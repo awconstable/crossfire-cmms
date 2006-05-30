@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cp bin/ripper.pl /usr/bin/cmms_ripper.pl
+cp conf/ripper.conf /etc/cmms_ripper.conf

@@ -1,0 +1,347 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef gid_t
+
+/* Define as __inline if that's what the C compiler calls it.  */
+#undef inline
+
+/* Define as the return type of signal handlers (int or void).  */
+#undef RETSIGTYPE
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if your <sys/time.h> declares struct tm.  */
+#undef TM_IN_SYS_TIME
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef uid_t
+
+#undef BAYRAD_DRV
+
+#undef CFONTZ_DRV
+
+#undef CWLNX_DRV
+
+#undef CURSES_DRV
+
+#undef CURSES_HAS__ACS_CHAR
+
+#undef CURSES_HAS_ACS_MAP
+
+#undef CURSES_HAS_REDRAWWIN
+
+#undef CURSES_HAS_WCOLOR_SET
+
+#undef DEBUG
+
+#undef GLK_DRV
+
+#undef HD44780_DRV
+
+#undef IRMANIN_DRV
+
+#undef JOY_DRV
+
+#undef LB216_DRV
+
+#undef LCDM001_DRV
+
+#undef LCDPORT
+
+#undef LIRCIN_DRV
+
+#undef LOAD_MAX
+
+#undef LOAD_MIN
+
+#undef MTXORB_DRV
+
+#undef SED1330_DRV
+
+#undef SED1520_DRV
+
+#undef SGX120_DRV
+
+#undef STV5730_DRV
+
+#undef SVGALIB_DRV
+
+#undef T6963_DRV
+
+/* Define the protocol version */
+#undef PROTOCOL_VERSION
+
+#undef API_VERSION
+
+#undef WIRZSLI_DRV
+
+#undef STAT_NFS
+
+#undef STAT_SMBFS
+
+/* two-argument statfs with statfs.bsize member (AIX, 4.3BSD) */
+#undef STAT_STATFS2_BSIZE
+
+/* two-argument statfs with statfs.fsize member (4.4BSD and NetBSD) */
+#undef STAT_STATFS2_FSIZE
+
+/* two-argument statfs with struct fs_data (Ultrix) */
+#undef STAT_STATFS2_FS_DATA
+
+/* 3-argument statfs function (DEC OSF/1) */
+#undef STAT_STATFS3_OSF1
+
+/* four-argument statfs (AIX-3.2.5, SVR3) */
+#undef STAT_STATFS4
+
+/* Define if you have the statvfs function */
+#undef STAT_STATVFS
+
+#undef SVGALIB_DRV
+
+#undef TEXT_DRV
+
+#undef T6963_DRV
+
+/* Define if you have the cfmakeraw function.  */
+#undef HAVE_CFMAKERAW
+
+/* Define if you have the getloadavg function.  */
+#undef HAVE_GETLOADAVG
+
+/* Define if you have the getmntinfo function.  */
+#undef HAVE_GETMNTINFO
+
+/* Define if you have the ioperm function.  */
+#undef HAVE_IOPERM
+
+/* Define if you have the sched_setscheduler function.  */
+#undef HAVE_SCHED_SETSCHEDULER
+
+/* Define if you have the select function.  */
+#undef HAVE_SELECT
+
+/* Define if you have the socket function.  */
+#undef HAVE_SOCKET
+
+/* Define if you have the statvfs function.  */
+#undef HAVE_STATVFS
+
+/* Define if you have the strdup function.  */
+#undef HAVE_STRDUP
+
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
+
+/* Define if you have the strtol function.  */
+#undef HAVE_STRTOL
+
+/* Define if you have the swapctl function.  */
+#undef HAVE_SWAPCTL
+
+/* Define if you have the uname function.  */
+#undef HAVE_UNAME
+
+/* Define if you have the <curses.h> header file.  */
+#undef HAVE_CURSES_H
+
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if you have the <errno.h> header file.  */
+#undef HAVE_ERRNO_H
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <kvm.h> header file.  */
+#undef HAVE_KVM_H
+
+/* Define if you have the <limits.h> header file.  */
+#undef HAVE_LIMITS_H
+
+/* Define if you have the <machine/cpufunc.h> header file.  */
+#undef HAVE_MACHINE_CPUFUNC_H
+
+/* Define if you have the <machine/pio.h> header file.  */
+#undef HAVE_MACHINE_PIO_H
+
+/* Define if you have the <machine/sysarch.h> header file.  */
+#undef HAVE_MACHINE_SYSARCH_H
+
+/* Define if you have the <mntent.h> header file.  */
+#undef HAVE_MNTENT_H
+
+/* Define if you have the <mnttab.h> header file.  */
+#undef HAVE_MNTTAB_H
+
+/* Define if you have the <ncurses.h> header file.  */
+#undef HAVE_NCURSES_H
+
+/* Define if you have the <ndir.h> header file.  */
+#undef HAVE_NDIR_H
+
+/* Define if you have the <procfs.h> header file.  */
+#undef HAVE_PROCFS_H
+
+/* Define if you have the <sched.h> header file.  */
+#undef HAVE_SCHED_H
+
+/* Define if you have the <sys/cpuvar.h> header file.  */
+#undef HAVE_SYS_CPUVAR_H
+
+/* Define if you have the <sys/dir.h> header file.  */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/dkstat.h> header file.  */
+#undef HAVE_SYS_DKSTAT_H
+
+/* Define if you have the <sys/dustat.h> header file.  */
+#undef HAVE_SYS_DUSTAT_H
+
+/* Define if you have the <sys/filsys.h> header file.  */
+#undef HAVE_SYS_FILSYS_H
+
+/* Define if you have the <sys/fs_types.h> header file.  */
+#undef HAVE_SYS_FS_TYPES_H
+
+/* Define if you have the <sys/fstyp.h> header file.  */
+#undef HAVE_SYS_FSTYP_H
+
+/* Define if you have the <sys/io.h> header file.  */
+#undef HAVE_SYS_IO_H
+
+/* Define if you have the <sys/ioctl.h> header file.  */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define if you have the <sys/loadavg.h> header file.  */
+#undef HAVE_SYS_LOADAVG_H
+
+/* Define if you have the <sys/mount.h> header file.  */
+#undef HAVE_SYS_MOUNT_H
+
+/* Define if you have the <sys/ndir.h> header file.  */
+#undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/param.h> header file.  */
+#undef HAVE_SYS_PARAM_H
+
+/* Define if you have the <sys/perm.h> header file.  */
+#undef HAVE_SYS_PERM_H
+
+/* Define if you have the <sys/procfs.h> header file.  */
+#undef HAVE_SYS_PROCFS_H
+
+/* Define if you have the <sys/sched.h> header file.  */
+#undef HAVE_SYS_SCHED_H
+
+/* Define if you have the <sys/statfs.h> header file.  */
+#undef HAVE_SYS_STATFS_H
+
+/* Define if you have the <sys/statvfs.h> header file.  */
+#undef HAVE_SYS_STATVFS_H
+
+/* Define if you have the <sys/sysctl.h> header file.  */
+#undef HAVE_SYS_SYSCTL_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <sys/types.h> header file.  */
+#undef HAVE_SYS_TYPES_H
+
+/* Define if you have the <sys/vfs.h> header file.  */
+#undef HAVE_SYS_VFS_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the <utime.h> header file.  */
+#undef HAVE_UTIME_H
+
+/* Define if you have the <utmpx.h> header file.  */
+#undef HAVE_UTMPX_H
+
+/* Define if you have the c library (-lc).  */
+#undef HAVE_LIBC
+
+/* Define if you have the i386 library (-li386).  */
+#undef HAVE_LIBI386
+
+/* Define if you have the kstat library (-lkstat).  */
+#undef HAVE_LIBKSTAT
+
+/* Define if you have the nsl library (-lnsl).  */
+#undef HAVE_LIBNSL
+
+/* Define if you have the posix4 library (-lposix4).  */
+#undef HAVE_LIBPOSIX4
+
+/* Define if you have the resolv library (-lresolv).  */
+#undef HAVE_LIBRESOLV
+
+/* Define if you have the rt library (-lrt).  */
+#undef HAVE_LIBRT
+
+/* Define if you have the socket library (-lsocket).  */
+#undef HAVE_LIBSOCKET
+
+/* Name of package */
+#undef PACKAGE
+
+/* Version number of package */
+#undef VERSION
+
+/* Define if you're using Linux. */
+#undef LINUX
+
+/* Define if you're using Solaris. */
+#undef SOLARIS
+
+/* Define if you're using OpenBSD. */
+#undef OPENBSD
+
+/* Define if you're using NetBSD. */
+#undef NETBSD
+
+/* Define if you're using FreeBSD. */
+#undef FREEBSD
+
+/* Set this to your system host (Linux, Solaris, OpenBSD, NetBSD or FreeBSD) */
+#undef SYSTEM_HOST
+
+/*  Define if you have System V IPC  */
+#undef HAVE_SYSV_IPC
+
+/*  Define if your system's sys/sem.h file defines union semun  */
+#undef HAVE_UNION_SEMUN
+
+/* Define if you have the sched_setscheduler function. */
+#undef HAVE_SCHED_SETSCHEDULER
+
+/* Define if you have the sched_setscheduler function. */
+#undef HAVE_SCHED_SETSCHEDULER
+
+/* Define if you have the NetBSD&OpenBSD version of i386_ioperm functions. */
+#undef HAVE_I386_IOPERM_NETBSD
+
+/* Define if you have the FreeBSD version of the i386_ioperm functions. */
+#undef HAVE_I386_IOPERM_FREEBSD
+
+/* Define if you have a parallel port and LCDproc knows how to talk to it. */
+#undef HAVE_PCSTYLE_LPT_CONTROL
+
+/* Location of your mounted filesystem table file */
+#undef MTAB_FILE
+

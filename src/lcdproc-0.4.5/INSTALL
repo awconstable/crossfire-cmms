@@ -1,0 +1,225 @@
+-- REALLY-QUICK START --------------------------------------------------
+
+If you're in a desperate hurry type:
+./configure --enable-drivers=all
+make
+
+And if you start wondering why it doesn't work, come back and read the
+rest of the file. 8)
+
+-- PREREQUISITES -----------------------------------------------------
+
+First read the README if you haven't already.
+
+Please take a few minutes to read the user guide located at 
+http://lcdproc.org/docs.php3
+
+For the details on supported platforms, see the PLAFORM SPECIFIC section
+of this file.
+
+In order to compile LCDproc, you'll need the following programs:
+
+an ANSI C compiler, we recommend GCC. Most Linux or BSD systems come 
+with GCC.
+
+GNU Make. It is available for all major distributions. If you want to
+compile it yourself, see http://www.gnu.org/software/make/make.html .
+
+If you want to modify the code, there are good chances that you'll need 
+the GNU autotools, that is automake and autoconf. It is available for
+all major distributions. If you want to compile it yourself, see
+http://sources.redhat.com/automake/ and
+http://sources.redhat.com/autoconf/ .
+
+-- DISPLAYS -----------------------------------------------------------
+
+Many different displays (or better said: output devices) are supported.
+Some of these devices also support input, for example with a keypad.
+There are drivers for input-only devices, too.
+
+Depending on what kind of LCD display you have, there are several
+sources of information. If your LCD display came with a manual, this
+is a great place to start. If you don't have a manual, you will have to
+find out what kind of display it is, and check the related information:
+
+HD44780 and compatible:
+  read the HD44780 section in the LCDproc User's Guide (docs/lcdproc-user)
+  or alternatively see http://www.robijn.net/lcdproc/
+STV5730: http://www.usblcd.de/lcdproc/
+SED1520: http://www.usblcd.de/lcdproc/
+
+If you still have problems you could take a look at the comments in the
+driver source code in server/drivers/. You may have some good indications
+there.
+
+You may want to take a look at LCDproc's hardware page at
+http://lcdproc.org/hardware.php3 for details. Several
+different types of displays are now supported.
+
+
+-- BUILDING LCDPROC -------------------------------------------------
+
+--- Preparing a CVS distro ---
+If you retrieved these files from the CVS, you will first need to run:
+    sh ./autogen.sh
+
+--- Configuration ---
+The simplest way of doing it is with:
+    ./configure
+But it may not do what you want, so please take a few seconds to type:
+    ./configure --help
+And read the available options, especially --enable-drivers
+
+--- Compilation ---
+Run make to build the server and all clients
+    make
+
+If you only want to compile the clients, you can omit to compile the 
+server:
+    cd shared
+    make
+    cd ../clients
+    make
+
+Similarly, if you only want to compile the server, you can omit to 
+compile the clients:
+    cd shared
+    make
+    cd ../server
+    make
+
+Depending on your system, LCDproc will build in a few seconds to a 
+few minutes. It's not very big. 
+
+If you want, you can install it (if you're root) by typing:
+    make install
+
+This will install the binaries and the man pages in the directory you
+specified in configure. 
+You may have to copy the configuration file (LCDd.conf) to /etc 
+(or /usr/local/etc) manually.
+
+-- PLATFORM SPECIFIC ------------------------------------------------
+
+The lcdproc crew has tried to support a number of platforms. Platforms
+that are very non-standard are not and will probably never be supported.
+Both server & drivers and clients have their own difficulties in
+porting. Here's are the prerequistes for both:
+
+--- Client ---
+The client should run on any POSIX compliant system.
+It has been sucessfully tested on:
+Linux 2.2.x, Linux 2.4.x, NetBSD 1.5, OpenBSD 3.0
+In the future, we want it to run on Windows, MacOS and others.
+
+--- Server ---
+The server needs to talk to the LCD display. At this time, it works
+on very little more than on the Intel i386 (PC Compatible)
+architecture. It has been sucessfully tested on:
+Linux 2.2.x, Linux 2.4.x, NetBSD 1.5, OpenBSD 3.0
+
+Here are some comments specific to each platform that LCDproc has been
+tested on.
+
+--- Linux ---
+Nothing special to say, everything should go well.
+
+You may not be able to compile all drivers on something else than i386
+if your linux installation does not have ioperm, inb and outb commands.
+./configure should leave all drivers that need those functions out
+(drivers for parallel port displays), so that LCDd should compile anyway.
+
+--- NetBSD ---
+You need to use GNU Make instead of NetBSD's make. 
+Remember to type gmake instead of make to compile LCDproc.
+The server will probably only compile on NetBSD/i386.
+
+If you try to run LCDd and you get this error:
+Bus error (core dumped)
+It is likely that you did not have the right permission to access the ports. 
+Try starting the program as root.
+
+--- OpenBSD ---
+You need to use GNU Make instead of OpenBSD's make. 
+Remember to type gmake instead of make to compile LCDproc.
+The server will probably only compile on OpenBSD/i386.
+
+--- FreeBSD ---
+It should compile fine on i386.
+
+--- Other platforms ---
+If you get it compiling and running on another platform let us know how
+you did it. We can put it in this INSTALL file.
+
+-- RUNNING LCDPROC -----------------------------------------------------
+
+--- Configuration file ---
+
+The first thing that you need to do is to modify the configuration file
+for your server. A example file (LCDd.conf) is available in the tarball.
+The comments present in this file should give you indications on what
+to do.
+
+--- Starting the server ---
+
+If you're in the LCDproc source directory, and have just built it, run:
+    server/LCDd -c path/to/config/file
+
+You can find out what drivers were compiled by running "LCDd -h".  
+Note that you cannot use more than one display driver at the same time.
+
+For security reasons, LCDd by default only accepts connections from
+localhost (127.0.0.1), it will not accept connections from other computers on
+your network / the Internet. You can change this behavior in the 
+configuration file.
+
+--- Starting the client(s) ---
+
+Then, you'll need some clients.  LCDproc comes with one:
+    clients/lcdproc/lcdproc C M T X &
+
+This will run the main LCDproc client, with the [C]pu, [M]emory,
+[T]ime, and [X]load screens.  The ampersand (&) puts it in the background.
+
+By default, the client tries to connect to a server located on localhost
+and listening to port 13666. To change this, use the -s and -p options.
+
+-- PUTTING LCDPROC IN SYSTEM STARTUP -----------------------------------
+
+It's nice to have LCDproc start when the computer boots, so here's how
+to do it:
+
+WARNING: Make sure you have modified the configuration file (/etc/LCDd.conf)
+         so that LCDd enters the background mode.
+         Otherwise LCDd will lock your system.
+
+Slackware:
+	Add lines to your /etc/rc.d/rc.local, such as the following:
+	  echo "Starting LCDd..."
+	  /usr/local/sbin/LCDd -c /etc/LCDd.conf
+	  echo "Starting lcdproc..."
+	  /usr/local/bin/lcdproc C M X &
+
+Debian:
+      - Copy (as root) the debian init script from the scripts/ direcory of the
+	sources to /etc/init.d
+	(cp scripts/init-lcdd.debian /etc/init.d/lcdd && \
+	 cp scripts/init-lcdproc.debian /etc/init.d/lcdproc)
+      - Run (as root): update-rc.d lcdd defaults
+	This will create symlinks to start and stop the daemon, resp.
+	from /etc/rc[2-5].d/S50lcd to /etc/init.d/lcd, and from
+	/etc/rc[016].d/K50lcd to /etc/init.d/lcd.
+      - Run (as root): update-rc.d lcdproc defaults
+	This will create symlinks to start and stop the lcdproc client, resp.
+	from /etc/rc[2-5].d/S50lcdproc to /etc/init.d/lcdproc, and from
+	/etc/rc[016].d/K50lcdproc to /etc/init.d/lcdproc.
+
+Redhat / Mandrake:
+      - Copy the scripts:
+	cp scripts/init-lcdd.rpm /etc/rc.d/init.d/lcdd && \
+	cp scripts/init-lcdproc.rpm /etc/rc.d/init.d/lcdproc)
+      - enable the scripts with e.g. linuxconf or create the symlinks manually
+
+
+That's all the OS`s we've actually done this with so far..
+

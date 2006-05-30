@@ -1,0 +1,451 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:579: checking for a BSD compatible install
+configure:632: checking whether build environment is sane
+configure:689: checking whether make sets ${MAKE}
+configure:735: checking for working aclocal
+configure:748: checking for working autoconf
+configure:761: checking for working automake
+configure:774: checking for working autoheader
+configure:787: checking for working makeinfo
+configure:811: checking host system type
+configure:872: checking whether to enable debugging
+configure:903: checking for gcc
+configure:1016: checking whether the C compiler (gcc -Wall -O3 ) works
+configure:1032: gcc -o conftest -Wall -O3   conftest.c  1>&5
+configure:1029: warning: return type defaults to `int'
+configure:1058: checking whether the C compiler (gcc -Wall -O3 ) is a cross-compiler
+configure:1063: checking whether we are using GNU C
+configure:1072: gcc -E conftest.c
+configure:1091: checking whether gcc accepts -g
+configure:1123: checking how to run the C preprocessor
+configure:1144: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1214: checking for a BSD compatible install
+configure:1269: checking for ranlib
+configure:1298: checking for gethostbyname
+configure:1326: gcc -o conftest -Wall -O3   conftest.c  1>&5
+configure:1393: checking for connect
+configure:1421: gcc -o conftest -Wall -O3   conftest.c  1>&5
+configure:1488: checking for inet_aton
+configure:1516: gcc -o conftest -Wall -O3   conftest.c  1>&5
+configure:1583: checking for kstat_open in -lkstat
+configure:1602: gcc -o conftest -Wall -O3   conftest.c -lkstat   1>&5
+/usr/bin/ld: cannot find -lkstat
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 1591 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char kstat_open();
+
+int main() {
+kstat_open()
+; return 0; }
+configure:1630: checking for nanosleep in -lposix4
+configure:1649: gcc -o conftest -Wall -O3   conftest.c -lposix4   1>&5
+/usr/bin/ld: cannot find -lposix4
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 1638 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char nanosleep();
+
+int main() {
+nanosleep()
+; return 0; }
+configure:1679: checking for getloadavg
+configure:1707: gcc -o conftest -Wall -O3   conftest.c  1>&5
+configure:1679: checking for swapctl
+configure:1707: gcc -o conftest -Wall -O3   conftest.c  1>&5
+/tmp/cc4XjG8g.o(.text+0xd): In function `main':
+: undefined reference to `swapctl'
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 1684 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char swapctl(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char swapctl();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_swapctl) || defined (__stub___swapctl)
+choke me
+#else
+swapctl();
+#endif
+
+; return 0; }
+configure:1735: checking for procfs.h
+configure:1745: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1741:20: procfs.h: No such file or directory
+configure: failed program was:
+#line 1740 "configure"
+#include "confdefs.h"
+#include <procfs.h>
+configure:1735: checking for sys/procfs.h
+configure:1745: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1735: checking for sys/loadavg.h
+configure:1745: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1741:25: sys/loadavg.h: No such file or directory
+configure: failed program was:
+#line 1740 "configure"
+#include "confdefs.h"
+#include <sys/loadavg.h>
+configure:1735: checking for utmpx.h
+configure:1745: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1773: checking for kvm_open in -lkvm
+configure:1792: gcc -o conftest -Wall -O3   conftest.c -lkvm   1>&5
+/usr/bin/ld: cannot find -lkvm
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 1781 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char kvm_open();
+
+int main() {
+kvm_open()
+; return 0; }
+configure:1813: checking for kvm_open in -lkvm with -lelf
+configure:1827: gcc -o conftest -Wall -O3   conftest.c -lkvm -lelf  1>&5
+/usr/bin/ld: cannot find -lkvm
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 1820 "configure"
+#include "confdefs.h"
+char kvm_open();
+int main() {
+kvm_open()
+; return 0; }
+configure:1855: checking for sched.h
+configure:1865: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1855: checking for sys/sched.h
+configure:1865: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1861:23: sys/sched.h: No such file or directory
+configure: failed program was:
+#line 1860 "configure"
+#include "confdefs.h"
+#include <sys/sched.h>
+configure:1855: checking for machine/cpufunc.h
+configure:1865: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1861:29: machine/cpufunc.h: No such file or directory
+configure: failed program was:
+#line 1860 "configure"
+#include "confdefs.h"
+#include <machine/cpufunc.h>
+configure:1855: checking for sys/types.h
+configure:1865: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1855: checking for machine/pio.h
+configure:1865: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1861:25: machine/pio.h: No such file or directory
+configure: failed program was:
+#line 1860 "configure"
+#include "confdefs.h"
+#include <machine/pio.h>
+configure:1855: checking for machine/sysarch.h
+configure:1865: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1861:29: machine/sysarch.h: No such file or directory
+configure: failed program was:
+#line 1860 "configure"
+#include "confdefs.h"
+#include <machine/sysarch.h>
+configure:1855: checking for sys/cpuvar.h
+configure:1865: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1861:24: sys/cpuvar.h: No such file or directory
+configure: failed program was:
+#line 1860 "configure"
+#include "confdefs.h"
+#include <sys/cpuvar.h>
+configure:1893: checking for System V IPC headers
+configure:1912: gcc -c -Wall -O3  conftest.c 1>&5
+configure:1937: checking for union semun
+configure:1954: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:1951: error: storage size of 's' isn't known
+configure:1951: warning: unused variable `s'
+configure: failed program was:
+#line 1943 "configure"
+#include "confdefs.h"
+
+                        #include <sys/types.h>
+                        #include <sys/ipc.h>
+                        #include <sys/sem.h>
+                
+int main() {
+ union semun s 
+; return 0; }
+configure:1981: checking for sched_setscheduler
+configure:2009: gcc -o conftest -Wall -O3   conftest.c  1>&5
+configure:2034: checking for sched_setscheduler in -lposix4
+configure:2053: gcc -o conftest -Wall -O3   conftest.c -lposix4   1>&5
+/usr/bin/ld: cannot find -lposix4
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 2042 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char sched_setscheduler();
+
+int main() {
+sched_setscheduler()
+; return 0; }
+configure:2081: checking for sched_setscheduler in -lposix4
+configure:2126: checking for sched_setscheduler in -lrt
+configure:2145: gcc -o conftest -Wall -O3   conftest.c -lrt   1>&5
+configure:2173: checking for sched_setscheduler in -lrt
+configure:2219: checking for i386_get_ioperm in -li386
+configure:2238: gcc -o conftest -Wall -O3   conftest.c -li386  -lrt  1>&5
+/usr/bin/ld: cannot find -li386
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 2227 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char i386_get_ioperm();
+
+int main() {
+i386_get_ioperm()
+; return 0; }
+configure:2266: checking for i386_get_ioperm in -li386
+configure:2308: checking for i386_get_ioperm in -lc
+configure:2327: gcc -o conftest -Wall -O3   conftest.c -lc  -lrt  1>&5
+/tmp/cc469Zmv.o(.text+0xd): In function `main':
+: undefined reference to `i386_get_ioperm'
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 2316 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char i386_get_ioperm();
+
+int main() {
+i386_get_ioperm()
+; return 0; }
+configure:2355: checking for i386_get_ioperm in -lc
+configure:2404: checking for ioperm
+configure:2432: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:2460: checking for sys/io.h
+configure:2470: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2460: checking for sys/perm.h
+configure:2470: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2460: checking for unistd.h
+configure:2470: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2498: checking for a parallel port
+configure:2510: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:2506: warning: unused variable `val'
+configure:2539: checking for dirent.h that defines DIR
+configure:2552: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:2548: warning: unused variable `dirp'
+configure:2577: checking for opendir in -ldir
+configure:2596: gcc -o conftest -Wall -O3   conftest.c -ldir  -lrt  1>&5
+/usr/bin/ld: cannot find -ldir
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 2585 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char opendir();
+
+int main() {
+opendir()
+; return 0; }
+configure:2660: checking for ANSI C header files
+configure:2673: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2740: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure: In function `main':
+configure:2735: warning: implicit declaration of function `exit'
+configure:2767: checking for fcntl.h
+configure:2777: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2767: checking for sys/ioctl.h
+configure:2777: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2767: checking for sys/time.h
+configure:2777: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2767: checking for errno.h
+configure:2777: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2807: checking for limits.h
+configure:2817: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2807: checking for kvm.h
+configure:2817: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2813:17: kvm.h: No such file or directory
+configure: failed program was:
+#line 2812 "configure"
+#include "confdefs.h"
+#include <kvm.h>
+configure:2807: checking for sys/param.h
+configure:2817: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2807: checking for sys/sysctl.h
+configure:2817: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2807: checking for sys/dkstat.h
+configure:2817: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2813:24: sys/dkstat.h: No such file or directory
+configure: failed program was:
+#line 2812 "configure"
+#include "confdefs.h"
+#include <sys/dkstat.h>
+configure:2846: checking for working const
+configure:2900: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:2874: warning: unused variable `s'
+configure:2894: warning: unused variable `foo'
+configure:2856: warning: unused variable `x'
+configure:2862: warning: unused variable `zero'
+configure:2891: warning: 'b' might be used uninitialized in this function
+configure:2873: warning: 't' might be used uninitialized in this function
+configure:2921: checking for inline
+configure:2935: gcc -c -Wall -O3  conftest.c 1>&5
+configure:2931: warning: return type defaults to `int'
+configure: In function `main':
+configure:2930: warning: control reaches end of non-void function
+configure:2961: checking for size_t
+configure:2994: checking whether time.h and sys/time.h may both be included
+configure:3008: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:3004: warning: unused variable `tp'
+configure:3029: checking whether struct tm is in sys/time.h or time.h
+configure:3042: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:3038: warning: statement with no effect
+configure:3063: checking for uid_t in sys/types.h
+configure:3099: checking whether gcc needs -traditional
+configure:3145: checking return type of signal handlers
+configure:3167: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:3163: warning: unused variable `i'
+configure:3188: checking for select
+configure:3216: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3188: checking for socket
+configure:3216: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3188: checking for strdup
+configure:3216: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3200: warning: conflicting types for built-in function 'strdup'
+configure:3188: checking for strerror
+configure:3216: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3188: checking for strtol
+configure:3216: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3188: checking for uname
+configure:3216: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3188: checking for cfmakeraw
+configure:3216: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3244: checking for your mounted filesystem table
+configure:3276: checking for fcntl.h
+configure:3276: checking for sys/dustat.h
+configure:3286: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3282:24: sys/dustat.h: No such file or directory
+configure: failed program was:
+#line 3281 "configure"
+#include "confdefs.h"
+#include <sys/dustat.h>
+configure:3276: checking for sys/param.h
+configure:3276: checking for sys/statfs.h
+configure:3286: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3276: checking for sys/fstyp.h
+configure:3286: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3282:23: sys/fstyp.h: No such file or directory
+configure: failed program was:
+#line 3281 "configure"
+#include "confdefs.h"
+#include <sys/fstyp.h>
+configure:3316: checking for mnttab.h
+configure:3326: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3322:20: mnttab.h: No such file or directory
+configure: failed program was:
+#line 3321 "configure"
+#include "confdefs.h"
+#include <mnttab.h>
+configure:3316: checking for mntent.h
+configure:3326: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3316: checking for utime.h
+configure:3326: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3316: checking for sys/statvfs.h
+configure:3326: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3316: checking for sys/vfs.h
+configure:3326: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3356: checking for sys/mount.h
+configure:3366: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3356: checking for sys/filsys.h
+configure:3366: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3362:24: sys/filsys.h: No such file or directory
+configure: failed program was:
+#line 3361 "configure"
+#include "confdefs.h"
+#include <sys/filsys.h>
+configure:3356: checking for sys/fs_types.h
+configure:3366: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3362:26: sys/fs_types.h: No such file or directory
+configure: failed program was:
+#line 3361 "configure"
+#include "confdefs.h"
+#include <sys/fs_types.h>
+configure:3395: checking for getmntinfo
+configure:3423: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+/tmp/ccm44VG2.o(.text+0xd): In function `main':
+: undefined reference to `getmntinfo'
+collect2: ld returned 1 exit status
+configure: failed program was:
+#line 3400 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char getmntinfo(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char getmntinfo();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_getmntinfo) || defined (__stub___getmntinfo)
+choke me
+#else
+getmntinfo();
+#endif
+
+; return 0; }
+configure:3449: checking how to get filesystem space usage
+configure:3459: checking for statvfs
+configure:3487: gcc -o conftest -Wall -O3   conftest.c -lrt  1>&5
+configure:3853: checking for which drivers to compile
+configure:3942: checking for ncurses.h
+configure:3952: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3942: checking for curses.h
+configure:3952: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:3979: checking for main in -lncurses
+configure:3994: gcc -o conftest -Wall -O3   conftest.c -lncurses  -lrt  1>&5
+configure:4012: checking for ncurses.h
+configure:4145: checking for acs_map in curses.h
+configure:4157: gcc -c -Wall -O3  conftest.c 1>&5
+configure: In function `main':
+configure:4153: warning: unused variable `map'
+configure:4218: checking for redrawwin() in curses
+configure:4236: gcc -o conftest -Wall -O3   conftest.c -lrt  -lncurses 1>&5
+configure:4259: checking for wcolor_set() in curses
+configure:4277: gcc -o conftest -Wall -O3   conftest.c -lrt  -lncurses 1>&5
