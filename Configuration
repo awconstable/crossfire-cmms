@@ -1,4 +1,9 @@
 #!/bin/bash
 
 cp bin/ripper.pl /usr/bin/cmms_ripper.pl
+cp bin/crestron.pl /usr/bin/cmms_crestron.pl
+cp bin/zone.pl /usr/bin/cmms_zone.pl
+cp bin/cmmsd.pl /usr/bin/
+
 cp conf/ripper.conf /etc/cmms_ripper.conf
+cp conf/server.conf /etc/cmms_server.conf
