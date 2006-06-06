@@ -8,20 +8,21 @@ my $ripper = new CMMS::Ripper(conf => '/etc/cmms_ripper.conf');
 # Lock CD
 #`cdctl -o1`;
 
-my $tracks = $ripper->metadata;
-$ripper->check($tracks) or &error; # Must unlock draw before dying!
-$ripper->rip($tracks);
+my $album = $ripper->metadata;
+
+#$ripper->check($album) or &error; # Must unlock draw before dying!
+#$ripper->rip($album);
 
 # Unlock CD
 #`cdctl -o0`;
 
-$ripper->encode($tracks);
-$ripper->cover($tracks);
-$ripper->store($tracks);
+#$ripper->encode($album);
+#$ripper->cover($album);
+$ripper->store($album);
 $ripper->purge;
 
 # Try to eject CD
-`eject`;
+#`eject`;
 
 sub error {
 	#`cdctl -o0`;

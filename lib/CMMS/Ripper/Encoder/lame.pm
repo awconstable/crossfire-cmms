@@ -19,6 +19,8 @@ sub _encode {
 	my $file = safe_chars(sprintf('%02d',$number)." $artist $track");
 	my $tmp = $self->{conf}->{tmpdir};
 
+	print STDERR "$tmp$file.mp3\n";
+
 	my($LAME,$pid) = psudo_tty("lame -b 160 $tmp$file.wav $tmp$file.mp3 2>&1");
 
 	my($oprog,$orate) = ('','44.1 kHz 160 kbps');
@@ -84,13 +86,14 @@ sub _encode {
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);
-	$comments = safe_chars($comments);
+	$comments = substr(safe_chars($comments),0,32);
 
 	my $folder = $self->{conf}->{mediadir}."$aartist/$album/";
 	$folder .= "$comments/" if $comments;
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.mp3 $folder` if -f "$tmp$file.mp3";
+	print STDERR "mv $tmp$file.mp3 $folder\n";
 
 	return 1;
 }

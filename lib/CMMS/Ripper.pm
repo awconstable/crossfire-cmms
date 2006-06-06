@@ -198,14 +198,17 @@ sub store {
 
 		my $aartist = safe_chars($meta->{ARTIST});
 		my $album = safe_chars($meta->{ALBUM});
-		my $comments = safe_chars($meta->{COMMENTS});
+		my $comments = substr(safe_chars($meta->{COMMENTS}),0,32);
 		my $folder = $self->{conf}->{mediadir}."$aartist/$album/";
 		$folder .= "$comments/" if $comments;
 		$folder =~ s/\/$//;
 
+		print STDERR "$folder\n";
+
 		my $track_num = sprintf('%02d',$track->number);
 
 		foreach(grep{/\.(mp3|flac|ogg|wav)$/}<$folder/${track_num}_*>) {
+			print STDERR "$_\n";
 			my($file_location,$file_name,$file_type) = (/^(.+\/)([^\/]+\.(.+))$/);
 			my $filesize = -s $_;
 			my $bitrate = (/\.mp3$/?160:'');

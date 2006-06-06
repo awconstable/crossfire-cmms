@@ -18,6 +18,8 @@ sub _encode {
 	my $file = safe_chars(sprintf('%02d',$number)." $artist $track");
 	my $tmp = $self->{conf}->{tmpdir};
 
+	print STDERR "$tmp$file.flac\n";
+
 	my($FLAC,$pid) = psudo_tty("flac $tmp$file.wav -o $tmp$file.flac 2>&1");
 
 	my $oprog = '';
@@ -51,13 +53,14 @@ sub _encode {
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);
-	$comments = safe_chars($comments);
+	$comments = substr(safe_chars($comments),0,32);
 
 	my $folder = $self->{conf}->{mediadir}."$aartist/$album/";
 	$folder .= "$comments/" if $comments;
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.flac $folder` if -f "$tmp$file.flac";
+	print STDERR "mv $tmp$file.flac $folder\n";
 
 	return 1;
 }

@@ -3,6 +3,7 @@ package CMMS::Ripper::Encoder::Generic;
 use strict;
 use warnings;
 use IO::LCDproc;
+use CMMS::File;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -81,8 +82,14 @@ sub encode {
 	$self->{title}->set(data => ($metadata->{ALBUM}=~/Unknown/?'Unknown Album':$metadata->{ALBUM}));
 	print STDERR $metadata->{ALBUM}."\n";
 
+	my $tmp = $self->{conf}->{tmpdir};
+
 	foreach my $track (@{$metadata->{TRACKS}}) {
-		$self->_encode($track->number,$track->title,$track->artist,$metadata->{ALBUM},$metadata->{COMMENTS},$metadata->{YEAR},$metadata->{GENRE},$metadata->{ARTIST});
+		my $file = safe_chars(sprintf('%02d',$track->number).' '.$track->artist.' '.$track->title);
+		if(-f "$tmp$file.wav") {
+			print STDERR "$tmp$file.wav\n";
+			$self->_encode($track->number,$track->title,$track->artist,$metadata->{ALBUM},$metadata->{COMMENTS},$metadata->{YEAR},$metadata->{GENRE},$metadata->{ARTIST});
+		}
 	}
 
 	$self->{status}->set(data => '');

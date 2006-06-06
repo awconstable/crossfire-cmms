@@ -111,6 +111,13 @@ sub _rip {
 			last;
 		}
 
+		if(/non audio track/) {
+			$self->{status}->set(data => 'rip: 0%');
+			$self->{detail}->set(data => 'Non audio track');
+			print STDERR "Track $number non audio\n";
+			last;
+		}
+
 		if(/Done./) {
 			$self->{status}->set(data => 'rip: done');
 			print STDERR "rip: done\n";

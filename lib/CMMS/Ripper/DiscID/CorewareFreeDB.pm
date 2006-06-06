@@ -3,6 +3,7 @@ package CMMS::Ripper::DiscID::CorewareFreeDB;
 use strict;
 use warnings;
 use base qw(Net::FreeDB);
+use Net::Cmd;
 
 sub read {
     my $self = shift;
