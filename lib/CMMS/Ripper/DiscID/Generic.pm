@@ -61,7 +61,7 @@ sub default {
 	my $discid = md5_hex($self->{discid});
 	my $metadata = {
 		GENRE => 'Misc',
-		DISCID => $discid,
+		DISCID => $self->{discid},
 		ARTIST => 'Unknown',
 		ALBUM => 'Unknown '.$discid
 	};
@@ -73,10 +73,20 @@ sub default {
 	}
 	close(QUERY);
 
-	my @tracks = ($query =~ /([0-9]+)\.\s+/g);
+	#track        length               begin        copy pre ch
+	#===========================================================
+	#  1.    22557 [05:00.57]        0 [00:00.00]    no   no  2
+	#  2.    14365 [03:11.40]    22557 [05:00.57]    no   no  2
+	my @tracks = ($query =~ /\s+([0-9]+)\.\s+/g);
+	my @offsets = ($query =~ /\]\s+([0-9]+)\s+\[/g);
+	#my($total) = ($query =~ /TOTAL\s+([0-9]+)/);
+	#$total = $total / 60;
+
+	my($mins,$secs) = ($query =~ /TOTAL\s+[0-9]+\s+\[([0-9]+):([0-9\.]+)\]/);
+	my $total = ($mins * 60) + $secs;
 
 	open(CDDB,"> ${tmp}album.cddb");
-	print CDDB "# xmcd\n\n#\n\n# Track frame offsets:\n\n".join("\n",map{"#       $_"}@tracks)."\n\n#\n\n# Disc length: ".(scalar @tracks)."\n\n#\n\n# Revision: 1\n\n# Processed by: cddbd v1.5.1PL2 Copyright (c) Steve Scherf et al.\n\n# Submitted via: CMMSRipper\n\n# Normalized: r4:DSETVAR1\n\n#\n\nDISCID=$discid\n\nDTITLE=Unknown $discid\n\n".join("\n",map{'TTITLE'.($_-1)."=Track $_"}@tracks)."\n\nEXTD=CMMSRipper\n\n".join("\n",map{'EXTT'.($_-1).'='}@tracks)."\n\nPLAYORDER=\n";
+	print CDDB "# xmcd\n#\n# Track frame offsets:\n".join("\n",map{"#       $_"}@offsets)."\n#\n# Disc length: $total seconds\n#\n# Revision: 1\n# Processed by: CMMSRipper\n# Submitted via: CMMSRipper\n# Normalized: r4:DSETVAR1\n#\nDISCID=$discid\nDTITLE=Unknown $discid\n".join("\n",map{'TTITLE'.($_-1)."=Track $_"}@tracks)."\nEXTD=CMMSRipper\n".join("\n",map{'EXTT'.($_-1).'='}@tracks)."\nPLAYORDER=\n";
 	close(CDDB);
 	my $albumdata = new CDDB::File("${tmp}album.cddb");
 

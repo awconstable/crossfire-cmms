@@ -3,10 +3,10 @@ package CMMS::Ripper;
 use strict;
 use warnings;
 use Config::General;
-use TAER::MysqlConnection;
 use URI::Escape;
 use LWP;
 use CMMS::File;
+use CMMS::Database::MysqlConnection;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -38,7 +38,7 @@ sub new {
 	$self->{conf} = \%conf;
 
 	my $db = $self->{conf}->{mysql};
-	my $mc = new TAER::MysqlConnection;
+	my $mc = new CMMS::Database::MysqlConnection;
 	$mc and $db->{host} and $mc->host( $db->{host} );
 	$mc and $db->{database} and $mc->database( $db->{database} );
 	$mc and $db->{user} and $mc->user( $db->{user} );

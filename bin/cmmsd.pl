@@ -65,8 +65,8 @@ foreach my $zone_config (@$zones) {
   } else {
       $log = "/usr/local/cmms/logs/zone$zone.log";
   }
-  # prepare command like "/usr/bin/zone.pl --zone 1 2>>zone1.log",,
-  my $command = "/usr/bin/zone.pl --zone $zone 2>>$log";
+  # prepare command like "/usr/bin/cmms_zone.pl --zone 1 2>>zone1.log",,
+  my $command = "/usr/bin/cmms_zone.pl --zone $zone 2>>$log";
 print STDERR "$command\n";
   push @processlist, { 
         type => CLIENT,

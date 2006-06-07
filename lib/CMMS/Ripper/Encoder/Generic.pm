@@ -36,7 +36,7 @@ sub new {
 sub initialise {
 	my $self = shift;
 
-	$self->{client}  = IO::LCDproc::Client->new(name => 'lamer', host => 'localhost');
+	$self->{client}  = IO::LCDproc::Client->new(name => 'lamer', host => $self->{conf}->{lcdhost}, port => $self->{conf}->{lcdport});
 	$self->{screen}  = IO::LCDproc::Screen->new(name => 'lamer', client => $self->{client});
 	$self->{title}   = IO::LCDproc::Widget->new(screen => $self->{screen}, name => 'title', type => 'title');
 	$self->{status}  = IO::LCDproc::Widget->new(screen => $self->{screen}, name => 'track',  xPos => 1,  yPos => 2);
@@ -85,7 +85,9 @@ sub encode {
 	my $tmp = $self->{conf}->{tmpdir};
 
 	foreach my $track (@{$metadata->{TRACKS}}) {
-		my $file = safe_chars(sprintf('%02d',$track->number).' '.$track->artist.' '.$track->title);
+		my $artist = $track->artist;
+		$artist = 'Unknown' if $artist =~ /Unknown/;
+		my $file = safe_chars(sprintf('%02d',$track->number).' '.$artist.' '.$track->title);
 		if(-f "$tmp$file.wav") {
 			print STDERR "$tmp$file.wav\n";
 			$self->_encode($track->number,$track->title,$track->artist,$metadata->{ALBUM},$metadata->{COMMENTS},$metadata->{YEAR},$metadata->{GENRE},$metadata->{ARTIST});

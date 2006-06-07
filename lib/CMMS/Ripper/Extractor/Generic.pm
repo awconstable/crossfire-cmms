@@ -35,7 +35,7 @@ sub new {
 sub initialise {
 	my $self = shift;
 
-	$self->{client} = IO::LCDproc::Client->new(name => 'ripper', host => 'localhost');
+	$self->{client} = IO::LCDproc::Client->new(name => 'ripper', host => $self->{conf}->{lcdhost}, port => $self->{conf}->{lcdport});
 	$self->{screen} = IO::LCDproc::Screen->new(name => 'screen', client => $self->{client});
 	$self->{title}  = IO::LCDproc::Widget->new(screen => $self->{screen}, name => 'title', type => 'title');
 	$self->{track}  = IO::LCDproc::Widget->new(screen => $self->{screen}, name => 'track',  xPos => 1,  yPos => 2);
