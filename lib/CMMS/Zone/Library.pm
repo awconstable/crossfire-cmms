@@ -12,50 +12,6 @@ our $permitted = {
 };
 our($AUTOLOAD);
 
-#############################################################
-# Constructor
-#
-sub new {
-	my $class = shift;
-	my (%params) = @_;
-
-	die('No database connection') unless $params{mc};
-	die('No config') unless $params{conf};
-	die('No handle') unless $params{handle};
-	die('No zone') unless $params{zone};
-
-	my $self = {};
-	$self->{conf} = $params{conf};
-	$self->{handle} = $params{handle};
-	$self->{zone} = $params{zone};
-
-	bless $self, $class;
-	$self->mysqlConnection($params{mc});
-
-	return $self;
-}
-
-#############################################################
-# AUTOLOAD restrict method aliases
-#
-sub AUTOLOAD {
-	my $self = shift;
-	die("$self is not an object") unless my $type = ref($self);
-	my $name = $AUTOLOAD;
-	$name =~ s/.*://;
-
-	die("Can't access '$name' field in object of class $type") unless( exists $permitted->{$name} );
-
-	return (@_?$self->{$name} = shift:$self->{$name});
-}
-
-#############################################################
-# DESTROY
-#
-sub DESTROY {
-	my $self = shift;
-}
-
 #
 # definitions
 #
@@ -102,26 +58,71 @@ my %menu_commands = (
     playplaylist=> \&menu_playplaylist,
 );
 
+#############################################################
+# Constructor
+#
+sub new {
+	my $class = shift;
+	my (%params) = @_;
+
+	die('No database connection') unless $params{mc};
+	die('No config') unless $params{conf};
+	die('No handle') unless $params{handle};
+	die('No zone') unless $params{zone};
+
+	my $self = {};
+	$self->{conf} = $params{conf};
+	$self->{handle} = $params{handle};
+	$self->{zone} = $params{zone};
+
+	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
+	$self->{now_play} = new CMMS::Zone::NowPlaying(handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
+	$self->{player} = new CMMS::Zone::Player(handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
+
+	bless $self, $class;
+	$self->mysqlConnection($params{mc});
+
+	$self->mem_reset;
+
+	return $self;
+}
+
+#############################################################
+# AUTOLOAD restrict method aliases
+#
+sub AUTOLOAD {
+	my $self = shift;
+	die("$self is not an object") unless my $type = ref($self);
+	my $name = $AUTOLOAD;
+	$name =~ s/.*://;
+
+	die("Can't access '$name' field in object of class $type") unless( exists $permitted->{$name} );
+
+	return (@_?$self->{$name} = shift:$self->{$name});
+}
+
+#############################################################
+# DESTROY
+#
+sub DESTROY {
+	my $self = shift;
+}
+
 #
 # initialisation & defaults
 #
 
-sub init {
-  $dbh = shift;
-  &mem_reset;
-}
-
 sub mem_reset {
-  $mem{category} = undef;
-  $mem{offset} = 0;
- 
-  $mem{playlist_id} = undef;
-  $mem{genre_id}    = undef;
-  $mem{artist_id}   = undef;
-  $mem{album_id}    = undef;
-  $mem{search}      = undef,
-        
-  @history = ();
+	$mem{category} = undef;
+	$mem{offset} = 0;
+
+	$mem{playlist_id} = undef;
+	$mem{genre_id}    = undef;
+	$mem{artist_id}   = undef;
+	$mem{album_id}    = undef;
+	$mem{search}      = undef,
+
+	@history = ();
 }
 
 #
@@ -129,35 +130,36 @@ sub mem_reset {
 #
 
 sub history_empty {
-  print STDERR "HISTORY: Empty\n";
-  @history = ();
+	print STDERR "HISTORY: Empty\n";
+	@history = ();
 }
 
 sub history_back {
-  if (@history > 1) {
-  print STDERR "HISTORY: back\n";
-  my $hsize = @history;
-      pop @history;
-      my $serialized = $history[@history-1]; #last record
-      %mem = %{ thaw($serialized) };
-      return 1; 
-  } else {
-      return 0;
-  }
+	if (@history > 1) {
+		print STDERR "HISTORY: back\n";
+		my $hsize = @history;
+		pop @history;
+		my $serialized = $history[@history-1]; #last record
+		%mem = %{ thaw($serialized) };
+		return 1; 
+	} else {
+		return 0;
+	}
 }
 
 sub history_add {
-  print STDERR "HISTORY: add\n";
-  return push @history, &freeze(\%mem);
+	print STDERR "HISTORY: add\n";
+	return push @history, &freeze(\%mem);
 }
 
 sub history_update {
-  print STDERR "HISTORY: update\n";
-  pop @history; # if (@history > 1); # we can add another step to go at beginning of list
-  &history_add();
+	my $self = shift;
+
+	print STDERR "HISTORY: update\n";
+	pop @history; # if (@history > 1); # we can add another step to go at beginning of list
+	$self->history_add;
 }
   
-
 #
 # support functions
 #
@@ -185,26 +187,30 @@ sub get_response {
 }
 
 sub make_select {
-  my ($query) = @_;
+	my ($self, $query) = @_;
 
-  $query =~ s/\?/%d/g;
-  $query = sprintf($query, $limit, $mem{offset});
-  my $sth;
-  $sth = db_select($dbh, $query);
+	my $mc = $self->mysqlConnection;
 
-  my @row;
-  $mem{lines} = ();
-  my $i = 0;
-  while ( @row = $sth->fetchrow_array ) {
-      $mem{lines}{$i}{id}   = $row[0];
-      $mem{lines}{$i}{text} = $row[1];
-      $i++;
-  }
-  return $i;
+	$query =~ s/\?/%d/g;
+	$query = sprintf($query, $limit, $mem{offset});
+
+	my $row = $self->query_and_get($query)||[];
+
+	$mem{lines} = ();
+	my $i = 0;
+	foreach( @{$row} ) {
+		$mem{lines}{$i}{id}   = $row->{id};
+		$mem{lines}{$i}{text} = $row->{text};
+		$i++;
+	}
+
+	return $i;
 }
 
 sub sql_prepare_where {
-  my @where;
+	my $self = shift;
+
+	my @where;
   my $i = 0;
   push (@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id} );
   push (@where, sprintf("artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
@@ -462,13 +468,16 @@ sub selectall {
 }
 
 sub empty_queue {
-    my $q = qq{
-      DELETE FROM playlist_current
-      WHERE zone = $zone;
-  };
-  
-  my $ret = db_query($dbh, $q);
-  return $ret;
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	my $sql = qq{
+		DELETE FROM playlist_current 
+		WHERE zone = $self->{zone};
+	};
+
+	return $mc->query($sql);
 }
 
 #
@@ -506,52 +515,59 @@ sub search_clear {
 }
 
 sub sql_track2playlist {
-  my ($where) = @_;
-  return qq {
-    INSERT INTO playlist_current 
-    SELECT $zone, id from track
-    $where
-    ORDER BY album_id, track_num;
-  };
+	my ($self, $where) = @_;
+
+	return qq {
+		INSERT INTO playlist_current 
+		SELECT $self->{zone}, id from track 
+		$where 
+		ORDER BY album_id, track_num;
+	};
 }
 
 sub sql_playlist2playlist {
-  my ($zone, $playlist_id) = @_;
-  return qq {
-    INSERT INTO playlist_current 
-    SELECT $zone, track_id FROM playlist_track
-    WHERE playlist_id = $playlist_id
-    ORDER BY track_order
-  };
+	my ($self, $playlist_id) = @_;
+
+	return qq {
+		INSERT INTO playlist_current 
+		SELECT $self->{zone}, track_id FROM playlist_track 
+		WHERE playlist_id = $playlist_id 
+		ORDER BY track_order
+	};
 }
 
 sub queueall {
-  my $q = "";
-  if (my $tmp = &sql_prepare_where) {
-     $q = &sql_track2playlist($tmp);
-  } else {
-     $q = &sql_track2playlist("");
-  }    
-  
-  my $ret = db_query($dbh, $q);
-  
-  # we are playing current playlist
-  zone_mem_del($dbh, $zone, 'playlist');
-    
-  return 0;
-  # it might be good idea to return anything that show
-  # an popup
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	my $sql = '';
+	if(my $tmp = $self->sql_prepare_where) {
+		$sql = $self->sql_track2playlist($tmp);
+	} else {
+		$sql = $self->sql_track2playlist('');
+	}
+
+	my $ret = $mc->query($sql);
+
+	# we are playing current playlist
+	$self->{zone_obj}->get('playlist'); # delete
+
+	return 0;
+	# it might be good idea to return anything that show a popup
 }
 
 sub playall {
- &empty_queue;
- &queueall;
+	my $self = shift;
 
- my $command = zone::now_playing::play();
- send2player($handle, $command);
- 
- # play first..
- 0;
+	$self->empty_queue;
+	$self->queueall;
+
+	my $command = $self->{now_play}->play;
+	send2player($command);
+
+	# play first..
+	0;
 }        
 
 sub page_next {
@@ -588,43 +604,40 @@ sub page_prev {
 #
 
 sub menu_play {
-  my ($data) = @_;
-  my $line = $data->{line_number};
-  
-  my $track = $mem{lines}{$line}{track_id};
-  my $command = zone::player::playtrack($dbh, $track);
-  send2player($handle, $command);
-  my %cmd = (
-     zone => $zone,
-     cmd  => "transport",
-     playlist => "Single Song"
-  );
-  print &hash2cmd(%cmd);
+	my ($self, $data) = shift;
+
+	my $line = $data->{line_number};
+
+	my $track = $mem{lines}{$line}{track_id};
+	my $command = $self->{player}->playtrack($track);
+	send2player($command);
+
+	my %cmd = (
+		zone => $self->{zone},
+		cmd  => 'transport',
+		playlist => 'Single Song'
+	);
+	print &hash2cmd(%cmd);
 }
 
 sub menu_playplaylist {
-  my ($data) = @_;
-  my $line = $data->{line_number};
-  return 0 unless exists $mem{lines}{$line}{playlist_id};
+	my ($self, $data) = @_;
 
-  &empty_queue;
+	my $mc = $self->mysqlConnection;
 
-  $mem{playlist_id} = $mem{lines}{$line}{playlist_id};
-  
-  my $q = sql_playlist2playlist( $zone, $mem{playlist_id} ); 
-  my $ret = db_query($dbh, $q);
+	my $line = $data->{line_number};
+	return 0 unless exists $mem{lines}{$line}{playlist_id};
 
-  # it would be better to put it in status command, when we start playing.
-  # however for that we have to share memory..
-  #&show_playlist($mem{playlist});
-  # ........... so i did.
-  # and we must do it before playing, so we will se playlist on screen ;)
-  &zone_mem_set($dbh, $zone, 'playlist', $mem{playlist_id});
+	$self->empty_queue;
+	$mem{playlist_id} = $mem{lines}{$line}{playlist_id};
+	
+	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
+	my $ret = $mc->query($sql);
 
-  my $command = zone::now_playing::play();
-  send2player($handle, $command);
-  
-  return 0;
+	my $command = $self->{now_playing}->play;
+	send2player($command);
+
+	return 0;
 }
 
 sub menu_select {
@@ -693,8 +706,8 @@ sub prepare_memory {
 }
 
 sub process {
-  my ($data) = @_;
-  
+	my ($self, $data) = @_;
+
 ###################################################################################
   # we are computers so we start at 0 instead at 1 like humans.
   # FIX IN CRESTRON INSTEAD
@@ -704,7 +717,7 @@ sub process {
   if ($commands{lc $data->{cmd}}) {  # Call function 
       if ($commands{lc $data->{cmd}}->($data)) {
          my %data_out = &get_response();
-         $data_out{zone} = $zone;
+         $data_out{zone} = $self->{zone};
          print &hash2cmd(%data_out);  # print response
       }      
   } else { print STDERR "Unknown library command: $data->{cmd}\n" }

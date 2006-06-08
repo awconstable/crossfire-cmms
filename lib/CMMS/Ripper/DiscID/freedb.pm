@@ -1,4 +1,4 @@
-package CMMS::Ripper::DiscID::freedb;
+package CMMS::Ripper::DiscID::FreeDB;
 
 use strict;
 use warnings;
@@ -8,7 +8,7 @@ use CMMS::Ripper::DiscID::CorewareFreeDB;
 sub new {
 	my $class = shift;
 	my $self = bless $class->SUPER::new(@_), $class;
-	$self->{FreeDB} = new CMMS::Ripper::DiscID::CorewareFreeDB(TIMEOUT => 20);
+	$self->{FreeDB} = new CMMS::Ripper::DiscID::CorewareFreeDB;
 
 	return $self;
 }
@@ -18,11 +18,7 @@ sub metadata {
 
 	my $mc = $self->mysqlConnection;
 
-	print STDERR "DiscID: $self->{discid}\n";
-
-	my $metadata = {};
-	($metadata) = $self->{FreeDB}->query($self->{discid}) if $self->{FreeDB};
-	$metadata = {} unless $metadata;
+	my($metadata) = $self->{FreeDB}->query($self->discid);
 	my $albumdata = {};
 
 	if($metadata->{ALBUM}) {

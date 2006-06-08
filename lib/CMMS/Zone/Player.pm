@@ -1,14 +1,10 @@
 package CMMS::Zone::Player;
 
 use strict;
-use Exporter;
+use CMMS::Database::zone_mem;
 
-use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $VERSION);
+use vars qw($VERSION);
 $VERSION = 0.01;
-@ISA = qw(Exporter);
-@EXPORT = qw(&trackid2filename &send2player &current_track &playtrack 
-&get_next_track &get_prev_track &track_mark_played &get_current_track 
-&track_unmark_played &filename2trackid &get_fulltrack_info);
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -33,6 +29,8 @@ sub new {
 	$self->{conf} = $params{conf};
 	$self->{handle} = $params{handle};
 	$self->{zone} = $params{zone};
+
+	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -66,92 +64,14 @@ sub DESTROY {
 #
 
 sub playtrack {
-  my ($dbh, $track_id) = @_;
+	my ($self, $track_id) = @_;
 
-  my $filename = trackid2filename($dbh, $track_id);
-  return 0 unless $filename;
+	my $filename = $self->trackid2filename($track_id);
+	return 0 unless $filename;
 
-  my ($host, $port, $location, $path) = &config_zone;
+	my $path = $self->{zone}->{datapath};
 
-  return "play ".$path.$filename;
-}
-
-sub get_next_track_in_order {
-  my ($dbh, $zone) = @_;
-  print STDERR "getting next track in order\n"; # level 1
-  my $q = qq{
-      SELECT track_id, track_order
-      FROM playlist_current 
-      WHERE zone = %d AND track_played IS NULL
-      ORDER BY track_order
-      LIMIT 1;
-  };
-  $q = sprintf($q, $zone);
-  my $sth = db_select($dbh, $q);
-  if (my @row = $sth->fetchrow_array) {
-      print STDERR "next track is ($row[0]:$row[1])\n"; # level 2
-      return ($row[0], $row[1]);
-  } else {
-    return (undef, undef);
-  }
-}
-
-sub get_next_track_randomly {
-  my ($dbh, $zone) = @_;
-  print STDERR "getting next track randomly\n"; # level 1
-  
-  # list all unplayed track, and make select somewhere in it
-  # this generates next random track
-  
-  my $total_tracks  = get_playlist_num_tracks($dbh, $zone);
-  my $played_tracks = get_playlist_num_played($dbh, $zone);
-  my $random = rand ($total_tracks-$played_tracks);
-  
-  my $q = qq{
-      SELECT track_id, track_order
-      FROM playlist_current 
-      WHERE zone = %d AND track_played IS NULL
-      ORDER BY track_order
-      LIMIT 1 OFFSET %d;
-  };
-  $q = sprintf($q, $zone, $random);
-  my $sth = db_select($dbh, $q);
-  if (my @row = $sth->fetchrow_array) {
-      print STDERR "next track is ($row[0]:$row[1])\n"; # level 2
-      return ($row[0], $row[1]);
-  } else {
-    return (undef, undef);
-  }
-}
-
-sub get_next_track {
-  my ($dbh, $zone) = @_;
-  my ($tr, $to, $random);
-  $random = &zone_mem_get($dbh, $zone, 'random');
-  if ($random) {
-    ($tr, $to) = get_next_track_randomly($dbh, $zone);
-  } else {
-    ($tr, $to) = get_next_track_in_order($dbh, $zone);
-  }    
-  
-  if (defined $tr && defined $to) {
-      return ($tr, $to);
-  } else {
-      # this is the last track, check repeat
-      if (&zone_mem_get($dbh, $zone, 'repeat')) {
-          # clear playlist and start again
-          &unmark_all_tracks($dbh, $zone);
-          # get next track again. (it might be recursion, however
-          # this avoids infinite loops
-          if ($random) {
-            return get_next_track_randomly($dbh, $zone);
-          } else {
-            return get_next_track_in_order($dbh, $zone);
-          }    
-      }
-  }      
-  print STDERR "LAST TRACK\n"; # LEVEL 1
-  return (undef, undef);      
+	return 'play '.$path.$filename;
 }
 
 sub get_prev_track {
@@ -174,36 +94,36 @@ sub get_prev_track {
 }
 
 sub track_mark_played {
-  my ($dbh, $zone, $track_id, $track_order) = @_;
-  my $mark = "playlist_current_played($zone)";
-  return &set_track_mark($dbh, $zone, $track_id, $track_order, $mark);
+	my ($self, $track_id, $track_order) = @_;
+	my $mark = 'playlist_current_played($self->{zone})';
+	return $self->set_track_mark($track_id, $track_order, $mark);
 }
 
 sub track_unmark_played {
-  my ($dbh, $zone, $track_id, $track_order) = @_;
-  return &set_track_mark($dbh, $zone, $track_id, $track_order, "NULL");
+	my ($self, $track_id, $track_order) = @_;
+	return $self->set_track_mark($track_id, $track_order, 'NULL');
 }
 
 sub set_track_mark {
-  my ($dbh, $zone, $track_id, $track_order, $mark) = @_;
-  return 0 unless defined $track_id;
-  return 0 unless defined $track_order;
-  
-  print STDERR "marking track ($track_id:$track_order) as ".
-                ($mark eq "NULL" ? "unplayed" : "played")."\n"; # LEVEL 1
-  
-# my ($current_track_id, $track_order) = &current_track($dbh, $zone);
-  my $q = qq{ 
-        UPDATE playlist_current 
-        SET track_played = %s
-        WHERE zone = %d
-          AND track_id = %d
-          AND track_order = %d
-  };
-   
-  $q = sprintf($q, $mark, $zone, $track_id, $track_order);
-  my $ret = db_query($dbh, $q);
-  return $ret;
+	my ($self, $track_id, $track_order, $mark) = @_;
+	return 0 unless defined $track_id;
+	return 0 unless defined $track_order;
+
+	my $mc = $self->mysqlConnection;
+
+	print STDERR "marking track ($track_id:$track_order) as ".($mark eq "NULL" ? "unplayed" : "played")."\n"; # LEVEL 1
+
+	my $sql = qq{
+		UPDATE playlist_current 
+		SET track_played = %s 
+		WHERE zone = %d 
+		AND track_id = %d 
+		AND track_order = %d
+	};
+
+	$sql = sprintf($sql, $mark, $self->{zone}, $track_id, $track_order);
+
+	return db_query($sql);
 }
 
 sub unmark_all_tracks {
@@ -217,120 +137,231 @@ sub unmark_all_tracks {
   return $ret;
 }
 
-#sub unmark_played {
-#  my ($dbh, $zone) = @_;
-#  my ($track_id, $track_order) = &current_track($dbh, $zone);
-#  my $q = qq{ 
-#        UPDATE playlist_current 
-#        SET track_played = NULL
-#        WHERE zone = %d
-#          AND track_played = (playlist_current_played(%d)-1) 
-#  };
-#
-#  $q = sprintf($q, $zone, $zone, $track_id, $track_order);
-#
-#  my $ret = db_query($dbh, $q);
-#  return $ret;
-#}
-
-#
-# OLD.. 
-#
-#sub mark_played {
-#  my ($dbh, $zone) = @_;
-#  my ($track_id, $track_order) = &current_track($dbh, $zone);
-#  my $q = qq{ 
-#        UPDATE playlist_current 
-#        SET track_played = playlist_current_played(%d) 
-#        WHERE zone = %d
-#          AND track_id = %d
-#          AND track_order = %d
-#  };
-# 
-#  $q = sprintf($q, $zone, $zone, $track_id, $track_order);
-#  my $ret = db_query($dbh, $q);
-#  return $ret;
-#}
-
-
 #
 # support functions (queries, ...)
 #
 
 sub trackid2filename {
-  my ($dbh, $trackid) = @_; 
-  my $q = qq{
-    SELECT file_location, file_name  
-    FROM track 
-    WHERE id = %d
-  };
-  $q = sprintf($q, $trackid);
+	my ($self, $trackid) = @_;
 
-  my $sth = db_select($dbh, $q);
-  my @row;
-  if (@row = $sth->fetchrow_array ) {
-      return $row[0].$row[1];
-  } else {
-      undef;
-  }
+	my $mc = $self->mysqlConnection;
+
+	my $sql = qq{
+		SELECT file_location, file_name 
+		FROM track_data 
+		WHERE track_id = %d
+	};
+
+	$sql = sprintf($sql, $trackid);
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	return $row->{file_location}.$row->{file_name} if $row;
+
+	return undef;
 }
 
 sub filename2trackid {
-  my ($dbh, $dir, $file) = @_;
-  my $q = qq{ 
-      SELECT id FROM track 
-      WHERE file_location = '%s' AND
-            file_name = '%s'
-      };
-  $q = sprintf($q, $dir, $file);
+	my ($self, $dir, $file) = @_;
 
-  my $sth = db_select($dbh, $q);
-  my @row;
-  if (@row = $sth->fetchrow_array ) {
-      return $row[0];
-  } else {
-      undef;
-  }
+	my $mc = $self->mysqlConnection;
+
+	my $sql = qq{
+		SELECT track_id FROM track_data 
+		WHERE file_location = '%s' AND 
+		file_name = '%s'
+	};
+
+	$sql = sprintf($sql, $dir, $file);
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	return $row->{track_id} if $row;
+
+	return undef;
 }
 
 sub current_track {
-  my ($dbh, $zone) = @_;
+	my $self = shift;
 
-  my $q = sprintf("
-    SELECT Count(*) 
-    FROM playlist_current 
-    WHERE zone = %d AND 
-          track_played IS NOT NULL", 
-    $zone);
-  my $sth = db_select($dbh, $q);
-  return undef unless (my @row = $sth->fetchrow_array);
+	my $mc = $self->mysqlConnection;
 
-  if ($row[0] > 0) {
-    # we are somewhere in the playlist, so we can get current track
-    return get_current_track($dbh, $zone);
-  } else {
-    # we haven't played anything yet, so we need get the first track
-    # first track can be first track from current playlist, or any track for random play.
-    # therefore we call next track function that implements this logic.
-    return get_next_track($dbh, $zone);
-  }
+	my $sql = qq{
+		SELECT Count(*) 
+		FROM playlist_current 
+		WHERE zone = %d AND 
+		track_played IS NOT NULL;
+	};
+
+	$sql = sprintf($sql, $self->{zone});
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	if ($row->{'Count(*)'} > 0) {
+	    	# we are somewhere in the playlist, so we can get current track
+	    	return $self->get_current_track;
+	} else {
+	    	# we haven't played anything yet, so we need get the first track
+	    	# first track can be first track from current playlist, or any track for random play.
+	    	# therefore we call next track function that implements this logic.
+	    	return $self->get_next_track;
+	}
 }
 
 sub get_current_track {
-  my ($dbh, $zone) = @_;
-  my $q = qq{
-      SELECT track_id, track_order
-      FROM playlist_current 
-      WHERE zone = %d AND track_played IS NOT NULL
-      ORDER BY track_order DESC
-      LIMIT 1;
-  };
-  $q = sprintf($q, $zone);
-  my $sth = db_select($dbh, $q);
-  if (my @row = $sth->fetchrow_array) {
-      return ($row[0], $row[1]);
-  }
-  return (undef, undef);      
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	my $sql = qq{
+		SELECT track_id, track_order 
+		FROM playlist_current 
+		WHERE zone = %d AND track_played IS NOT NULL 
+		ORDER BY track_order DESC 
+		LIMIT 1;
+	};
+
+	$sql = sprintf($sql, $self->{zone});
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	return ($row->{track_id}, $row->{track_order}) if $row;
+
+	return (undef, undef);      
+}
+
+sub get_next_track {
+	my $self = shift;
+
+	my ($tr, $to, $random);
+	$random = $self->{zone_obj}->get('random');
+	if($random) {
+		($tr, $to) = $self->get_next_track_randomly;
+	} else {
+		($tr, $to) = $self->get_next_track_in_order;
+	}
+
+	if(defined $tr && defined $to) {
+		return ($tr, $to);
+	} else {
+		# this is the last track, check repeat
+		if($self->{zone_obj}->get('repeat')) {
+			# clear playlist and start again
+			$self->unmark_all_tracks;
+			# get next track again. (it might be recursion, however
+			# this avoids infinite loops
+			if($random) {
+				return $self->get_next_track_randomly;
+			} else {
+				return $self->get_next_track_in_order;
+			}
+		}
+	}
+
+	print STDERR "LAST TRACK\n"; # LEVEL 1
+	return (undef, undef);      
+}
+
+sub get_next_track_in_order {
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	print STDERR "getting next track in order\n"; # level 1
+
+	my $sql = qq{
+		SELECT track_id, track_order 
+		FROM playlist_current 
+		WHERE zone = %d AND track_played IS NULL 
+		ORDER BY track_order 
+		LIMIT 1;
+	};
+
+	$sql = sprintf($sql, $self->{zone});
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	if($row) {
+		print STDERR "next track is ($row->{track_id}:$row->{track_order})\n"; # level 2
+		return ($row->{track_id}, $row->{track_order});
+	} else {
+		return (undef, undef);
+	}
+}
+
+sub get_next_track_randomly {
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	print STDERR "getting next track randomly\n"; # level 1
+
+	# list all unplayed track, and make select somewhere in it
+	# this generates next random track
+
+	my $total_tracks  = $self->get_playlist_num_tracks;
+	my $played_tracks = $self->get_playlist_num_played;
+	my $random = rand($total_tracks-$played_tracks);
+
+	my $sql = qq{
+		SELECT track_id, track_order 
+		FROM playlist_current 
+		WHERE zone = %d AND track_played IS NULL 
+		ORDER BY track_order 
+		LIMIT 1 OFFSET %d;
+	};
+
+	$sql = sprintf($sql, $self->{zone}, $random);
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	if($row) {
+		print STDERR "next track is ($row->{track_id}:$row->{track_order})\n"; # level 2
+		return ($row->{track_id}, $row->{track_order});
+	} else {
+		return (undef, undef);
+	}
+}
+
+sub get_playlist_num_played {
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	my $sql = qq{
+		SELECT Count(*) 
+		FROM playlist_current 
+		WHERE zone = %d AND 
+		track_played IS NOT NULL
+	};
+
+	$sql = sprintf($sql, $self->{zone});
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	return $row->{'Count(*)'} if $row;
+
+	return undef;
+}
+
+sub get_playlist_num_tracks {
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	my $sql = qq{
+		SELECT Count(*) 
+		FROM playlist_current 
+		WHERE zone = %d
+	};
+
+	$sql = sprintf($sql, $self->{zone});
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	return $row->{'Count(*)'} if $row;
+
+	return undef;
 }
 
 sub get_fulltrack_info { 
@@ -402,37 +433,5 @@ sub get_playlist_name {
     return "unknown...";
   }
 }
-
-sub get_playlist_num_played {
-  my ($dbh, $zone) = @_;
-  my $q = sprintf("
-    SELECT Count(*) 
-    FROM playlist_current 
-    WHERE zone = %d AND 
-          track_played IS NOT NULL", 
-    $zone);
-  my $sth = db_select($dbh, $q);
-  if (my @row = $sth->fetchrow_array) {
-    return $row[0];
-  } else {
-    return undef;
-  }
-}
-
-sub get_playlist_num_tracks {
-  my ($dbh, $zone) = @_;
-  my $q = sprintf("
-    SELECT Count(*) 
-    FROM playlist_current 
-    WHERE zone = %d", 
-    $zone);
-  my $sth = db_select($dbh, $q);
-  if (my @row = $sth->fetchrow_array) {
-    return $row[0];
-  } else {
-    return undef;
-  }
-}
-
 
 1;
