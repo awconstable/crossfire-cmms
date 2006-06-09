@@ -30,13 +30,13 @@ $mc and $mc->connect || die("Can't connect to database '".$mc->database."' on '"
 my $parentpid = $$;
 my ($kidpid, $handle, $line);
 
-print STDERR "[$$] Connecting to irmp3d $host:$port \n";
+print STDERR "[$$] Connecting to irmp3d $zone->{host}:$zone->{port} \n";
 
 # create a tcp connection to the specified host and port
 $handle = IO::Socket::INET->new(Proto     => "tcp",
                                 PeerAddr  => $zone->{host},
                                 PeerPort  => $zone->{port})
-     or die "can't connect to port $port on $host: $!";
+     or die "can't connect to port $zone->{port} on $zone->{host}: $!";
      
 print STDERR "[$$] Connected to irmp3d.\n";
 

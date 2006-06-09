@@ -4,6 +4,7 @@ use strict;
 use CMMS::Zone::NowPlaying;
 use CMMS::Zone::Library;
 use CMMS::Zone::Player;
+use CMMS::Zone::Command;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -29,8 +30,8 @@ sub new {
 	$self->{handle} = $params{handle};
 	$self->{zone} = $params{zone};
 
-	$self->{lib} = new CMMS::Zone::Library(handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
-	$self->{now} = new CMMS::Zone::NowPlaying(handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
+	$self->{library} = new CMMS::Zone::Library(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
+	$self->{now_playing} = new CMMS::Zone::NowPlaying(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -73,7 +74,7 @@ sub loop {
 		next unless %cmd;  # empty hash - there won't be command either
 		next unless &check_cmd(\%cmd, $self->{zone}); # do further checking (eg. zone)
 		my $cmd = $self->process(\%cmd);
-		send2player($cmd) if $cmd;
+		send2player($self->{handle}, $cmd) if $cmd;
 	}
 }
 
@@ -81,7 +82,8 @@ sub process {
 	my($self,$c) = @_;
 
 	if ($self->{lc $c->{screen}}) {  # Call function
-		return $self->{lc $c->{screen}}->($c);
+		my $screen = lc $c->{screen};
+		return eval "\$self->{$screen}->process(\$c)";
 	} else {
 		print STDERR "Unknown screen: $c->{screen}\n"
 	}

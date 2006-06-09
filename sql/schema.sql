@@ -85,9 +85,9 @@ CREATE TABLE playlist_current (
 
 CREATE TABLE zone_mem (
   zone INT(11) NOT NULL,
-  key varchar(32) NOT NULL,
+  `key` varchar(32) NOT NULL,
   value varchar(64),
-  UNIQUE zone_key (zone,key)
+  UNIQUE zone_key (zone,`key`)
 );
 
 INSERT INTO genre VALUES (123, 'A Cappella');

@@ -2,6 +2,7 @@ package CMMS::Zone::NowPlaying;
 
 use strict;
 use CMMS::Zone::Player;
+use CMMS::Zone::Command;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -10,17 +11,17 @@ our $permitted = {
 };
 our($AUTOLOAD);
 
-my %commands = (
-    play    => \&play,
-    stop    => \&stop,
-    pause   => \&pause,
-    rev     => \&rev,
-    fwd     => \&fwd,
-    previous=> \&prev,
-    next    => \&next,
-    repeat  => \&repeat,
-    random  => \&random
-);
+our $commands = {
+    play    => 'play',
+    stop    => 'stop',
+    pause   => 'pause',
+    rev     => 'rev',
+    fwd     => 'fwd',
+    previous=> 'prev',
+    next    => 'next',
+    repeat  => 'repeat',
+    random  => 'random'
+};
 
 #############################################################
 # Constructor
@@ -39,7 +40,7 @@ sub new {
 	$self->{handle} = $params{handle};
 	$self->{zone} = $params{zone};
 
-	$self->{player} = new CMMS::Zone::Player(handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
+	$self->{player} = new CMMS::Zone::Player(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
 	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
 
 	bless $self, $class;
@@ -191,11 +192,16 @@ sub repeat {
 }
 
 sub process {
-  my ($c) = @_;
-  if ($commands{lc $c->{cmd}}) {  # Call function 
-      return $commands{lc $c->{cmd}}->() 
-  } else { print STDERR "Unknown command: $c->{cmd}\n" }
-  return 0;  
+	my ($self, $c) = @_;
+	
+	if($commands{lc $c->{cmd}}) {  # Call function
+		my $method = $commands->{lc $c->{cmd}};
+		return eval "$commands->{\$self->$method";
+	} else {
+		print STDERR "Unknown command: $c->{cmd}\n"
+	}
+
+	return 0;  
 }
 
 1;

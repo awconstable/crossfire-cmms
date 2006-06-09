@@ -4,6 +4,7 @@ use strict;
 use Storable qw(freeze thaw);
 use CMMS::Zone::Player;
 use CMMS::Zone::NowPlaying;
+use CMMS::Zone::Command;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -39,23 +40,23 @@ my %mem = ( # current variables
 #
 
 my %commands = (
-    list        => \&list,
-    page_prev   => \&page_prev,
-    page_next   => \&page_next,
-    menu_select => \&menu_select,
-    back	=> \&back,
-    selectall   => \&selectall,
-    queueall	=> \&queueall,
-    playall	=> \&playall,
-    search_add	=> \&search_add,
-    search_back => \&search_back,
-    search_clear=> \&search_clear,
+    list        => 'list',
+    page_prev   => 'page_prev',
+    page_next   => 'page_next',
+    menu_select => 'menu_select',
+    back	=> 'back',
+    selectall   => 'selectall',
+    queueall	=> 'queueall',
+    playall	=> 'playall',
+    search_add	=> 'search_add',
+    search_back => 'search_back',
+    search_clear=> 'search_clear',
 );
 
 my %menu_commands = (
-    change      => \&menu_change,
-    play        => \&menu_play,
-    playplaylist=> \&menu_playplaylist,
+    change      => 'menu_change',
+    play        => 'menu_play',
+    playplaylist=> 'menu_playplaylist',
 );
 
 #############################################################
@@ -76,8 +77,8 @@ sub new {
 	$self->{zone} = $params{zone};
 
 	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
-	$self->{now_play} = new CMMS::Zone::NowPlaying(handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
-	$self->{player} = new CMMS::Zone::Player(handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
+	$self->{now_play} = new CMMS::Zone::NowPlaying(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
+	$self->{player} = new CMMS::Zone::Player(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -165,25 +166,27 @@ sub history_update {
 #
 
 sub get_lines {
-  my @namelist;
-  my $i;
-  for ($i = 0; $i<$limit; $i++) {
-    if ( exists $mem{lines}{$i}{text} ) {
-      $namelist[$i] = $mem{lines}{$i}{text};
-    } else {
-      $namelist[$i] = EMPTY_ROW; # "--"
-    }
-  }
- return join SEP_LINES, @namelist;
+	my @namelist;
+	my $i;
+	for($i = 0; $i<$limit; $i++) {
+		if( exists $mem{lines}{$i}{text} ) {
+			$namelist[$i] = $mem{lines}{$i}{text};
+		} else {
+			$namelist[$i] = EMPTY_ROW; # "--"
+		}
+	}
+
+	return join SEP_LINES, @namelist;
 }
 
 sub get_response {
-  my %cmd = (
-     cmd  => "library",
-     category => $mem{category},
-     lines => &get_lines
-  );
-  return %cmd;
+	my $self = shift;
+
+	return (
+		cmd  => 'library',
+		category => $mem{category},
+		lines => $self->get_lines
+	);
 }
 
 sub make_select {
@@ -714,15 +717,18 @@ sub process {
   $data->{line_number}--  if $data->{line_number};
 ###################################################################################  
 
-  if ($commands{lc $data->{cmd}}) {  # Call function 
-      if ($commands{lc $data->{cmd}}->($data)) {
-         my %data_out = &get_response();
-         $data_out{zone} = $self->{zone};
-         print &hash2cmd(%data_out);  # print response
-      }      
-  } else { print STDERR "Unknown library command: $data->{cmd}\n" }
+	if($commands{lc $data->{cmd}}) {  # Call function
+		my $method = $commands{lc $data->{cmd}};
+		if(eval "\$self->$method->(\$data)) {
+			my %data_out = $self->get_response;
+			$data_out{zone} = $self->{zone}->{number};
+			print &hash2cmd(%data_out);  # print response
+		}
+	} else {
+		print STDERR "Unknown library command: $data->{cmd}\n"
+	}
 
-  return ();
+	return ();
 }
            
 1;

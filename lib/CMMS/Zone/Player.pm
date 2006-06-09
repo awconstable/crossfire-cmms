@@ -75,27 +75,32 @@ sub playtrack {
 }
 
 sub get_prev_track {
-  print STDERR "prev track request\n"; # LEVEL 1
-  my ($dbh, $zone) = @_;
-  my $q = qq{
-      SELECT track_id, track_order
-      FROM playlist_current 
-      WHERE zone = %d AND track_played IS NOT NULL
-      ORDER BY track_order DESC
-      LIMIT 1;
-  };
-  $q = sprintf($q, $zone);
-  my $sth = db_select($dbh, $q);
-  if (my @row = $sth->fetchrow_array) {
-      print STDERR "prev track is ($row[0]:$row[1])\n"; # LEVEL 2
-      return ($row[0], $row[1]);
-  }
-  return (undef, undef);      
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	print STDERR "prev track request\n"; # LEVEL 1
+
+	my $sql = qq{
+		SELECT track_id, track_order 
+		FROM playlist_current 
+		WHERE zone = %d AND track_played IS NOT NULL 
+		ORDER BY track_order DESC 
+		LIMIT 1;
+	};
+	$sql = sprintf($sql, $self->{zone}->{number});
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+	if($row) {
+		print STDERR "prev track is ($row->{track_id}:$row->{track_order})\n"; # LEVEL 2
+		return ($row->{track_id}, $row->{track_order});
+	}
+	return (undef, undef);      
 }
 
 sub track_mark_played {
 	my ($self, $track_id, $track_order) = @_;
-	my $mark = 'playlist_current_played($self->{zone})';
+	my $mark = "playlist_current_played($self->{zone}->{number})";
 	return $self->set_track_mark($track_id, $track_order, $mark);
 }
 
@@ -121,20 +126,20 @@ sub set_track_mark {
 		AND track_order = %d
 	};
 
-	$sql = sprintf($sql, $mark, $self->{zone}, $track_id, $track_order);
+	$sql = sprintf($sql, $mark, $self->{zone}->{number}, $track_id, $track_order);
 
 	return db_query($sql);
 }
 
 sub unmark_all_tracks {
-  print STDERR "unmarking all tracks\n"; # LEVEL 1
-  my ($dbh, $zone) = @_;
-  my $q = sprintf("
-        UPDATE playlist_current 
-        SET track_played = NULL 
-        WHERE zone = %d", $zone); 
-  my $ret = db_query($dbh, $q);
-  return $ret;
+	my $self = shift;
+
+	my $mc = $self->mysqlConnection;
+
+	print STDERR "unmarking all tracks\n"; # LEVEL 1
+
+	my $slq = sprintf('UPDATE playlist_current SET track_played = NULL WHERE zone = %d', $self->{zone}->{number});
+	return = $mc->query($sql);
 }
 
 #
@@ -193,7 +198,7 @@ sub current_track {
 		track_played IS NOT NULL;
 	};
 
-	$sql = sprintf($sql, $self->{zone});
+	$sql = sprintf($sql, $self->{zone}->{number});
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
@@ -221,7 +226,7 @@ sub get_current_track {
 		LIMIT 1;
 	};
 
-	$sql = sprintf($sql, $self->{zone});
+	$sql = sprintf($sql, $self->{zone}->{number});
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
@@ -277,7 +282,7 @@ sub get_next_track_in_order {
 		LIMIT 1;
 	};
 
-	$sql = sprintf($sql, $self->{zone});
+	$sql = sprintf($sql, $self->{zone}->{number});
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
@@ -311,7 +316,7 @@ sub get_next_track_randomly {
 		LIMIT 1 OFFSET %d;
 	};
 
-	$sql = sprintf($sql, $self->{zone}, $random);
+	$sql = sprintf($sql, $self->{zone}->{number}, $random);
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
@@ -335,7 +340,7 @@ sub get_playlist_num_played {
 		track_played IS NOT NULL
 	};
 
-	$sql = sprintf($sql, $self->{zone});
+	$sql = sprintf($sql, $self->{zone}->{number});
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
@@ -355,7 +360,7 @@ sub get_playlist_num_tracks {
 		WHERE zone = %d
 	};
 
-	$sql = sprintf($sql, $self->{zone});
+	$sql = sprintf($sql, $self->{zone}->{number});
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
@@ -365,73 +370,78 @@ sub get_playlist_num_tracks {
 }
 
 sub get_fulltrack_info { 
-  my ($dbh, $zone, $track_id) = @_;
-  my $q = qq{
-      SELECT t.track_num as track_num, t.title AS track, 
-             artist.name as artist,
-             album.name as album,
-             genre.name as genre,
-             t.length_seconds as length 
-      FROM track t, album, artist, genre
-      WHERE t.id = '%d' 
-            AND t.artist_id = artist.id
-            AND t.album_id = album.id
-            AND t.genre_id = genre.id
-  };
-  $q = sprintf($q, $track_id);
-#  print $q;
-  my $sth = db_select($dbh, $q);
+	my ($self, $track_id) = @_;
 
-#  my $playlist = "";
-#  my ($tid, $torder) = get_current_track($dbh, $zone);
-#  if (defined $torder) { $playlist .= ++$torder . ". "; }
-  my $playlist = &get_playlist_num_played($dbh, $zone)."/".&get_playlist_num_tracks($dbh, $zone);
-  my $playlist_id = &zone_mem_get($dbh, $zone, 'playlist');
-  if (defined $playlist_id) {
-      $playlist .= " - ". get_playlist_name($dbh, $playlist_id);  
-  } else {
-      $playlist .= "__ made-to-order __";
-  }
-      
-  if (my @row = $sth->fetchrow_array) {
-      my %hash = (
-          cmd    => "transport",
-          zone   => $zone,
-          track  => $row[0]. '. ' . $row[1],
-          artist => $row[2],
-          album  => $row[3],
-          genre  => $row[4],
-          playlist => $playlist
-      );
+	my $mc = $self->mysqlConnection;
 
-      my ($timeenabled, $timeformat) = &config_zone_time;
-      if ($timeenabled) {
-          my $time = $row[5];
-          $hash{feedback} = sprintf($timeformat,
-                0,0, ($time / 60), ($time % 60), ($time / 60), ($time % 60));
-      } else {
-          $hash{feedback} = "";
-      }
-      
-      my $play_state = &zone_mem_get($dbh, $zone, 'state');      
-      if (defined $play_state) {
-          $hash{state} = $play_state;
-      }
+	my $sql = qq{
+		SELECT t.track_num as track_num, t.title AS track, 
+		artist.name as artist, 
+		album.name as album, 
+		genre.name as genre, 
+		t.length_seconds as length 
+		FROM track t, album, artist, genre 
+		WHERE t.id = '%d' 
+		AND t.artist_id = artist.id 
+		AND t.album_id = album.id 
+		AND t.genre_id = genre.id
+	};
+	$sql = sprintf($sql, $track_id);
+	$row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
 
-      return %hash;
-  }
-  return undef;
+	my $playlist = $self->get_playlist_num_played."/".$self->get_playlist_num_tracks;
+	my $playlist_id = $self->{zone_obj}->get('playlist');
+	if(defined $playlist_id) {
+		$playlist .= " - ". $self->get_playlist_name($playlist_id); 
+	} else {
+		$playlist .= "__ made-to-order __";
+	}
+
+	if($row) {
+		my %hash = (
+			cmd    => 'transport',
+			zone   => $self->{zone}->{number},
+			track  => $row->{track_num}. '. ' . $row->{track},
+			artist => $row->{artist},
+			album  => $row->{album},
+			genre  => $row->{genre},
+			playlist => $playlist,
+			feedback => ''
+		);
+
+		my $timeenabled = $self->{zone}->{time};
+		my $timeformat = $self->{zone}->{timeformat};
+		if($timeenabled) {
+			my $time = $row->{length};
+			$hash{feedback} = sprintf($timeformat,
+			0,0, ($time / 60), ($time % 60), ($time / 60), ($time % 60));
+		}
+
+		my $play_state = $self->{zone_obj}->get('state');
+		if(defined $play_state) {
+			$hash{state} = $play_state;
+		}
+
+		return %hash;
+	}
+
+	return undef;
 }
 
 sub get_playlist_name {
-  my ($dbh, $playlist_id) = @_;
-  my $q = sprintf("SELECT name FROM playlist WHERE id=%d", $playlist_id);
-  my $sth = db_select($dbh, $q);
-  if (my @row = $sth->fetchrow_array) {
-    return $row[0];
-  } else {
-    return "unknown...";
-  }
+	my ($self, $playlist_id) = @_;
+
+	my $mc = $self->mysqlConnection;
+
+	my $sql = sprintf('SELECT name FROM playlist WHERE id=%d', $playlist_id);
+
+	my $row = $mc->query_and_get($sql)||[];
+	$row = $row->[0];
+
+	return $row->{name} if $row;
+
+	return 'unknown...';
 }
 
 1;
