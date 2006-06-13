@@ -5,6 +5,7 @@ use Storable qw(freeze thaw);
 use CMMS::Zone::Player;
 use CMMS::Zone::NowPlaying;
 use CMMS::Zone::Command;
+use Data::Dumper;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -39,7 +40,7 @@ my %mem = ( # current variables
 # command references
 #
 
-my %commands = (
+our $commands = {
     list        => 'list',
     page_prev   => 'page_prev',
     page_next   => 'page_next',
@@ -51,13 +52,13 @@ my %commands = (
     search_add	=> 'search_add',
     search_back => 'search_back',
     search_clear=> 'search_clear',
-);
+};
 
-my %menu_commands = (
+our $menu_commands = {
     change      => 'menu_change',
     play        => 'menu_play',
     playplaylist=> 'menu_playplaylist',
-);
+};
 
 #############################################################
 # Constructor
@@ -76,7 +77,6 @@ sub new {
 	$self->{handle} = $params{handle};
 	$self->{zone} = $params{zone};
 
-	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
 	$self->{now_play} = new CMMS::Zone::NowPlaying(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
 	$self->{player} = new CMMS::Zone::Player(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
 
@@ -197,13 +197,13 @@ sub make_select {
 	$query =~ s/\?/%d/g;
 	$query = sprintf($query, $limit, $mem{offset});
 
-	my $row = $self->query_and_get($query)||[];
+	my $rows = $self->query_and_get($query)||[];
 
 	$mem{lines} = ();
 	my $i = 0;
-	foreach( @{$row} ) {
-		$mem{lines}{$i}{id}   = $row->{id};
-		$mem{lines}{$i}{text} = $row->{text};
+	foreach( @{$rows} ) {
+		$mem{lines}{$i}{id}   = $_->{id};
+		$mem{lines}{$i}{text} = $_->{text};
 		$i++;
 	}
 
@@ -214,25 +214,25 @@ sub sql_prepare_where {
 	my $self = shift;
 
 	my @where;
-  my $i = 0;
-  push (@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id} );
-  push (@where, sprintf("artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
-  push (@where, sprintf("album_id=%d",  $mem{album_id} )) if ($mem{album_id} );
-  
-  # to make it SQL compliant LIKE comman can also be used, however 
-  # regualar expressions are more powerfull, so i'll use them instead.
-  if ($mem{search}) {
-    my $search_column = "name";
-       $search_column = "title" if ($mem{category} eq "tracks");
-    my $search_regexp = $mem{search};
-    push (@where, sprintf("%s ~* '^%s'", $search_column, $search_regexp));
-  }
-  
-  #    = $mem{lines}{$line}{genre}  if (exists $mem{lines}{$line}{genre});
-  if (@where) {
-    return "WHERE " . join(" AND ", @where);
-  }
-  return 0;
+	my $i = 0;
+	push (@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id} );
+	push (@where, sprintf("artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
+	push (@where, sprintf("album_id=%d",  $mem{album_id} )) if ($mem{album_id} );
+
+	# to make it SQL compliant LIKE comman can also be used, however
+	# regualar expressions are more powerfull, so i'll use them instead.
+	if($mem{search}) {
+		my $search_column = 'name';
+		$search_column = 'title' if ($mem{category} eq 'tracks');
+		my $search_regexp = $mem{search};
+		push (@where, sprintf("%s ~* '^%s'", $search_column, $search_regexp));
+	}
+
+	if(@where) {
+		return 'WHERE ' . join(' AND ', @where);
+	}
+
+	return 0;
 }
 
 #
@@ -240,8 +240,9 @@ sub sql_prepare_where {
 #
 
 sub sql_genre {
-  my ($where) = @_;
-  $where = "" unless $where;
+	my ($self, $where) = @_;
+	$where = '' unless $where;
+
   return qq{
 	SELECT g.id, g.name 
 	FROM genre g 
@@ -254,14 +255,16 @@ sub sql_genre {
 }
 
 sub select_genres {
-  my $q = &sql_genre(&sql_prepare_where());
-  my $rows = &make_select($q);
+	my $self = shift;
+
+  my $q = $self->sql_genre($self->sql_prepare_where);
+  my $rows = $self->make_select($q);
   if ($rows > 0) {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{genre_id} = $id;
-          $mem{lines}{$i}{cmd} = "change";
-          $mem{lines}{$i}{category} = "artists";
+          $mem{lines}{$i}{cmd} = 'change';
+          $mem{lines}{$i}{category} = 'artists';
       }
       return 1;
   } else {
@@ -274,7 +277,8 @@ sub sql_artist_plain {
 }
 
 sub sql_artist_where {
-  my ($where) = @_;
+	my ($self, $where) = @_;
+
   return qq{
          SELECT artist_id, a.name
          FROM track t
@@ -295,7 +299,8 @@ sub sql_album_plain {
 }
 
 sub sql_album_where {
-  my ($where) = @_;
+	my ($self, $where) = @_;
+
   return qq{
          SELECT album_id, a.name
          FROM track t
@@ -308,7 +313,8 @@ sub sql_album_where {
 }
 
 sub sql_track_where_by_id {
-  my ($where) = @_;                                  
+	my ($self, $where) = @_;
+
   return qq{
          SELECT id, track_num || '. ' || title
          FROM track 
@@ -319,7 +325,8 @@ sub sql_track_where_by_id {
 }   
                                                    
 sub sql_track_where {
-  my ($where) = @_;
+	my ($self, $where) = @_;
+
   return qq{
          SELECT id, title
          FROM track 
@@ -328,15 +335,18 @@ sub sql_track_where {
          LIMIT ? OFFSET ? 
   };
 }
+
 sub select_artists {
-  my $q = "";
-  if (my $tmp = &sql_prepare_where) {
-      $q = &sql_artist_where ($tmp);
+	my $self = shift;
+
+	my $q = '';
+  if (my $tmp = $self->sql_prepare_where) {
+      $q = $self->sql_artist_where($tmp);
   } else {
-      $q = &sql_artist_plain;
+      $q = $self->sql_artist_plain;
   }
-  
-  my $rows = &make_select($q);
+
+  my $rows = $self->make_select($q);
   if ($rows > 0) {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
@@ -351,14 +361,16 @@ sub select_artists {
 }
 
 sub select_albums {
-  my $q = "";
-  if (my $tmp = &sql_prepare_where) {
-      $q = &sql_album_where ($tmp);
+	my $self = shift;
+
+	my $q = '';
+  if (my $tmp = $self->sql_prepare_where) {
+      $q = $self->sql_album_where($tmp);
   } else {
-      $q = &sql_album_plain;
+      $q = $self->sql_album_plain;
   }
   
-  my $rows = &make_select($q);
+  my $rows = $self->make_select($q);
   if ($rows > 0) {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
@@ -373,18 +385,20 @@ sub select_albums {
 }
 
 sub select_tracks {
-  my $q = "";
-  if (my $tmp = &sql_prepare_where) {
+	my $self = shift;
+
+	my $q = '';
+  if (my $tmp = $self->sql_prepare_where) {
       if ($mem{album}) { 
-          $q = &sql_track_where_by_id($tmp);
+          $q = $self->sql_track_where_by_id($tmp);
       } else {
-          $q = &sql_track_where ($tmp);
+          $q = $self->sql_track_where ($tmp);
       }
   } else {
-      $q = &sql_track_where ("");
+      $q = $self->sql_track_where('');
   }
-  
-  my $rows = &make_select($q);
+
+  my $rows = $self->make_select($q);
   if ($rows > 0) {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
@@ -398,8 +412,9 @@ sub select_tracks {
 }
 
 sub sql_playlist {
-  my ($where) = @_;
-  $where = "" unless $where;
+	my ($self, $where) = @_;
+	$where = '' unless $where;
+
   return qq{
 	SELECT id, name 
 	FROM playlist 
@@ -410,9 +425,11 @@ sub sql_playlist {
 }
 
 sub select_playlists {
-  my $q = &sql_playlist(&sql_prepare_where());
+	my $self = shift;
+
+	my $q = $self->sql_playlist($self->sql_prepare_where);
   
-  my $rows = &make_select($q);
+  my $rows = $self->make_select($q);
   if ($rows > 0) {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
@@ -433,41 +450,41 @@ sub select_playlists {
 
 # new list request
 sub list {
-  my ($data) = @_;
-  &mem_reset();
-  $mem{category} = $data->{category};
-  &history_empty();
-  &history_add();
-  return &prepare_memory();
+	my ($self, $data) = @_;
+
+	$self->mem_reset;
+	$mem{category} = $data->{category};
+	$self->history_empty;
+	$self->history_add;
+
+	return $self->prepare_memory;
 }
 
 sub selectall {
-  my ($data) = @_;
+	my ($self, $data) = @_;
   
-  # check whetever we know where we are
-  return 0 unless $mem{category};
-  my $category = $mem{category};
+	# check whetever we know where we are
+	return 0 unless $mem{category};
+	my $category = $mem{category};
 
-  # &mem_reset(); # we just changing category with same constraints
-  my %conv_table = (
-    genres => "artists",
-               artists  => "albums",
-                            albums  => "tracks",
-    playlists => "tracks"
-  );  
-  
-  # find next category in conversion hash
-  if ($conv_table{lc $category}) { 
-     $mem{category} = $conv_table{lc $category};
-     #&history_empty();
-     &history_add();
-     return &prepare_memory();
-  } elsif ($category eq "tracks") { 
-     return &queueall; # or we can call playall as well
-  }
+	my %conv_table = (
+		genres => 'artists',
+		artists  => 'albums',
+		albums  => 'tracks',
+		playlists => 'tracks'
+	);  
 
-  # else return nothing..
-  return 0;
+	# find next category in conversion hash
+	if($conv_table{lc $category}) { 
+		$mem{category} = $conv_table{lc $category};
+		$self->history_add;
+		return $self->prepare_memory;
+	} elsif($category eq "tracks") { 
+		return $self->queueall; # or we can call playall as well
+	}
+
+	# else return nothing..
+	return 0;
 }
 
 sub empty_queue {
@@ -477,7 +494,7 @@ sub empty_queue {
 
 	my $sql = qq{
 		DELETE FROM playlist_current 
-		WHERE zone = $self->{zone};
+		WHERE zone = $self->{zone}->{number};
 	};
 
 	return $mc->query($sql);
@@ -488,41 +505,47 @@ sub empty_queue {
 #
 
 sub search_add {
-  my ($data) = @_;
-  #zone:1|screen:library|cmd:search_add|char:[a-z0-9\?\*]
-  $mem{search} .= $data->{char};
-  $mem{offset} = 0; # we are changing query completely, so go to the begining
-  &history_update();
-  return &prepare_memory();
+	my ($self, $data) = @_;
+
+	#zone:1|screen:library|cmd:search_add|char:[a-z0-9\?\*]
+	$mem{search} .= $data->{char};
+	$mem{offset} = 0; # we are changing query completely, so go to the begining
+	$self->history_update;
+	return $self->prepare_memory;
 }
 
 sub search_back {
-  return 0 unless defined $mem{search}; # there is no search string..
-  # trim
-  if ($mem{search} =~ /^(.+).$/) {
-     $mem{search} = $1;
-  } else {
-     # last occurance;
-     $mem{search} = undef;
-  }
-  $mem{offset} = 0; # and show the list from begining
-  &history_update();
-  return &prepare_memory();
+	my $self = shift;
+
+	return 0 unless defined $mem{search}; # there is no search string..
+	# trim
+	if($mem{search} =~ /^(.+).$/) {
+		$mem{search} = $1;
+	} else {
+		# last occurance;
+		$mem{search} = undef;
+	}
+	$mem{offset} = 0; # and show the list from begining
+	$self->history_update;
+
+	return $self->prepare_memory;
 }
 
 sub search_clear {
-  $mem{search} = undef;
-  $mem{offset} = 0; # and show the list from begining
-  &history_update();
-  return &prepare_memory();
+	my $self = shift;
+
+	$mem{search} = undef;
+	$mem{offset} = 0; # and show the list from begining
+	$self->history_update;
+	return $self->prepare_memory;
 }
 
 sub sql_track2playlist {
 	my ($self, $where) = @_;
 
 	return qq {
-		INSERT INTO playlist_current 
-		SELECT $self->{zone}, id from track 
+		REPLACE INTO playlist_current 
+		(zone,track_id) SELECT '$self->{zone}->{number}', id from track 
 		$where 
 		ORDER BY album_id, track_num;
 	};
@@ -532,8 +555,8 @@ sub sql_playlist2playlist {
 	my ($self, $playlist_id) = @_;
 
 	return qq {
-		INSERT INTO playlist_current 
-		SELECT $self->{zone}, track_id FROM playlist_track 
+		REPLACE INTO playlist_current 
+		(zone,track_id) SELECT '$self->{zone}->{number}', track_id FROM playlist_track 
 		WHERE playlist_id = $playlist_id 
 		ORDER BY track_order
 	};
@@ -554,7 +577,7 @@ sub queueall {
 	my $ret = $mc->query($sql);
 
 	# we are playing current playlist
-	$self->{zone_obj}->get('playlist'); # delete
+	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND `key`='playlist'");
 
 	return 0;
 	# it might be good idea to return anything that show a popup
@@ -567,35 +590,44 @@ sub playall {
 	$self->queueall;
 
 	my $command = $self->{now_play}->play;
-	send2player($command);
+	send2player($self->{handle}, $command);
 
 	# play first..
 	0;
 }        
 
 sub page_next {
-  my $last_offset = $mem{offset};
-  $mem{offset} += $limit;
-  if (&prepare_memory) {
-      &history_update();
-      return 1;
-  } else {
-      $mem{offset} = $last_offset;
-      return 0;
-  }
+	my $self = shift;
+
+	my $last_offset = $mem{offset};
+	$mem{offset} += $limit;
+	if($self->prepare_memory) {
+		$self->history_update;
+		return 1;
+	} else {
+		$mem{offset} = $last_offset;
+		return 0;
+	}
 }
 
 sub page_prev {
-  if ($mem{offset} == 0) { return 0; } # we are at begining, so return without screen redrawing
-  $mem{offset} -= $limit;
-  if ($mem{offset} < 0) { $mem{offset} = 0; }
-  if (&prepare_memory) {
-      &history_update();
-      return 1;
-  } else {
-      $mem{offset} = 0;   # something went wrong, set to zero ;-)
-      return 0;
-  }  
+	my $self = shift;
+
+	if($mem{offset} == 0) {
+		# we are at begining, so return without screen redrawing
+		return 0;
+	}
+	$mem{offset} -= $limit;
+	if($mem{offset} < 0) {
+		$mem{offset} = 0;
+	}
+	if($self->prepare_memory) {
+		$self->history_update;
+		return 1;
+	} else {
+		$mem{offset} = 0;   # something went wrong, set to zero ;-)
+		return 0;
+	}  
 }
 
 #
@@ -613,10 +645,10 @@ sub menu_play {
 
 	my $track = $mem{lines}{$line}{track_id};
 	my $command = $self->{player}->playtrack($track);
-	send2player($command);
+	send2player($self->{handle}, $command);
 
 	my %cmd = (
-		zone => $self->{zone},
+		zone => $self->{zone}->{number},
 		cmd  => 'transport',
 		playlist => 'Single Song'
 	);
@@ -637,52 +669,62 @@ sub menu_playplaylist {
 	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
 	my $ret = $mc->query($sql);
 
+	$mc->query("REPLACE INTO zone_mem VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}'");
+
 	my $command = $self->{now_playing}->play;
-	send2player($command);
+	send2player($self->{handle}, $command);
 
 	return 0;
 }
 
 sub menu_select {
-  my ($data) = @_;
-  # we must meet all these conditions:
-  return 0 unless (exists $data->{line_number});  # have we received line number?
-               my $line = $data->{line_number};
-  return 0 unless (exists $mem{lines}{$line}{cmd});  # does this line contain any data?
-                my $cmd = $mem{lines}{$line}{cmd};
-  if ($menu_commands{lc $cmd}) { 
-      return $menu_commands{lc $cmd}->($data) 
-  } else { warn "Unknown library/menu command: $cmd\n" }
-  return 0;
+	my ($self, $data) = @_;
+
+	# we must meet all these conditions:
+	return 0 unless (exists $data->{line_number});  # have we received line number?
+	my $line = $data->{line_number};
+	return 0 unless (exists $mem{lines}{$line}{cmd});  # does this line contain any data?
+	my $cmd = $mem{lines}{$line}{cmd};
+
+	if($menu_commands->{lc $cmd}) {
+		my $method = $menu_commands->{lc $cmd};
+		return eval "\$self->$method(\$data)";
+	} else {
+		warn "Unknown library/menu command: $cmd\n"
+	}
+
+	return 0;
 }
 
 sub menu_change {
-  my ($data) = @_;
-  my $line = $data->{line_number};
-  # check, whether we'd like to change or do any other command!
-  $mem{offset} = 0;
-  $mem{search} = undef;
-  $mem{category}  = $mem{lines}{$line}{category};
-  $mem{genre_id}  = $mem{lines}{$line}{genre_id}  if (exists $mem{lines}{$line}{genre_id});
-  $mem{artist_id} = $mem{lines}{$line}{artist_id} if (exists $mem{lines}{$line}{artist_id});
-  $mem{album_id}  = $mem{lines}{$line}{album_id}  if (exists $mem{lines}{$line}{album_id});
- 
-  &history_add();
- 
-  # instead calling:  return &prepare_memory();
-  # we'll trick the program, so it''ll draw empty screen when there are no records
-  &prepare_memory();
-  return 1;  
+	my ($self, $data) = @_;
+
+	my $line = $data->{line_number};
+	# check, whether we'd like to change or do any other command!
+	$mem{offset} = 0;
+	$mem{search} = undef;
+	$mem{category}  = $mem{lines}{$line}{category};
+	$mem{genre_id}  = $mem{lines}{$line}{genre_id}  if (exists $mem{lines}{$line}{genre_id});
+	$mem{artist_id} = $mem{lines}{$line}{artist_id} if (exists $mem{lines}{$line}{artist_id});
+	$mem{album_id}  = $mem{lines}{$line}{album_id}  if (exists $mem{lines}{$line}{album_id});
+
+	$self->history_add;
+
+	# instead calling:  return &prepare_memory();
+	# we'll trick the program, so it''ll draw empty screen when there are no records
+	$self->prepare_memory;
+
+	return 1;  
 }
 
-
-
 sub back {
-  if (&history_back()) {
-      return &prepare_memory();
-  } else {
-      return 0;
-  }
+	my $self = shift;
+
+	if($self->history_back) {
+		return $self->prepare_memory;
+	} else {
+		return 0;
+	}
 }
  
 #
@@ -690,22 +732,28 @@ sub back {
 #
 
 sub prepare_memory {
- return 0 unless $mem{category};
+	my $self = shift;
 
- my $c = $mem{category};
- if ($c eq "genres") {
-   return &select_genres();
- } elsif ($c eq "artists") {
-   return &select_artists();
- } elsif ($c eq "albums") {
-   return &select_albums();
- } elsif ($c eq "tracks") {
-   return &select_tracks();
-   return 0;
- } elsif ($c eq "playlists") {
-   return &select_playlists();
- }
- return 0;
+print STDERR Dumper(\%mem);
+
+	return 0 unless $mem{category};
+
+	my $c = $mem{category};
+
+	if($c eq 'genres') {
+		return $self->select_genres;
+	} elsif($c eq 'artists') {
+		return $self->select_artists;
+	} elsif($c eq 'albums') {
+		return $self->select_albums;
+	} elsif($c eq 'tracks') {
+		return $self->select_tracks;
+		return 0;
+	} elsif($c eq 'playlists') {
+		return $self->select_playlists;
+	}
+
+	return 0;
 }
 
 sub process {
@@ -717,15 +765,17 @@ sub process {
   $data->{line_number}--  if $data->{line_number};
 ###################################################################################  
 
-	if($commands{lc $data->{cmd}}) {  # Call function
-		my $method = $commands{lc $data->{cmd}};
-		if(eval "\$self->$method->(\$data)) {
+	if($commands->{lc $data->{cmd}}) {  # Call function
+		my $method = $commands->{lc $data->{cmd}};
+		if(eval "\$self->$method(\$data)") {
 			my %data_out = $self->get_response;
 			$data_out{zone} = $self->{zone}->{number};
 			print &hash2cmd(%data_out);  # print response
+
+			print STDERR join(', ', caller())."\n";
 		}
 	} else {
-		print STDERR "Unknown library command: $data->{cmd}\n"
+		print STDERR "Unknown library command: $data->{cmd}\n";
 	}
 
 	return ();

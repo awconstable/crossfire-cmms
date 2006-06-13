@@ -72,7 +72,7 @@ sub loop {
 		next if $line eq ''; # empty line - there won't be command
 		%cmd = cmd2hash $line;
 		next unless %cmd;  # empty hash - there won't be command either
-		next unless &check_cmd(\%cmd, $self->{zone}); # do further checking (eg. zone)
+		next unless &check_cmd(\%cmd, $self->{zone}->{number}); # do further checking (eg. zone)
 		my $cmd = $self->process(\%cmd);
 		send2player($self->{handle}, $cmd) if $cmd;
 	}

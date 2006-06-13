@@ -65,7 +65,6 @@ sub new {
 	$self->{zone} = $params{zone};
 
 	$self->{player} = new CMMS::Zone::Player(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
-	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -111,7 +110,10 @@ sub endofsong {
 sub pause {
 	my $self = shift;
 
-	$self->{zone_obj}->set('state', 'pause');
+	my $mc = $self->mysqlConnection;
+
+	$mc->query("REPLACE INTO zone_mem VALUES('$self->{zone}->{number}', 'state', 'pause')");
+
 	return (
 		cmd   => 'transport',
 		state => 'pause'
@@ -121,7 +123,10 @@ sub pause {
 sub playing {
 	my $self = shift;
 
-	$self->{zone_obj}->set('state', 'play');
+	my $mc = $self->mysqlConnection;
+
+	$mc->query("REPLACE INTO zone_mem VALUES('$self->{zone}->{number}', 'state', 'play')");
+
 	return (
 		cmd   => 'transport',
 		state => 'play'
@@ -131,7 +136,10 @@ sub playing {
 sub stop {
 	my $self = shift;
 
-	$self->{zone_obj}->set('state', 'stop');
+	my $mc = $self->mysqlConnection;
+
+	$mc->query("REPLACE INTO zone_mem VALUES('$self->{zone}->{number}', 'state', 'stop')");
+
 	return (
 		cmd   => 'transport',
 		state => 'stop'
@@ -140,7 +148,8 @@ sub stop {
 
 sub get_track_info {    
 	my ($self, $dir, $file) = @_;
-	my $track_id = $self->{player}->filename2trackid($dir, $file);
+
+	my $track_id = $self->{player}->filename2trackid($self->{zone}->{datapath}.$dir, $file);
 	return $self->{player}->get_fulltrack_info($track_id);    
 }
 

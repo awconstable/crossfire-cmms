@@ -172,6 +172,17 @@ sub amazon_cover {
 sub store {
 	my($self,$meta) = @_;
 
+	my $aartist = safe_chars($meta->{ARTIST});
+	my $album = safe_chars($meta->{ALBUM});
+	my $comments = substr(safe_chars($meta->{COMMENTS}),0,32);
+	my $folder = $self->{conf}->{mediadir}."$aartist/$album/";
+	$folder .= "$comments/" if $comments;
+	$folder =~ s/\/$//;
+
+	print STDERR "$folder\n";
+
+	die("No tracks for this album") unless scalar grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*> > 0; # Don't store album if no tracks
+
 	my $mc = $self->mysqlConnection;
 
 	my($sql,$artist_id,$album_id,$genre_id);
@@ -195,15 +206,6 @@ sub store {
 		$mc->query($sql);
 
 		my $track_id = $mc->last_id;
-
-		my $aartist = safe_chars($meta->{ARTIST});
-		my $album = safe_chars($meta->{ALBUM});
-		my $comments = substr(safe_chars($meta->{COMMENTS}),0,32);
-		my $folder = $self->{conf}->{mediadir}."$aartist/$album/";
-		$folder .= "$comments/" if $comments;
-		$folder =~ s/\/$//;
-
-		print STDERR "$folder\n";
 
 		my $track_num = sprintf('%02d',$track->number);
 

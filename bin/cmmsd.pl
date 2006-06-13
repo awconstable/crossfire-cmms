@@ -7,6 +7,7 @@ use IPC::Open2;
 use Time::localtime;
 use POSIX qw(strftime);
 use Config::General;
+use CMMS::Zone::Command;
 
 # load config & configure multiplexer
 my %conf = ParseConfig('/etc/cmms_server.conf');
@@ -46,6 +47,7 @@ foreach my $item (@$servers) {
   print STDERR "Configuring server $item->{command}.\n" if $DEBUG;
   # prepare command like "./server.pl 2>>server.log",
   my $command = "$item->{command} 2>>$item->{log}";
+print STDERR "$command\n";
   push @processlist, { 
         type => SERVER,
         hIN  => IO::Handle->new, # prepare *Read  handle
@@ -127,6 +129,7 @@ while (@ready = $select->can_read) {
                     my $handleOUT = $_->{hOUT}; # just copy ref, $_->{} as handle doesn't work
                     if ($handleOUT->opened) { 
                         # handle openned we can send data
+                        print STDOUT "Sent [CLIENT $_->{pid}] >>>$data>>>\n" if $DEBUG;
                         print $handleOUT $data, "\n";
                     } else {
                         # handle closed, so we must reopen handle first and then send data

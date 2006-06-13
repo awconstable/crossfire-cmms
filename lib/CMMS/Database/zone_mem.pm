@@ -1,4 +1,4 @@
-#$Id: zone_mem.pm,v 1.3 2006/06/09 11:15:44 byngmeister Exp $
+#$Id: zone_mem.pm,v 1.4 2006/06/13 11:15:33 byngmeister Exp $
 
 package CMMS::Database::zone_mem;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS

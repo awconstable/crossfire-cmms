@@ -48,9 +48,9 @@ while(@ready = $select->can_read) {
 	} else {
 	    # read a line of text.
 	    # close the connection if recv() fails.
-	    my $line="";
+	    my $line='';
 	    $socket->recv($line,250);
-	    if($line eq "") {
+	    if($line eq '') {
 		print STDERR "Client(",$socket->fileno,") disconnected.\n";
 		$select->remove($socket);
 		$socket->close;

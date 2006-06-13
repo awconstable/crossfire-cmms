@@ -41,7 +41,6 @@ sub new {
 	$self->{zone} = $params{zone};
 
 	$self->{player} = new CMMS::Zone::Player(mc => $params{mc}, handle => $self->{handle}, zone => $self->{zone}, conf => $self->{conf});
-	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -100,7 +99,7 @@ sub prev {
 				return $self->play_stop_by_state($track_id2);
 			} else {
 				my %cmd = (
-					zone => $self->{zone},
+					zone => $self->{zone}->{number},
 					cmd  => "transport",
 					playlist => "_________ START _________"
 				);
@@ -111,7 +110,7 @@ sub prev {
 		# else we don't have anything else to play
 		# let's tell it this usefull information to the user
 		my %cmd = (
-			zone => $self->{zone},
+			zone => $self->{zone}->{number},
 			cmd  => "transport",
 			playlist => '_________ START _________'
 		);
@@ -141,7 +140,11 @@ sub next {
 sub play_stop_by_state {
 	my ($self, $track_id) = @_;
 
-	my $state = $self->{zone_obj}->get('state');
+	my $mc = $self->mysqlConnection;
+
+	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'state'")||[];
+	$row = $row->[0];
+	my $state = $row->{value};
 
 	if($state eq 'play') {
 		return $self->{player}->playtrack($track_id);
@@ -157,17 +160,27 @@ sub play_stop_by_state {
 	0;
 }
 
-
-
 sub random {
 	my $self = shift;
 
-	$self->{zone_obj}->get('random'); # neg
+	my $mc = $self->mysqlConnection;
+
+	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'random'")||[];
+	$row = $row->[0];
+	my $random = $row->{value};
+
+	if($random) {
+		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'random'");
+		$random = undef;
+	} else {
+		$mc->query_and_get("REPLACE INTO zone_mem values('$self->{zone}->{number}', 'random', 1)");
+		$random = 1;
+	}
 
 	my %cmd = (
-		zone => $self->{zone},
+		zone => $self->{zone}->{number},
 		cmd  => 'transport',
-		random => $self->{zone_obj}->get('random')
+		random => $random
 	);
 
 	print &hash2cmd(%cmd);
@@ -178,12 +191,24 @@ sub random {
 sub repeat {
 	my $self = shift;
 
-	$self->{zone_obj}->get('repeat'); # neg
+	my $mc = $self->mysqlConnection;
+
+	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'repeat'")||[];
+	$row = $row->[0];
+	my $repeat = $row->{value};
+
+	if($repeat) {
+		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'repeat'");
+		$repeat = undef;
+	} else {
+		$mc->query_and_get("REPLACE INTO zone_mem values('$self->{zone}->{number}', 'repeat', 1)");
+		$repeat = 1;
+	}
 
 	my %cmd = (
-		zone => $self->{zone},
+		zone => $self->{zone}->{number},
 		cmd  => 'transport',
-		repeat => $self->{zone_obj}->get('repeat')
+		repeat => $repeat
 	);
 
 	print &hash2cmd(%cmd);
@@ -194,9 +219,9 @@ sub repeat {
 sub process {
 	my ($self, $c) = @_;
 	
-	if($commands{lc $c->{cmd}}) {  # Call function
+	if($commands->{lc $c->{cmd}}) {  # Call function
 		my $method = $commands->{lc $c->{cmd}};
-		return eval "$commands->{\$self->$method";
+		return eval "\$self->$method";
 	} else {
 		print STDERR "Unknown command: $c->{cmd}\n"
 	}

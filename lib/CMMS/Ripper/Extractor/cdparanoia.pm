@@ -28,7 +28,7 @@ sub _rip {
 	$number =~ s/[\r\n+]//g;
 	$track =~ s/[\r\n+]//g;
 	$artist =~ s/[\r\n+]//g;
-	$artist = 'Unknown' if $artist =~ /Unknown/;
+	$artist = 'Unknown' if $artist =~ /^unknown/i;
 
 	$self->{detail}->set(data => (length($track)>20?substr($track,0,17).'...':$track));
 	print STDERR (length($track)>20?substr($track,0,17).'...':$track)."\n";

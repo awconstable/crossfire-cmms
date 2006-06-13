@@ -1,7 +1,6 @@
 package CMMS::Zone::Player;
 
 use strict;
-use CMMS::Database::zone_mem;
 
 use vars qw($VERSION);
 $VERSION = 0.01;
@@ -29,8 +28,6 @@ sub new {
 	$self->{conf} = $params{conf};
 	$self->{handle} = $params{handle};
 	$self->{zone} = $params{zone};
-
-	$self->{zone_obj} = new CMMS::Database::zone_mem(mc => $params{mc}, id => $self->{zone});
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -71,6 +68,8 @@ sub playtrack {
 
 	my $path = $self->{zone}->{datapath};
 
+	$filename =~ s/$path//;
+
 	return 'play '.$path.$filename;
 }
 
@@ -100,7 +99,7 @@ sub get_prev_track {
 
 sub track_mark_played {
 	my ($self, $track_id, $track_order) = @_;
-	my $mark = "playlist_current_played($self->{zone}->{number})";
+	my $mark = "'playlist_current_played($self->{zone}->{number})'";
 	return $self->set_track_mark($track_id, $track_order, $mark);
 }
 
@@ -128,7 +127,7 @@ sub set_track_mark {
 
 	$sql = sprintf($sql, $mark, $self->{zone}->{number}, $track_id, $track_order);
 
-	return db_query($sql);
+	return $mc->query($sql);
 }
 
 sub unmark_all_tracks {
@@ -138,8 +137,8 @@ sub unmark_all_tracks {
 
 	print STDERR "unmarking all tracks\n"; # LEVEL 1
 
-	my $slq = sprintf('UPDATE playlist_current SET track_played = NULL WHERE zone = %d', $self->{zone}->{number});
-	return = $mc->query($sql);
+	my $sql = sprintf('UPDATE playlist_current SET track_played = NULL WHERE zone = %d', $self->{zone}->{number});
+	return $mc->query($sql);
 }
 
 #
@@ -238,8 +237,18 @@ sub get_current_track {
 sub get_next_track {
 	my $self = shift;
 
-	my ($tr, $to, $random);
-	$random = $self->{zone_obj}->get('random');
+	my $mc = $self->mysqlConnection;
+
+	my ($tr, $to, $random, $repeat);
+
+	my $row = $mc->query("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'random'")||[];
+	$row = $row->[0];
+	$random = $row->{value};
+
+	$row = $mc->query("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'repeat'")||[];
+	$row = $row->[0];
+	$repeat = $row->{value};
+
 	if($random) {
 		($tr, $to) = $self->get_next_track_randomly;
 	} else {
@@ -250,7 +259,7 @@ sub get_next_track {
 		return ($tr, $to);
 	} else {
 		# this is the last track, check repeat
-		if($self->{zone_obj}->get('repeat')) {
+		if($repeat) {
 			# clear playlist and start again
 			$self->unmark_all_tracks;
 			# get next track again. (it might be recursion, however
@@ -387,11 +396,18 @@ sub get_fulltrack_info {
 		AND t.genre_id = genre.id
 	};
 	$sql = sprintf($sql, $track_id);
-	$row = $mc->query_and_get($sql)||[];
+	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
+	my $row2 = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'playlist'")||[];
+	$row2 = $row2->[0];
+	my $playlist_id = $row2->{value};
+
+	$row2 = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'state'")||[];
+	$row2 = $row2->[0];
+	my $play_state = $row2->{value};
+
 	my $playlist = $self->get_playlist_num_played."/".$self->get_playlist_num_tracks;
-	my $playlist_id = $self->{zone_obj}->get('playlist');
 	if(defined $playlist_id) {
 		$playlist .= " - ". $self->get_playlist_name($playlist_id); 
 	} else {
@@ -399,6 +415,8 @@ sub get_fulltrack_info {
 	}
 
 	if($row) {
+		$row->{album} = 'Unknown' if $row->{album} =~ /^unknown/i;
+
 		my %hash = (
 			cmd    => 'transport',
 			zone   => $self->{zone}->{number},
@@ -418,7 +436,6 @@ sub get_fulltrack_info {
 			0,0, ($time / 60), ($time % 60), ($time / 60), ($time % 60));
 		}
 
-		my $play_state = $self->{zone_obj}->get('state');
 		if(defined $play_state) {
 			$hash{state} = $play_state;
 		}

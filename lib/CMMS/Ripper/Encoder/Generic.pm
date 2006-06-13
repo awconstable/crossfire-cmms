@@ -79,14 +79,14 @@ sub encode {
 
 	$self->initialise;
 
-	$self->{title}->set(data => ($metadata->{ALBUM}=~/Unknown/?'Unknown Album':$metadata->{ALBUM}));
+	$self->{title}->set(data => ($metadata->{ALBUM}=~/^unknown/i?'Unknown Album':$metadata->{ALBUM}));
 	print STDERR $metadata->{ALBUM}."\n";
 
 	my $tmp = $self->{conf}->{tmpdir};
 
 	foreach my $track (@{$metadata->{TRACKS}}) {
 		my $artist = $track->artist;
-		$artist = 'Unknown' if $artist =~ /Unknown/;
+		$artist = 'Unknown' if $artist =~ /^unknown/i;
 		my $file = safe_chars(sprintf('%02d',$track->number).' '.$artist.' '.$track->title);
 		if(-f "$tmp$file.wav") {
 			print STDERR "$tmp$file.wav\n";

@@ -11,7 +11,7 @@ sub _encode {
 	my($self,$number,$track,$artist,$album,$comments,$year,$genre,$aartist) = @_;
 	($number,$track,$artist,$album,$comments,$year,$genre,$aartist) = map{s/[\r\n+]//g;$_}($number,$track,$artist,$album,$comments,$year,$genre,$aartist);
 
-	$artist = 'Unknown' if $artist =~ /Unknown/;
+	$artist = 'Unknown' if $artist =~ /^unknown/i;
 
 	$self->{status}->set(data => 'MP3 Encoding '.sprintf('%02d',$number));
 	print STDERR 'MP3 Encoding track '.sprintf('%02d',$number)."\n";
