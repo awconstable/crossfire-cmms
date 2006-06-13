@@ -149,8 +149,8 @@ sub stop {
 sub get_track_info {    
 	my ($self, $dir, $file) = @_;
 
-	my $track_id = $self->{player}->filename2trackid($self->{zone}->{datapath}.$dir, $file);
-	return $self->{player}->get_fulltrack_info($track_id);    
+	my $track_id = $self->{player}->filename2trackid($dir, $file);
+	return $self->{player}->get_fulltrack_info($track_id);
 }
 
 sub status_play {
@@ -160,13 +160,10 @@ sub status_play {
 	# mod_mpg123 /home/chrala/cmms_mp3/rolling_stones/flashpoint/17-sex_drive.mp3
 	$data =~ /^(\w*) (.*)$/;
 
-	my $path = $self->{zone}->{datapath};
-
 	# PREXIF...............|DIRECTORY................|FILENAME
 	# /storedir/media/audio/rolling_stones/flashpoint/06-ruby_tuesday.mp3
 	# /home/chrala/cmms_mp3/rolling_stones/flashpoint/17-sex_drive.mp3
 	$data = $2;
-	$data =~ s/$path//;
 	$data =~ /^(.*)\/(.*)$/;
 
 	return $self->get_track_info($1.'/', $2);
@@ -225,8 +222,10 @@ sub loop {
 		if($commands->{lc $status}{lc $cmd}) {
 			my $method = $commands->{lc $status}{lc $cmd};
 			my %ret = eval "\$self->$method(\$data)";
-			$ret{zone} = $self->{zone}->{number};
-			print hash2cmd(%ret);
+			if($ret{cmd}) {
+				$ret{zone} = $self->{zone}->{number};
+				print hash2cmd(%ret);
+			}
 		} else {
 			print STDERR "irmp3d: ".$line."\n";
 		}

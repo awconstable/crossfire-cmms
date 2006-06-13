@@ -5,7 +5,6 @@ use Storable qw(freeze thaw);
 use CMMS::Zone::Player;
 use CMMS::Zone::NowPlaying;
 use CMMS::Zone::Command;
-use Data::Dumper;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -197,7 +196,7 @@ sub make_select {
 	$query =~ s/\?/%d/g;
 	$query = sprintf($query, $limit, $mem{offset});
 
-	my $rows = $self->query_and_get($query)||[];
+	my $rows = $mc->query_and_get($query)||[];
 
 	$mem{lines} = ();
 	my $i = 0;
@@ -244,7 +243,7 @@ sub sql_genre {
 	$where = '' unless $where;
 
   return qq{
-	SELECT g.id, g.name 
+	SELECT g.id, g.name as text 
 	FROM genre g 
 	RIGHT JOIN track t ON g.id=t.genre_id
 	$where
@@ -273,14 +272,14 @@ sub select_genres {
 }
 
 sub sql_artist_plain {
-  return qq{SELECT id, name FROM artist ORDER BY name LIMIT ? OFFSET ?};
+  return qq{SELECT id, name as text FROM artist ORDER BY name LIMIT ? OFFSET ?};
 }
 
 sub sql_artist_where {
 	my ($self, $where) = @_;
 
   return qq{
-         SELECT artist_id, a.name
+         SELECT artist_id, a.name as text 
          FROM track t
          LEFT JOIN artist a ON t.artist_id = a.id
          $where
@@ -292,7 +291,7 @@ sub sql_artist_where {
 
 sub sql_album_plain {
   return qq{
-     SELECT id, name 
+     SELECT id, name as text 
      FROM album 
      ORDER BY name 
      LIMIT ? OFFSET ?};
@@ -302,11 +301,11 @@ sub sql_album_where {
 	my ($self, $where) = @_;
 
   return qq{
-         SELECT album_id, a.name
-         FROM track t
+         SELECT a.id, a.name as text 
+         FROM track t 
          LEFT JOIN album a ON t.album_id = a.id
          $where
-         GROUP BY album_id, a.name
+         GROUP BY a.id, a.name
          ORDER by a.name
          LIMIT ? OFFSET ? 
   };
@@ -316,7 +315,7 @@ sub sql_track_where_by_id {
 	my ($self, $where) = @_;
 
   return qq{
-         SELECT id, track_num || '. ' || title
+         SELECT id, track_num || '. ' || title as text 
          FROM track 
          $where
          ORDER BY track_num
@@ -328,7 +327,7 @@ sub sql_track_where {
 	my ($self, $where) = @_;
 
   return qq{
-         SELECT id, title
+         SELECT id, title as text
          FROM track 
          $where
          ORDER BY title
@@ -351,8 +350,8 @@ sub select_artists {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{artist_id} = $id;
-          $mem{lines}{$i}{cmd} = "change";
-          $mem{lines}{$i}{category} = "albums";
+          $mem{lines}{$i}{cmd} = 'change';
+          $mem{lines}{$i}{category} = 'albums';
       }
       return 1;
   } else {
@@ -369,14 +368,14 @@ sub select_albums {
   } else {
       $q = $self->sql_album_plain;
   }
-  
+
   my $rows = $self->make_select($q);
   if ($rows > 0) {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{album_id} = $id;
-          $mem{lines}{$i}{cmd} = "change";
-          $mem{lines}{$i}{category} = "tracks";
+          $mem{lines}{$i}{cmd} = 'change';
+          $mem{lines}{$i}{category} = 'tracks';
       }
       return 1;
   } else {
@@ -403,7 +402,7 @@ sub select_tracks {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{track_id} = $id;
-          $mem{lines}{$i}{cmd} = "play";
+          $mem{lines}{$i}{cmd} = 'play';
       }
       return 1;
   } else {
@@ -434,8 +433,8 @@ sub select_playlists {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{playlist_id} = $id;
-          $mem{lines}{$i}{cmd} = "playplaylist";
-          $mem{lines}{$i}{category} = "playlists";
+          $mem{lines}{$i}{cmd} = 'playplaylist';
+          $mem{lines}{$i}{category} = 'playlists';
       }
       return 1;
   } else {
@@ -734,8 +733,6 @@ sub back {
 sub prepare_memory {
 	my $self = shift;
 
-print STDERR Dumper(\%mem);
-
 	return 0 unless $mem{category};
 
 	my $c = $mem{category};
@@ -771,8 +768,6 @@ sub process {
 			my %data_out = $self->get_response;
 			$data_out{zone} = $self->{zone}->{number};
 			print &hash2cmd(%data_out);  # print response
-
-			print STDERR join(', ', caller())."\n";
 		}
 	} else {
 		print STDERR "Unknown library command: $data->{cmd}\n";

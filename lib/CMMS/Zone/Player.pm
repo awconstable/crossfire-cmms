@@ -1,8 +1,8 @@
 package CMMS::Zone::Player;
 
 use strict;
-
 use vars qw($VERSION);
+
 $VERSION = 0.01;
 
 our $permitted = {
