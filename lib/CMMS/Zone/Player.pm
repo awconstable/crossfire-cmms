@@ -424,7 +424,8 @@ sub get_fulltrack_info {
 			album  => $row->{album},
 			genre  => $row->{genre},
 			playlist => $playlist,
-			feedback => ''
+			feedback => '',
+			number => $row->{track_num}
 		);
 
 		my $timeenabled = $self->{zone}->{time};

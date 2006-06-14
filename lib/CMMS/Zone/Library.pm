@@ -640,13 +640,28 @@ sub page_prev {
 sub menu_play {
 	my ($self, $data) = @_;
 
+	my $mc = $self->mysqlConnection;
+
 	my $line = $data->{line_number};
 
 	my $track = $mem{lines}{$line}{track_id};
-	my $command = $self->{player}->playtrack($track);
-	send2player($self->{handle}, $command);
 
 	my %trk = $self->{player}->get_fulltrack_info($track);
+
+	# Delete current playlist
+	$self->empty_queue;
+	# Add all tracks for this album
+	my $sql = $self->sql_track2playlist("WHERE album_id in (select album_id from track where id = $track)");
+	$mc->query($sql);
+	# Set track position in playlist
+	$self->{player}->track_mark_played($track,$trk{number});
+
+	$mc->query("update playlist_current set track_played = 1 where zone='$self->{zone}->{number}' and track_order < $trk{number}");
+
+	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND `key`='playlist'");
+
+	my $command = $self->{player}->playtrack($track);
+	send2player($self->{handle}, $command);
 
 	my %cmd = (
 		zone => $self->{zone}->{number},

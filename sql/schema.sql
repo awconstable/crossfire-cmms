@@ -64,7 +64,8 @@ CREATE TABLE playlist (
 CREATE TABLE playlist_track (
   playlist_id INT(11) NOT NULL,
   track_id INT(11) NOT NULL,
-  track_order INT NOT NULL
+  track_order INT NOT NULL,
+  UNIQUE playlist_track (playlist_id,track_id,track_order)
 );
 
 --
@@ -77,7 +78,8 @@ CREATE TABLE playlist_current (
   zone INT(11) NOT NULL,
   track_id INT(11) NOT NULL,
   track_order INT(11) NOT NULL,
-  track_played INT(11) NULL
+  track_played INT(11) NULL,
+  UNIQUE playlist_track (zone,track_id,track_order)
 );
 
 CREATE TABLE zone_mem (
