@@ -100,8 +100,8 @@ sub prev {
 			} else {
 				my %cmd = (
 					zone => $self->{zone}->{number},
-					cmd  => "transport",
-					playlist => "_________ START _________"
+					cmd  => 'transport',
+					playlist => '_________ START _________'
 				);
 				print &hash2cmd(%cmd);
 			}
@@ -111,7 +111,7 @@ sub prev {
 		# let's tell it this usefull information to the user
 		my %cmd = (
 			zone => $self->{zone}->{number},
-			cmd  => "transport",
+			cmd  => 'transport',
 			playlist => '_________ START _________'
 		);
 		print &hash2cmd(%cmd);
@@ -125,13 +125,12 @@ sub next {
 
 	my ($track_id, $track_order) = $self->{player}->get_next_track;
 
-	if (defined $track_id && defined $track_order) {
+	if(defined $track_id && defined $track_order) {
 		$self->{player}->track_mark_played($track_id, $track_order);
 		return $self->play_stop_by_state($track_id);
-	} else {
-		# else we don't have anything else to play
-		# let's tell it this usefull information to the user
 	}
+	# else we don't have anything else to play
+	# let's tell it this usefull information to the user
 
 	0;
 }

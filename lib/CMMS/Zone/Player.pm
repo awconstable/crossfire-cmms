@@ -99,8 +99,7 @@ sub get_prev_track {
 
 sub track_mark_played {
 	my ($self, $track_id, $track_order) = @_;
-	my $mark = "'playlist_current_played($self->{zone}->{number})'";
-	return $self->set_track_mark($track_id, $track_order, $mark);
+	return $self->set_track_mark($track_id, $track_order, 1);
 }
 
 sub track_unmark_played {
@@ -115,7 +114,7 @@ sub set_track_mark {
 
 	my $mc = $self->mysqlConnection;
 
-	print STDERR "marking track ($track_id:$track_order) as ".($mark eq "NULL" ? "unplayed" : "played")."\n"; # LEVEL 1
+	print STDERR "marking track ($track_id:$track_order) as ".($mark eq 'NULL' ? 'unplayed' : 'played')."\n"; # LEVEL 1
 
 	my $sql = qq{
 		UPDATE playlist_current 
@@ -241,11 +240,11 @@ sub get_next_track {
 
 	my ($tr, $to, $random, $repeat);
 
-	my $row = $mc->query("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'random'")||[];
+	my $row = $mc->query_and_get("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'random'")||[];
 	$row = $row->[0];
 	$random = $row->{value};
 
-	$row = $mc->query("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'repeat'")||[];
+	$row = $mc->query_and_get("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'repeat'")||[];
 	$row = $row->[0];
 	$repeat = $row->{value};
 

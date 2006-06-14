@@ -195,6 +195,10 @@ sub store {
 	$genre_id = $_->{id} || -1;
 
 	foreach my $track (@{$meta->{TRACKS}}) {
+		my $track_num = sprintf('%02d',$track->number);
+		my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/${track_num}_*>;
+		next unless scalar @files;
+
 		my $artist = $mc->quote(($track->artist =~ /Unknown/?'Unknown':$track->artist));
 		($_) = @{$mc->query_and_get('SELECT id FROM artist WHERE name = '.$artist)||[]};
 		$artist_id = 0;
@@ -207,9 +211,7 @@ sub store {
 
 		my $track_id = $mc->last_id;
 
-		my $track_num = sprintf('%02d',$track->number);
-
-		foreach(grep{/\.(mp3|flac|ogg|wav)$/}<$folder/${track_num}_*>) {
+		foreach(@files) {
 			print STDERR "$_\n";
 			my($file_location,$file_name,$file_type) = (/^(.+\/)([^\/]+\.(.+))$/);
 			my $filesize = -s $_;

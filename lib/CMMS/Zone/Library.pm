@@ -415,10 +415,10 @@ sub sql_playlist {
 	$where = '' unless $where;
 
   return qq{
-	SELECT id, name 
+	SELECT id, name as text 
 	FROM playlist 
-	$where
-	ORDER BY name
+	$where 
+	ORDER BY name 
 	LIMIT ? OFFSET ?
   };
 }
@@ -544,7 +544,7 @@ sub sql_track2playlist {
 
 	return qq {
 		REPLACE INTO playlist_current 
-		(zone,track_id) SELECT '$self->{zone}->{number}', id from track 
+		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, track_num from track 
 		$where 
 		ORDER BY album_id, track_num;
 	};
@@ -555,7 +555,7 @@ sub sql_playlist2playlist {
 
 	return qq {
 		REPLACE INTO playlist_current 
-		(zone,track_id) SELECT '$self->{zone}->{number}', track_id FROM playlist_track 
+		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', track_id, track_order FROM playlist_track 
 		WHERE playlist_id = $playlist_id 
 		ORDER BY track_order
 	};
@@ -668,7 +668,7 @@ sub menu_playplaylist {
 	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
 	my $ret = $mc->query($sql);
 
-	$mc->query("REPLACE INTO zone_mem VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}'");
+	$mc->query("REPLACE INTO zone_mem VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')");
 
 	my $command = $self->{now_playing}->play;
 	send2player($self->{handle}, $command);
