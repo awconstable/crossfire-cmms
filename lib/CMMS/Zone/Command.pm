@@ -43,11 +43,14 @@ sub printcmdhash {
 
 # create hash from received line
 sub cmd2hash {
-  @_ = split($recv_sep_regex, shift);
+	$_ = shift;
+	s/\?/\\\\?/g;
+	s/\*/\\\\*/g;
+  @_ = split($recv_sep_regex, $_);
   my %myhash;
   foreach (<@_>) {
     # print "$_\n";
-    next unless $_ =~ /$value_sep/; # skip incorrect records (without ':')
+    next unless /$value_sep/; # skip incorrect records (without ':')
     my ($key, $value) = split($value_sep, $_, 2); # ___:______________
     $myhash{$key} = $value;
   }

@@ -193,7 +193,8 @@ sub make_select {
 
 	my $mc = $self->mysqlConnection;
 
-	$query =~ s/\?/%d/g;
+	$query =~ s/(([^\|])\?)/$2%d/g;
+	$query =~ s/\|\?/?/g;
 	$query = sprintf($query, $limit, $mem{offset});
 
 	my $rows = $mc->query_and_get($query)||[];
@@ -214,17 +215,14 @@ sub sql_prepare_where {
 
 	my @where;
 	my $i = 0;
-	push (@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id} );
-	push (@where, sprintf("artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
-	push (@where, sprintf("album_id=%d",  $mem{album_id} )) if ($mem{album_id} );
+	push(@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id} );
+	push(@where, sprintf("artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
+	push(@where, sprintf("album_id=%d",  $mem{album_id} )) if ($mem{album_id} );
 
-	# to make it SQL compliant LIKE comman can also be used, however
-	# regualar expressions are more powerfull, so i'll use them instead.
 	if($mem{search}) {
 		my $search_column = 'name';
 		$search_column = 'title' if ($mem{category} eq 'tracks');
-		my $search_regexp = $mem{search};
-		push (@where, sprintf("%s ~* '^%s'", $search_column, $search_regexp));
+		push(@where, "$search_column like '$mem{search}%%'");
 	}
 
 	if(@where) {
@@ -507,6 +505,9 @@ sub search_add {
 	my ($self, $data) = @_;
 
 	#zone:1|screen:library|cmd:search_add|char:[a-z0-9\?\*]
+
+	$data->{char} =~s/\?/|?/;
+
 	$mem{search} .= $data->{char};
 	$mem{offset} = 0; # we are changing query completely, so go to the begining
 	$self->history_update;
