@@ -638,7 +638,7 @@ sub page_prev {
 #
 
 sub menu_play {
-	my ($self, $data) = shift;
+	my ($self, $data) = @_;
 
 	my $line = $data->{line_number};
 
@@ -646,12 +646,20 @@ sub menu_play {
 	my $command = $self->{player}->playtrack($track);
 	send2player($self->{handle}, $command);
 
+	my %trk = $self->{player}->get_fulltrack_info($track);
+
 	my %cmd = (
 		zone => $self->{zone}->{number},
 		cmd  => 'transport',
-		playlist => 'Single Song'
+		playlist => 'Single Song',
+		artist => $trk{artist},
+		track => $trk{track},
+		genre => $trk{genre},
+		album => $trk{album}
 	);
 	print &hash2cmd(%cmd);
+
+	return 0;
 }
 
 sub menu_playplaylist {
@@ -668,9 +676,12 @@ sub menu_playplaylist {
 	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
 	my $ret = $mc->query($sql);
 
-	$mc->query("REPLACE INTO zone_mem VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')");
+	$sql = "REPLACE INTO zone_mem VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
 
-	my $command = $self->{now_playing}->play;
+	$mc->query($sql);
+
+	my $command = $self->{now_play}->play;
+
 	send2player($self->{handle}, $command);
 
 	return 0;
