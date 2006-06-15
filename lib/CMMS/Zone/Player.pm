@@ -149,10 +149,12 @@ sub trackid2filename {
 
 	my $mc = $self->mysqlConnection;
 
+	# select flac files
 	my $sql = qq{
 		SELECT file_location, file_name 
 		FROM track_data 
-		WHERE track_id = %d
+		WHERE track_id = %d 
+		AND file_name like '%%mp3'
 	};
 
 	$sql = sprintf($sql, $trackid);
@@ -406,11 +408,11 @@ sub get_fulltrack_info {
 	$row2 = $row2->[0];
 	my $play_state = $row2->{value};
 
-	my $playlist = $self->get_playlist_num_played."/".$self->get_playlist_num_tracks;
+	my $playlist = $self->get_playlist_num_played."/".$self->get_playlist_num_tracks.' - ';
 	if(defined $playlist_id) {
-		$playlist .= " - ". $self->get_playlist_name($playlist_id); 
+		$playlist .= $self->get_playlist_name($playlist_id); 
 	} else {
-		$playlist .= "__ made-to-order __";
+		$playlist .= ' Default';
 	}
 
 	if($row) {

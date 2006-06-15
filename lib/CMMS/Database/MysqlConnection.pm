@@ -1,4 +1,4 @@
-#$Id: MysqlConnection.pm,v 1.1 2006/06/07 16:01:05 byngmeister Exp $
+#$Id: MysqlConnection.pm,v 1.2 2006/06/15 15:28:12 byngmeister Exp $
 
 package CMMS::Database::MysqlConnection;
 
@@ -66,6 +66,30 @@ sub new {
   $self->password( $params{password} || '' );
 
   return $self;
+}
+
+# auto reconnect
+sub query {
+	my ($self, $sql) = @_;
+
+	unless($self->{dbh}->ping) {
+		$self->connect or die("MySQL server went away, connection couldn't be restablished :(");
+		print STDERR "MySQL server went away, connection restablished :)\n";
+	}
+
+	return $self->SUPER::query($sql);
+}
+
+# auto reconnect
+sub query_and_get {
+	my ($self, $sql) = @_;
+
+	unless($self->{dbh}->ping) {
+		$self->connect or die("MySQL server went away, connection couldn't be restablished :(");
+		print STDERR "MySQL server went away, connection restablished :)\n";
+	}
+
+	return $self->SUPER::query_and_get($sql);
 }
 
 1;

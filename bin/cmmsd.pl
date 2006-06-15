@@ -47,7 +47,7 @@ foreach my $item (@$servers) {
   print STDERR "Configuring server $item->{command}.\n" if $DEBUG;
   # prepare command like "./server.pl 2>>server.log",
   my $command = "$item->{command} 2>>$item->{log}";
-print STDERR "$command\n";
+
   push @processlist, { 
         type => SERVER,
         hIN  => IO::Handle->new, # prepare *Read  handle
@@ -69,7 +69,7 @@ foreach my $zone_config (@$zones) {
   }
   # prepare command like "/usr/bin/cmms_zone.pl --zone 1 2>>zone1.log",,
   my $command = "/usr/bin/cmms_zone.pl --zone $zone 2>>$log";
-print STDERR "$command\n";
+
   push @processlist, { 
         type => CLIENT,
         hIN  => IO::Handle->new,
