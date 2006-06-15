@@ -90,7 +90,7 @@ sub prev {
 	my ($track_id, $track_order) = $self->{player}->get_current_track;
 
 	if(defined $track_id && defined $track_order) {
-		if($track_order == 0) {
+		if($track_order == 1) {
 			return $self->play_stop_by_state($track_id);
 		} else {
 			$self->{player}->track_unmark_played($track_id, $track_order);
