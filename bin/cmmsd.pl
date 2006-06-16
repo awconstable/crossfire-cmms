@@ -2,12 +2,15 @@
 
 use strict;
 use IO::Select;
-use IO::Handle; # STDOUT autoflush
+use IO::Handle;
 use IPC::Open2;
 use Time::localtime;
 use POSIX qw(strftime);
 use Config::General;
 use CMMS::Zone::Command;
+
+close(STDERR);
+open(STDERR,'>> /usr/local/cmms/logs/cmmsd.log');
 
 # load config & configure multiplexer
 my %conf = ParseConfig('/etc/cmms_server.conf');
@@ -32,8 +35,6 @@ use constant CLIENT => 1;
 use constant SERVER => 2;
 
 my @processlist;
-
-STDOUT->autoflush(1); 
 
 foreach my $item (@$servers) {
   next unless $item->{command};
@@ -110,7 +111,7 @@ while (@ready = $select->can_read) {
 
         if ($process->{type} == SERVER) {
             # data from an server, send data to particular client process
-            print STDOUT "[SERVER", $mid, "]<<<", $data, "<<<\n" if $DEBUG;
+            print STDERR "[SERVER", $mid, "]<<<", $data, "<<<\n" if $DEBUG;
 
             my %cmd = cmd2hash($data);
             
@@ -122,11 +123,11 @@ while (@ready = $select->can_read) {
                     my $handleOUT = $_->{hOUT}; # just copy ref, $_->{} as handle doesn't work
                     if ($handleOUT->opened) { 
                         # handle openned we can send data
-                        print STDOUT "Sent [CLIENT $_->{pid}] >>>$data>>>\n" if $DEBUG;
+                        print STDERR "Sent [CLIENT $_->{pid}] >>>$data>>>\n" if $DEBUG;
                         print $handleOUT $data, "\n";
                     } else {
                         # handle closed, so we must reopen handle first and then send data
-                        print "Starting zone ", $_->{zone}, "\n" if $DEBUG;
+                        print STDERR "Starting zone ", $_->{zone}, "\n" if $DEBUG;
                         $_->{pid} = open2($_->{hIN}, $_->{hOUT}, $_->{cmd});
                         $select->add($_->{hIN});
                         print $handleOUT $data, "\n"; # send data
@@ -143,7 +144,7 @@ while (@ready = $select->can_read) {
             }
         } elsif ($process->{type} == CLIENT) {
             # data from an client, broadcast to all servers
-            print STDOUT "[CLIENT", $mid, "]>>>", $data, ">>> \n" if $DEBUG;	    
+            print STDERR "[CLIENT", $mid, "]>>>", $data, ">>> \n" if $DEBUG;	    
 
             foreach (@processlist) {                    
                 next unless ($_->{type} == SERVER);     # skip clients
@@ -153,7 +154,7 @@ while (@ready = $select->can_read) {
                     print $handleOUT $data, "\n";
                 } else {
                     # handle closed, so we must reopen handle first and then send data
-                    print "Starting server ", $_->{cmd}, "\n" if $DEBUG;
+                    print STDERR "Starting server ", $_->{cmd}, "\n" if $DEBUG;
                     $_->{pid} = open2($_->{hIN}, $_->{hOUT}, $_->{cmd});
                     $select->add($_->{hIN});
                     print $handleOUT $data, "\n"; # send data
@@ -176,9 +177,9 @@ while (@ready = $select->can_read) {
 # input: reference to @process
 sub cmmsd_status {
   my $p = shift;
-  print "<status>\n";
+  print STDERR "<status>\n";
   foreach (@$p) {   
-      print "  <process>\n";
+      print STDERR "  <process>\n";
       my $val;
       foreach my $key (sort keys %$_) {
         if ($key eq "type") { 
@@ -191,11 +192,11 @@ sub cmmsd_status {
         } else {
           $val = $$_{$key};
         }
-        print "      <$key>$val</$key>\n";
+        print STDERR "      <$key>$val</$key>\n";
       }
-      print "  </process>\n";
+      print STDERR "  </process>\n";
   }
-  print "</status>\n";
+  print STDERR "</status>\n";
 } # end of cmmsd_status
 
 # reap the freshly dead child
