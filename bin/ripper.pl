@@ -3,7 +3,7 @@
 use strict;
 use CMMS::Ripper;
 
-my $ripper = new CMMS::Ripper(conf => '/etc/cmms_ripper.conf');
+my $ripper = new CMMS::Ripper(conf => '/etc/cmms.conf');
 
 # Lock CD
 #`cdctl -o1`;

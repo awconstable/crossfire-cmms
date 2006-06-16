@@ -23,7 +23,7 @@ sub new {
 	die('No metadata') unless $params{metadata};
 
 	my $self = {};
-	$self->{conf} = $params{conf};
+	$self->{conf}->{ripper} = $params{conf};
 	$self->{metadata} = $params{metadata};
 
 	bless $self, $class;
@@ -35,7 +35,7 @@ sub new {
 sub initialise {
 	my $self = shift;
 
-	$self->{client} = IO::LCDproc::Client->new(name => 'ripper', host => $self->{conf}->{lcdhost}, port => $self->{conf}->{lcdport});
+	$self->{client} = IO::LCDproc::Client->new(name => 'ripper', host => $self->{conf}->{ripper}->{lcdhost}, port => $self->{conf}->{ripper}->{lcdport});
 	$self->{screen} = IO::LCDproc::Screen->new(name => 'screen', client => $self->{client});
 	$self->{title}  = IO::LCDproc::Widget->new(screen => $self->{screen}, name => 'title', type => 'title');
 	$self->{track}  = IO::LCDproc::Widget->new(screen => $self->{screen}, name => 'track',  xPos => 1,  yPos => 2);

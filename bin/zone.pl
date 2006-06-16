@@ -9,7 +9,7 @@ use CMMS::Zone::Status;
 use CMMS::Database::MysqlConnection;
 
 # load config & configure multiplexer
-my %conf = ParseConfig('/etc/cmms_server.conf');
+my %conf = ParseConfig('/etc/cmms.conf');
 
 my $zone;
 GetOptions('zone' => \$zone);

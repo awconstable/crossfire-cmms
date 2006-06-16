@@ -16,7 +16,7 @@ STDOUT->autoflush(1);
 STDERR->autoflush(1);
 
 # load config & configure multiplexer
-my %conf = ParseConfig('/etc/cmms_server.conf');
+my %conf = ParseConfig('/etc/cmms.conf');
 
 # we'll use variable instead constant, so we can change to debug
 # in the running program. 

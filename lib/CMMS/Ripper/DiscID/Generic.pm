@@ -23,7 +23,7 @@ sub new {
 	die('No mysql connection') unless $params{mc};
 
 	my $self = {};
-	$self->{conf} = $params{conf};
+	$self->{conf}->{ripper} = $params{conf};
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -56,7 +56,7 @@ sub DESTROY {
 sub default {
 	my $self = shift;
 
-	my $tmp = $self->{conf}->{tmpdir};
+	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
 	my $discid = md5_hex($self->{discid});
 	my $metadata = {

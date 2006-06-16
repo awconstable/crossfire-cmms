@@ -36,7 +36,7 @@ sub _rip {
 	print STDERR 'track: '.sprintf('%02d',$number)."\n";
 
 	my $file = safe_chars(sprintf('%02d',$number)." $artist $track");
-	my $tmp = $self->{conf}->{tmpdir};
+	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
 	($CDPARANOIA,$pid) = psudo_tty("cdparanoia -w -e $number $tmp$file.wav");
 

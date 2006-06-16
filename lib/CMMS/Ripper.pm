@@ -35,7 +35,7 @@ sub new {
 	$conf{tmpdir} =~ s/\/$//;
 	$conf{tmpdir} .= '/';
 
-	$self->{conf} = \%conf;
+	$self->{conf}->{ripper} = \%conf;
 
 	my $db = $self->{conf}->{mysql};
 	my $mc = new CMMS::Database::MysqlConnection;
@@ -45,17 +45,17 @@ sub new {
 	$mc and $db->{password} and $mc->password( $db->{password} );
 	$mc and $mc->connect || die("Can't connect to database '".$mc->database."' on '".$mc->host."' with user '".$mc->user."'");
 
-	my $metadata = $self->{conf}->{metadata};
-	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf})";
+	my $metadata = $self->{conf}->{ripper}->{metadata};
+	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf}->{ripper})";
 	die("Problem loading metadata $metadata: $@") if $@;
 
-	my $ripper = $self->{conf}->{ripper};
-	eval "use CMMS::Ripper::Extractor::$ripper;\n\$self->{ripper} = new CMMS::Ripper::Extractor::$ripper(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf})";
+	my $ripper = $self->{conf}->{ripper}->{ripper};
+	eval "use CMMS::Ripper::Extractor::$ripper;\n\$self->{ripper} = new CMMS::Ripper::Extractor::$ripper(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf}->{ripper})";
 	die("Problem loading ripper $ripper: $@") if $@;
 
 	$self->{encoder} = [];
-	foreach my $encoder (@{$self->{conf}->{encoder}}) {
-		eval "use CMMS::Ripper::Encoder::$encoder;\n push(\@{\$self->{encoder}},new CMMS::Ripper::Encoder::$encoder(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf}))";
+	foreach my $encoder (@{$self->{conf}->{ripper}->{encoder}}) {
+		eval "use CMMS::Ripper::Encoder::$encoder;\n push(\@{\$self->{encoder}},new CMMS::Ripper::Encoder::$encoder(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf}->{ripper}))";
 		die("Problem loading encoder $encoder: $@") if $@;
 	}
 
@@ -116,7 +116,7 @@ sub amazon_cover {
 	my $url_cover = '';
 
 	my $params = {
-		SubscriptionId => $self->{conf}->{amazonid},
+		SubscriptionId => $self->{conf}->{ripper}->{amazonid},
 		Operation => 'ItemSearch',
 		SearchIndex => 'Music',
 		Artist => $meta->{ARTIST},
@@ -124,7 +124,7 @@ sub amazon_cover {
 		ResponseGroup => 'Images'
 	};
 
-	my $url = $self->{conf}->{amazonurl}.join('&',map{"$_=".uri_escape($params->{$_})}keys %{$params});
+	my $url = $self->{conf}->{ripper}->{amazonurl}.join('&',map{"$_=".uri_escape($params->{$_})}keys %{$params});
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->get($url);
@@ -157,7 +157,7 @@ sub amazon_cover {
 	my $artist = safe_chars($meta->{ARTIST});
 	my $album = safe_chars($meta->{ALBUM});
 	my $comments = safe_chars($meta->{COMMENTS});
-	my $folder = $self->{conf}->{mediadir}."$artist/$album/";
+	my $folder = $self->{conf}->{ripper}->{mediadir}."$artist/$album/";
 	$folder .= "$comments/" if $comments;
 	`mkdir -p $folder` unless -d $folder;
 
@@ -175,7 +175,7 @@ sub store {
 	my $aartist = safe_chars($meta->{ARTIST});
 	my $album = safe_chars($meta->{ALBUM});
 	my $comments = substr(safe_chars($meta->{COMMENTS}),0,32);
-	my $folder = $self->{conf}->{mediadir}."$aartist/$album/";
+	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
 	$folder .= "$comments/" if $comments;
 	$folder =~ s/\/$//;
 
@@ -216,7 +216,7 @@ sub store {
 			my($file_location,$file_name,$file_type) = (/^(.+\/)([^\/]+\.(.+))$/);
 			my $filesize = -s $_;
 			my $bitrate = (/\.mp3$/?160:'');
-			$sql = 'INSERT INTO track_data (track_id,file_location,file_name,file_type,bitrate,filesize,info_source) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($track_id,$file_location,$file_name,$file_type,$bitrate,$filesize,$self->{conf}->{metadata})).')';
+			$sql = 'INSERT INTO track_data (track_id,file_location,file_name,file_type,bitrate,filesize,info_source) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($track_id,$file_location,$file_name,$file_type,$bitrate,$filesize,$self->{conf}->{ripper}->{metadata})).')';
 			$mc->query($sql);
 		}
 
@@ -239,7 +239,7 @@ sub check {
 
 sub purge {
 	my $self = shift;
-	my $tmp = $self->{conf}->{tmpdir};
+	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
 	`rm -f $tmp*.wav`;
 }

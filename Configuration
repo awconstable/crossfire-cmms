@@ -7,5 +7,4 @@ cp bin/cmmsd.pl /usr/bin/
 
 cp init/cmmsd /etc/rc.d/init.d/
 
-cp conf/ripper.conf /etc/cmms_ripper.conf
-cp conf/server.conf /etc/cmms_server.conf
+cp conf/cmms.conf /etc/

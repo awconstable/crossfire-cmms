@@ -6,7 +6,7 @@ use IO::Select;
 use Config::General;
 
 # load config & configure multiplexer
-my %conf = ParseConfig('/etc/cmms_server.conf');
+my %conf = ParseConfig('/etc/cmms.conf');
 my $conf = $conf{crestron};
 
 # flush flush output... don't keep necessary information to yourself!
