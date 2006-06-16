@@ -72,6 +72,14 @@ sub DESTROY {
 sub play {
 	my $self = shift;
 
+	my $mc = $self->mysqlConnection;
+	my $state = '';
+	my $rows = $mc->query_and_get("select value from zone_mem where zone = $self->{zone}->{number}")||[];
+	my $row = $rows->[0];
+	$state = $row->{value} if $row;
+	return $self->pause if $state eq 'pause';
+	return 0 if $state eq 'play';
+
 	my ($track_id, $track_order) = $self->{player}->current_track;
 	$self->{player}->track_mark_played($track_id, $track_order);
 	# not necessary, cause we are playing already marked one

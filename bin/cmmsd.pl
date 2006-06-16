@@ -12,6 +12,9 @@ use CMMS::Zone::Command;
 close(STDERR);
 open(STDERR,'>> /usr/local/cmms/logs/cmmsd.log');
 
+STDOUT->autoflush(1);
+STDERR->autoflush(1);
+
 # load config & configure multiplexer
 my %conf = ParseConfig('/etc/cmms_server.conf');
 

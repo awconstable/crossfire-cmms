@@ -1,4 +1,4 @@
-#$Id: MysqlConnection.pm,v 1.2 2006/06/15 15:28:12 byngmeister Exp $
+#$Id: MysqlConnection.pm,v 1.3 2006/06/16 15:28:17 byngmeister Exp $
 
 package CMMS::Database::MysqlConnection;
 
