@@ -11,7 +11,7 @@
 
 # Path to binary
 daemon=/usr/bin/cmmsd.pl
-prog=cmmsd.pl
+prog=cmms
 RETVAL=0
 
 # subs
@@ -22,7 +22,7 @@ getpids() {
 }
 start() {
         echo -n $"Starting $prog: "
-        $daemon
+        $daemon 1>/dev/null 2>&1 &
         RETVAL=$?
         return $RETVAL
 }
