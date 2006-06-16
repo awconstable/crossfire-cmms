@@ -33,13 +33,6 @@ use constant SERVER => 2;
 
 my @processlist;
 
-push @processlist, { 
-      type => SERVER,
-      handle  => "STDIN",  ## value only for server status 
-      hIN  => \*STDIN,
-      hOUT => \*STDOUT,
-      };
-$select->add(\*STDIN);
 STDOUT->autoflush(1); 
 
 foreach my $item (@$servers) {
