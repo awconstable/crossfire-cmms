@@ -5,5 +5,7 @@ cp bin/crestron.pl /usr/bin/cmms_crestron.pl
 cp bin/zone.pl /usr/bin/cmms_zone.pl
 cp bin/cmmsd.pl /usr/bin/
 
+cp init/cmmsd /etc/init.d/rc.d/
+
 cp conf/ripper.conf /etc/cmms_ripper.conf
 cp conf/server.conf /etc/cmms_server.conf
