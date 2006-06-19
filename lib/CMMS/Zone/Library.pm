@@ -584,6 +584,20 @@ sub queueall {
 	# we are playing current playlist
 	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND `key`='playlist'");
 
+	$pos = 1;
+	$rows = $mc->query_and_get('select track_order as pos from playlist_current where track_played is not null order by track_order desc limit 1')||[];
+	$row = $rows->[0];
+	$pos = $row->{pos} if $row;
+	my $total = 1;
+	$rows = $mc->query_and_get('select count(track_id) as total from playlist_current')||[];
+	$row = $rows->[0];
+	$total = $row->{total} if $row;
+	print hash2cmd(
+		zone => $self->{zone}->{number},
+		cmd => 'transport',
+		playlist => $pos.'/'.$total.' - Default'
+	);
+
 	return 0;
 	# it might be good idea to return anything that show a popup
 }
