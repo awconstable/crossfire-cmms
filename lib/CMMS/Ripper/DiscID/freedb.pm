@@ -1,4 +1,4 @@
-package CMMS::Ripper::DiscID::FreeDB;
+package CMMS::Ripper::DiscID::freedb;
 
 use strict;
 use warnings;
