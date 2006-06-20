@@ -93,7 +93,7 @@ sub rip {
 	print STDERR "Normalizing tracks\n";
 
 	# Normalize wav volume
-	`normalize -b $self->{conf}->{tmpdir}*.wav`;
+	`normalize -b $self->{conf}->{ripper}->{tmpdir}*.wav`;
 
 	$self->{detail}->set(data => 'All tracks ripped');
 	print STDERR "All tracks ripped\n";
