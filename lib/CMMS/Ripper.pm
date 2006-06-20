@@ -178,10 +178,11 @@ sub store {
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
 	$folder .= "$comments/" if $comments;
 	$folder =~ s/\/$//;
+	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>||();
 
 	print STDERR "$folder\n";
 
-	die("No tracks for this album") unless scalar grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*> > 0; # Don't store album if no tracks
+	die("No tracks for this album") unless scalar @files; # Don't store album if no tracks
 
 	my $mc = $self->mysqlConnection;
 
@@ -196,7 +197,7 @@ sub store {
 
 	foreach my $track (@{$meta->{TRACKS}}) {
 		my $track_num = sprintf('%02d',$track->number);
-		my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/${track_num}_*>;
+		my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/${track_num}_*>||();
 		next unless scalar @files;
 
 		my $artist = $mc->quote(($track->artist =~ /Unknown/?'Unknown':$track->artist));
