@@ -97,20 +97,12 @@ sub prev {
 
 	my ($track_id, $track_order) = $self->{player}->get_current_track;
 
-	if(defined $track_id && defined $track_order) {
-		if($track_order > 1) {
-			$self->{player}->track_unmark_played($track_id, $track_order);
-			my ($track_id2, $track_order2) = $self->{player}->current_track;
-			if (defined $track_id2 && defined $track_order2) {
-				return $self->play_stop_by_state($track_id2);
-			} else {
-				my %cmd = (
-					zone => $self->{zone}->{number},
-					cmd  => 'transport',
-					playlist => '_________ START _________'
-				);
-				print &hash2cmd(%cmd);
-			}
+	if(defined $track_id && defined $track_order && $track_order > 1) {
+		$self->{player}->track_unmark_played($track_id, $track_order);
+		my ($track_id2, $track_order2) = $self->{player}->current_track;
+		if(defined $track_id2 && defined $track_order2) {
+			$self->{player}->track_mark_played($track_id2, $track_order2);
+			return $self->play_stop_by_state($track_id2);
 		}
 	}
 	# else we don't have anything else to play

@@ -547,7 +547,7 @@ sub sql_track2playlist {
 		REPLACE INTO playlist_current 
 		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, ($pos+track_num) from track 
 		$where 
-		ORDER BY album_id, track_num;
+		ORDER BY album_id, track_num
 	};
 }
 
@@ -568,7 +568,7 @@ sub queueall {
 	my $mc = $self->mysqlConnection;
 
 	my $pos = 0;
-	my $rows = $mc->query_and_get('select count(track_id) as total from playlist_current')||[];
+	my $rows = $mc->query_and_get("select count(track_id) as total from playlist_current where zone = '$self->{zone}->{number}'")||[];
 	my $row = $rows->[0];
 	$pos = $row->{total} if $row;
 
@@ -585,11 +585,11 @@ sub queueall {
 	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND `key`='playlist'");
 
 	$pos = 1;
-	$rows = $mc->query_and_get('select track_order as pos from playlist_current where track_played is not null order by track_order desc limit 1')||[];
+	$rows = $mc->query_and_get("select track_order as pos from playlist_current where zone = '$self->{zone}->{number}' and track_played is not null order by track_order desc limit 1")||[];
 	$row = $rows->[0];
 	$pos = $row->{pos} if $row;
 	my $total = 1;
-	$rows = $mc->query_and_get('select count(track_id) as total from playlist_current')||[];
+	$rows = $mc->query_and_get("select count(track_id) as total from playlist_current where zone = '$self->{zone}->{number}'")||[];
 	$row = $rows->[0];
 	$total = $row->{total} if $row;
 	print hash2cmd(

@@ -192,7 +192,7 @@ sub current_track {
 	my $mc = $self->mysqlConnection;
 
 	my $sql = qq{
-		SELECT Count(*) 
+		SELECT count(track_id) as total 
 		FROM playlist_current 
 		WHERE zone = %d AND 
 		track_played IS NOT NULL;
@@ -202,7 +202,7 @@ sub current_track {
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
-	if ($row->{'Count(*)'} > 0) {
+	if ($row->{'total'} > 0) {
 	    	# we are somewhere in the playlist, so we can get current track
 	    	return $self->get_current_track;
 	} else {
@@ -344,7 +344,7 @@ sub get_playlist_num_played {
 	my $mc = $self->mysqlConnection;
 
 	my $sql = qq{
-		SELECT Count(*) 
+		SELECT count(track_id) as total 
 		FROM playlist_current 
 		WHERE zone = %d AND 
 		track_played IS NOT NULL
@@ -354,7 +354,7 @@ sub get_playlist_num_played {
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
-	return $row->{'Count(*)'} if $row;
+	return $row->{'total'} if $row;
 
 	return undef;
 }
@@ -365,7 +365,7 @@ sub get_playlist_num_tracks {
 	my $mc = $self->mysqlConnection;
 
 	my $sql = qq{
-		SELECT Count(*) 
+		SELECT count(track_id) as total 
 		FROM playlist_current 
 		WHERE zone = %d
 	};
@@ -374,7 +374,7 @@ sub get_playlist_num_tracks {
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
-	return $row->{'Count(*)'} if $row;
+	return $row->{'total'} if $row;
 
 	return undef;
 }
