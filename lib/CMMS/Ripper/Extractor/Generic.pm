@@ -89,6 +89,12 @@ sub rip {
 	$self->{track}->set(data => '');
 	$self->{status}->set(data => '');
 	$self->{pg_bar}->set(data => '');
+	$self->{detail}->set(data => 'Normalizing tracks');
+	print STDERR "Normalizing tracks\n";
+
+	# Normalize wav volume
+	`normalize -b $self->{conf}->{tmpdir}*.wav`;
+
 	$self->{detail}->set(data => 'All tracks ripped');
 	print STDERR "All tracks ripped\n";
 
