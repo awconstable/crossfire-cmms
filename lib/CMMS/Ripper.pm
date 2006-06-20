@@ -35,7 +35,7 @@ sub new {
 	$conf{tmpdir} =~ s/\/$//;
 	$conf{tmpdir} .= '/';
 
-	$self->{conf}->{ripper} = \%conf;
+	$self->{conf} = \%conf;
 
 	my $db = $self->{conf}->{mysql};
 	my $mc = new CMMS::Database::MysqlConnection;

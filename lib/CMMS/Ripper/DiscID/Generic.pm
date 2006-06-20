@@ -23,7 +23,7 @@ sub new {
 	die('No mysql connection') unless $params{mc};
 
 	my $self = {};
-	$self->{conf}->{ripper} = $params{conf};
+	$self->{conf} = $params{conf};
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});

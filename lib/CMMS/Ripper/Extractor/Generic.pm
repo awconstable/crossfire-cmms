@@ -23,7 +23,7 @@ sub new {
 	die('No metadata') unless $params{metadata};
 
 	my $self = {};
-	$self->{conf}->{ripper} = $params{conf};
+	$self->{conf} = $params{conf};
 	$self->{metadata} = $params{metadata};
 
 	bless $self, $class;
