@@ -12,11 +12,14 @@ use CMMS::Database::MysqlConnection;
 my %conf = ParseConfig('/etc/cmms.conf');
 
 my $zone;
-GetOptions('zone' => \$zone);
+GetOptions('zone=s' => \$zone);
 
 foreach(@{$conf{zones}->{zone}}) {
 	next unless $_->{number};
-	$zone = $_ if $_->{number} == $zone;
+	if($_->{number} eq $zone) {
+		$zone = $_;
+		last;
+	}
 }
 
 my $db = $conf{mysql};
