@@ -7,7 +7,6 @@ use URI::Escape;
 use LWP;
 use CMMS::File;
 use CMMS::Database::MysqlConnection;
-use Data::Dumper;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -29,9 +28,6 @@ sub new {
 	my $self = {};
 
 	my %conf = ParseConfig($params{conf});
-
-	print Dumper(%conf);
-
 	@_ = split(',',$conf{ripper}->{encoder});
 	$conf{ripper}->{encoder} = \@_;
 	$conf{ripper}->{mediadir} =~ s/\/$//;
@@ -50,7 +46,7 @@ sub new {
 	$mc and $mc->connect || die("Can't connect to database '".$mc->database."' on '".$mc->host."' with user '".$mc->user."'");
 
 	my $metadata = $self->{conf}->{ripper}->{metadata};
-	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf}})";
+	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf})";
 	die("Problem loading metadata $metadata: $@") if $@;
 
 	my $ripper = $self->{conf}->{ripper}->{ripper};
