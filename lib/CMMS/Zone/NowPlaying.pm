@@ -87,7 +87,12 @@ sub play {
 	return $self->{player}->playtrack($track_id) if (defined $track_id) && (defined $track_order);
 }
 
-sub stop {return 'stop';}
+sub stop {
+	my $self = shift;
+
+	$self->{player}->{last_track} = undef;
+	return 'stop';
+}
 sub pause {return 'pause';}
 sub rev {return 'seek -10';}
 sub fwd {return 'seek +10';}
@@ -140,9 +145,11 @@ sub play_stop_by_state {
 		return $self->{player}->playtrack($track_id);
 	} elsif($state eq 'stop') {
 		my %trackinfo = $self->{player}->get_fulltrack_info($track_id);
+		$self->{player}->{last_track} = undef;
 		print &hash2cmd(%trackinfo);
 	} elsif($state eq 'pause') {
 		my %trackinfo = $self->{player}->get_fulltrack_info($track_id);
+		$self->{player}->{last_track} = undef;
 		print &hash2cmd(%trackinfo);
 		return 'stop';
 	}
