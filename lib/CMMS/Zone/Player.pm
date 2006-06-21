@@ -412,7 +412,7 @@ sub get_fulltrack_info {
 	if(defined $playlist_id) {
 		$playlist .= $self->get_playlist_name($playlist_id); 
 	} else {
-		$playlist .= ' Default';
+		$playlist .= ' Now Playing';
 	}
 
 	if($row) {

@@ -97,7 +97,7 @@ sub prev {
 
 	my ($track_id, $track_order) = $self->{player}->get_current_track;
 
-	if(defined $track_id && defined $track_order && $track_order > 1) {
+	if(defined $track_id && defined $track_order) {
 		$self->{player}->track_unmark_played($track_id, $track_order);
 		my ($track_id2, $track_order2) = $self->{player}->current_track;
 		if(defined $track_id2 && defined $track_order2) {

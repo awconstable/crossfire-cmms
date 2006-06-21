@@ -178,7 +178,7 @@ sub store {
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
 	$folder .= "$comments/" if $comments;
 	$folder =~ s/\/$//;
-	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>||();
+	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
 	print STDERR "$folder\n";
 
@@ -195,12 +195,17 @@ sub store {
 	($_) = @{$mc->query_and_get($sql)||[]};
 	$genre_id = $_->{id} || -1;
 
+	@files = ();
 	foreach my $track (@{$meta->{TRACKS}}) {
 		my $track_num = sprintf('%02d',$track->number);
-		my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/${track_num}_*>||();
+		my $artitst = $track->artist;
+		$artist = 'Unknown' if $artist =~ /^unknown/i;
+		my $title = $track->title;
+		$title = safe_chars("$track_num $artist $title");
+		@files = <$folder/$title.*>;
 		next unless scalar @files;
 
-		my $artist = $mc->quote(($track->artist =~ /Unknown/?'Unknown':$track->artist));
+		$artist = $mc->quote($artitst);
 		($_) = @{$mc->query_and_get('SELECT id FROM artist WHERE name = '.$artist)||[]};
 		$artist_id = 0;
 		unless($artist_id = $_->{id}) {

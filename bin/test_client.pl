@@ -7,10 +7,11 @@ $| = 1;
 
 my ($remote, $port, $iaddr, $paddr, $proto, $line);
 
-$remote  = 'localhost';
+$remote  = 'cmms';
 $port    = 6661;
 if ($port =~ /\D/) { $port = getservbyname($port, 'tcp') }
-$iaddr   = inet_aton($remote) || die "no host: $remote";
+#$iaddr   = inet_aton($remote) || die "no host: $remote";
+$iaddr   = 10.1.1.244;
 $paddr   = sockaddr_in($port, $iaddr);
 $proto   = getprotobyname('tcp');
 socket(SOCK, PF_INET, SOCK_STREAM, $proto) || die "socket: $!";

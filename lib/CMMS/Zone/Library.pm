@@ -5,6 +5,7 @@ use Storable qw(freeze thaw);
 use CMMS::Zone::Player;
 use CMMS::Zone::NowPlaying;
 use CMMS::Zone::Command;
+use POSIX qw(ceil);
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -210,6 +211,26 @@ sub make_select {
 	return $i;
 }
 
+sub make_select_no_limit {
+	my ($self, $query) = @_;
+
+	my $mc = $self->mysqlConnection;
+
+	$query =~ s/LIMIT \? OFFSET \?//ig;
+
+	my $rows = $mc->query_and_get($query)||[];
+
+	$mem{lines} = ();
+	my $i = 0;
+	foreach( @{$rows} ) {
+		$mem{lines}{$i}{id}   = $_->{id};
+		$mem{lines}{$i}{text} = $_->{text};
+		$i++;
+	}
+
+	return $i;
+}
+
 sub sql_prepare_where {
 	my $self = shift;
 
@@ -320,6 +341,18 @@ sub sql_track_where_by_id {
          LIMIT ? OFFSET ?
   };
 }   
+
+sub sql_track_where_num {
+	my ($self, $where) = @_;
+
+  return qq{
+         SELECT id, title as text
+         FROM track 
+         $where
+         ORDER BY track_num
+         LIMIT ? OFFSET ? 
+  };
+}
                                                    
 sub sql_track_where {
 	my ($self, $where) = @_;
@@ -361,15 +394,15 @@ sub select_albums {
 	my $self = shift;
 
 	my $q = '';
-  if (my $tmp = $self->sql_prepare_where) {
+  if(my $tmp = $self->sql_prepare_where) {
       $q = $self->sql_album_where($tmp);
   } else {
       $q = $self->sql_album_plain;
   }
 
   my $rows = $self->make_select($q);
-  if ($rows > 0) {
-      for (my $i = 0; $i<$rows; $i++) {
+  if($rows > 0) {
+      for(my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{album_id} = $id;
           $mem{lines}{$i}{cmd} = 'change';
@@ -385,19 +418,19 @@ sub select_tracks {
 	my $self = shift;
 
 	my $q = '';
-  if (my $tmp = $self->sql_prepare_where) {
-      if ($mem{album}) { 
+  if(my $tmp = $self->sql_prepare_where) {
+      if($mem{album}) { 
           $q = $self->sql_track_where_by_id($tmp);
       } else {
-          $q = $self->sql_track_where ($tmp);
+          $q = $self->sql_track_where_num($tmp);
       }
   } else {
       $q = $self->sql_track_where('');
   }
 
   my $rows = $self->make_select($q);
-  if ($rows > 0) {
-      for (my $i = 0; $i<$rows; $i++) {
+  if($rows > 0) {
+      for(my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{track_id} = $id;
           $mem{lines}{$i}{cmd} = 'play';
@@ -621,15 +654,37 @@ sub playall {
 sub page_next {
 	my $self = shift;
 
-	my $last_offset = $mem{offset};
+	my $c = $mem{category};
+
+	my $total = 0;
+	if($c eq 'genres') {
+		$total = $self->make_select_no_limit($self->sql_genre($self->sql_prepare_where||''));
+	} elsif($c eq 'artists') {
+		$total = $self->make_select_no_limit($self->sql_artist_where($self->sql_prepare_where||''));
+	} elsif($c eq 'albums') {
+		$total = $self->make_select_no_limit($self->sql_album_where($self->sql_prepare_where||''));
+	} elsif($c eq 'tracks') {
+		$total = $self->make_select_no_limit($self->sql_track_where($self->sql_prepare_where||''));
+	} elsif($c eq 'playlists') {
+		$total = $self->make_select_no_limit($self->sql_playlist($self->sql_prepare_where||''));
+	}
+	$total = (ceil($total / $limit)-1) * $limit;
+
+	if($mem{offset} eq $total) {
+		# we are at end, so return without screen redrawing
+		# Hack :(
+		$mem{offset} += $limit;
+		return $self->page_prev;
+	}
+
 	$mem{offset} += $limit;
 	if($self->prepare_memory) {
 		$self->history_update;
 		return 1;
 	} else {
-		$mem{offset} = $last_offset;
+		$mem{offset} = $total;   # something went wrong, set to zero ;-)
 		return 0;
-	}
+	} 
 }
 
 sub page_prev {
