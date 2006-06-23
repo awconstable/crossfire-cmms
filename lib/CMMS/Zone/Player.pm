@@ -28,7 +28,6 @@ sub new {
 	$self->{conf} = $params{conf};
 	$self->{handle} = $params{handle};
 	$self->{zone} = $params{zone};
-	$self->{last_track} = undef;
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -63,8 +62,6 @@ sub DESTROY {
 
 sub playtrack {
 	my ($self, $track_id) = @_;
-	
-	return 0 if $track_id eq $self->{last_track};
 
 	my $filename = $self->trackid2filename($track_id);
 	return 0 unless $filename;
@@ -73,7 +70,6 @@ sub playtrack {
 
 	$filename =~ s/$path//;
 
-	$self->{last_track} = $track_id;
 	return 'play '.$path.$filename;
 }
 
