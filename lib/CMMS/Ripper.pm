@@ -198,14 +198,14 @@ sub store {
 	@files = ();
 	foreach my $track (@{$meta->{TRACKS}}) {
 		my $track_num = sprintf('%02d',$track->number);
-		my $artitst = $track->artist;
+		my $artist = $track->artist;
 		$artist = 'Unknown' if $artist =~ /^unknown/i;
 		my $title = $track->title;
 		$title = safe_chars("$track_num $artist $title");
 		@files = <$folder/$title.*>;
 		next unless scalar @files;
 
-		$artist = $mc->quote($artitst);
+		$artist = $mc->quote($artist);
 		($_) = @{$mc->query_and_get('SELECT id FROM artist WHERE name = '.$artist)||[]};
 		$artist_id = 0;
 		unless($artist_id = $_->{id}) {
