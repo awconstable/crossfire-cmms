@@ -1,4 +1,4 @@
-#$Id: MysqlConnection.pm,v 1.3 2006/06/16 15:28:17 byngmeister Exp $
+#$Id: MysqlConnection.pm,v 1.4 2006/06/26 15:56:53 byngmeister Exp $
 
 package CMMS::Database::MysqlConnection;
 
@@ -62,8 +62,8 @@ sub new {
 
   $self->host( $params{host} || 'localhost' );
   $self->database( $params{database} || 'cmms' );
-  $self->user( $params{user} || 'root' );
-  $self->password( $params{password} || '' );
+  $self->user( $params{user} || 'cmms' );
+  $self->password( $params{password} || 'cmms' );
 
   return $self;
 }
