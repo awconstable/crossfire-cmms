@@ -8,3 +8,4 @@ cp bin/cmmsd.pl /usr/bin/
 cp init/cmmsd /etc/rc.d/init.d/
 
 cp conf/cmms.conf /etc/
+cp conf/cdde.xml /etc/

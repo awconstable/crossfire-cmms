@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<cdde delay="500000">
+  <drive path="/dev/cdrom">
+    <audio command="/usr/bin/perl -w /usr/bin/cmms_ripper.pl"/>
+    <mixed command="/usr/bin/perl -w /usr/bin/cmms_ripper.pl"/>
+    <data command="eject"/>
+    <dvd command="eject"/>
+    <vcd command="eject"/>
+    <svcd command="eject"/>
+    <blank command="eject"/>
+  </drive>
+</cdde>
