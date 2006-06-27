@@ -112,7 +112,7 @@ sub pause {
 
 	my $mc = $self->mysqlConnection;
 
-	$mc->query("REPLACE INTO zone_mem VALUES('$self->{zone}->{number}', 'state', 'pause')");
+	$mc->query("REPLACE INTO zone_mem (zone,`key`,value) VALUES('$self->{zone}->{number}', 'state', 'pause')");
 
 	return (
 		cmd   => 'transport',
@@ -125,7 +125,7 @@ sub playing {
 
 	my $mc = $self->mysqlConnection;
 
-	$mc->query("REPLACE INTO zone_mem VALUES('$self->{zone}->{number}', 'state', 'play')");
+	$mc->query("REPLACE INTO zone_mem (zone,`key`,value) VALUES('$self->{zone}->{number}', 'state', 'play')");
 
 	return (
 		cmd   => 'transport',
@@ -138,7 +138,7 @@ sub stop {
 
 	my $mc = $self->mysqlConnection;
 
-	$mc->query("REPLACE INTO zone_mem VALUES('$self->{zone}->{number}', 'state', 'stop')");
+	$mc->query("REPLACE INTO zone_mem (zone,`key`,value) VALUES('$self->{zone}->{number}', 'state', 'stop')");
 
 	return (
 		cmd   => 'transport',
