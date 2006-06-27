@@ -10,3 +10,5 @@ cp init/cmmsd /etc/rc.d/init.d/
 cp conf/cmms.conf /etc/
 cp conf/cdde.xml /etc/
 cp conf/LCDd.conf /etc/
+
+patch /etc/fstab -i fstab.patch
