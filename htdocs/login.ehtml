@@ -1,8 +1,8 @@
 [- 
 use CommunityNode;
-use SmsGateway::MysqlConnection;
-use SmsGateway::Theme::HTML;
-use SmsGateway::MysqlConnection;
+use CMMS::Database::MysqlConnection;
+use CMMS::Database::Theme::HTML;
+use CMMS::Database::MysqlConnection;
 use CGI;
 use URI::Escape;
 use TAER::Session::Session;
@@ -10,15 +10,15 @@ use Data::Dumper;
 
 $cgi = new CGI;
 
-$cn_mc = new SmsGateway::MysqlConnection;
-# get SmsGateway database config from environment
+$cn_mc = new CMMS::Database::MysqlConnection;
+# get CMMS::Database database config from environment
 %cn_conf = qw/cnHost host cnUser user cnPassword password cnDatabase database/;
 while ( my($conf,$method) = each %cn_conf ) {
   $ENV{$conf} && $cn_mc->$method($ENV{$conf});
 }
 $cn_mc->connect;
 
-$mc = new SmsGateway::MysqlConnection;
+$mc = new CMMS::Database::MysqlConnection;
 
 # get application database config from environment
 $ENV{'dbHost'} and $mc->host($ENV{'dbHost'});
@@ -30,7 +30,7 @@ $mc->connect;
 
 # Create the look and feel theme object
 #
-$laf = new SmsGateway::Theme::HTML();
+$laf = new CMMS::Database::Theme::HTML();
 $ENV{'Theme'} and $laf->theme($ENV{'Theme'});
 $ENV{'ThemeDirectory'} and $laf->theme_root($ENV{'ThemeDirectory'});
 $laf->http_root($ENV{'DOCUMENT_ROOT'});

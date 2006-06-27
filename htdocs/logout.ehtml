@@ -1,8 +1,8 @@
 [-
   use CommunityNode;
-  use SmsGateway::MysqlConnection;
-  use SmsGateway::Theme::HTML;
-  use SmsGateway::MysqlConnection;
+  use CMMS::Database::MysqlConnection;
+  use CMMS::Database::Theme::HTML;
+  use CMMS::Database::MysqlConnection;
   use CGI;
   use URI::Escape;
   use TAER::Session::Session;
@@ -10,7 +10,7 @@
   $cgi = new CGI;
 
   # get any settings from environment
-  $mc = new SmsGateway::MysqlConnection;
+  $mc = new CMMS::Database::MysqlConnection;
   for my $p (qw/Host User Password Database/) {
     my $method = lc($p);
     $ENV{"db$p"} and $mc->$method($ENV{"db$p"});
@@ -18,7 +18,7 @@
   $mc->connect;
 
   # create the look and feel theme object
-  $laf = new SmsGateway::Theme::HTML();
+  $laf = new CMMS::Database::Theme::HTML();
   $ENV{Theme}          and $laf->theme($ENV{Theme});
   $ENV{ThemeDirectory} and $laf->theme_root($ENV{ThemeDirectory});
   $laf->http_root($ENV{DOCUMENT_ROOT});
