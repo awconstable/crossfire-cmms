@@ -170,7 +170,7 @@ sub random {
 		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'random'");
 		$random = undef;
 	} else {
-		$mc->query_and_get("REPLACE INTO zone_mem values('$self->{zone}->{number}', 'random', 1)");
+		$mc->query_and_get("REPLACE INTO zone_mem (zone,`key`,value) values('$self->{zone}->{number}', 'random', 1)");
 		$random = 1;
 	}
 
@@ -198,7 +198,7 @@ sub repeat {
 		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'repeat'");
 		$repeat = undef;
 	} else {
-		$mc->query_and_get("REPLACE INTO zone_mem values('$self->{zone}->{number}', 'repeat', 1)");
+		$mc->query_and_get("REPLACE INTO zone_mem (zone,`key`,value) values('$self->{zone}->{number}', 'repeat', 1)");
 		$repeat = 1;
 	}
 

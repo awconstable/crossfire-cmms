@@ -769,7 +769,7 @@ sub menu_playplaylist {
 	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
 	my $ret = $mc->query($sql);
 
-	$sql = "REPLACE INTO zone_mem VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
+	$sql = "REPLACE INTO zone_mem (zone,`key`,value) VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
 
 	$mc->query($sql);
 
