@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# irmp3d        Startup script for the irmp3d Daemon
+#
+# chkconfig: - 85 15
+# description: Daemon for irmp3d
+# processname: irmp3d
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Path to binary
+daemon=/usr/local/sbin/irmp3d
+prog=irmp3d
+RETVAL=0
+
+# subs
+getpids() {
+        PIDS=`ps -efww | grep $prog | awk {'print $2'}`
+	PIDS=`echo ${PIDS//\n/''}`
+        [ -z "$PIDS" ] && return 1 || return 0
+}
+start() {
+        echo -n $"Starting $prog: "
+        $daemon -l /var/log/irmp3d.log 1>/dev/null 2>&1
+        RETVAL=$?
+        return $RETVAL
+}
+stop() {
+	echo -n $"Stopping $prog: "
+	getpids && [ -w / ] && kill $PIDS
+	RETVAL=$?
+	return $RETVAL
+}
+status() {
+	if getpids ; then
+		echo "$prog ($PIDS) is running..."
+	else
+		echo "$prog is stopped"
+		RETVAL=1
+	fi
+	echo
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	if getpids ; then
+		echo "$prog ($PIDS) is allready running..."
+	else
+		start && success || failure
+	fi
+	echo
+	;;
+  stop)
+	stop && success || failure
+	echo
+	;;
+  status)
+        status
+	RETVAL=$?
+	;;
+  restart)
+        stop && success || failure
+        echo
+        start && success || failure
+        echo
+        ;;
+  condrestart)
+        if getpids ; then
+                stop && success || failure
+                echo
+                start && success || failure
+                echo
+        else
+                echo "$prog is stopped"
+        fi
+	;;
+  *)
+	echo $"Usage: cmmsd {start|stop|restart|condrestart|status}"
+	exit 1
+esac
+
+exit $RETVAL

@@ -6,6 +6,9 @@ cp bin/zone.pl /usr/bin/cmms_zone.pl
 cp bin/cmmsd.pl /usr/bin/
 
 cp init/cmmsd /etc/rc.d/init.d/
+cp init/cdde /etc/rc.d/init.d/
+cp init/irmp3d /etc/rc.d/init.d/
+cp init/LCDd /etc/rc.d/init.d/
 
 cp conf/cmms.conf /etc/
 cp conf/cdde.xml /etc/
