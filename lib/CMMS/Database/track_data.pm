@@ -1,4 +1,4 @@
-#$Id: track_data.pm,v 1.2 2006/06/27 14:43:44 byngmeister Exp $
+#$Id: track_data.pm,v 1.3 2006/06/27 15:18:12 byngmeister Exp $
 
 package CMMS::Database::track_data;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -95,7 +95,7 @@ sub new {
 
             },
             'bitrate' => {
-	        type => "smallint",
+	        type => "int",
 		tag  => "Bitrate",
 		title => "Bitrate",
 
