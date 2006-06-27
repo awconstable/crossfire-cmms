@@ -1,4 +1,4 @@
-#$Id: playlist_current.pm,v 1.3 2006/06/27 14:39:10 byngmeister Exp $
+#$Id: playlist_current.pm,v 1.4 2006/06/27 14:43:44 byngmeister Exp $
 
 package CMMS::Database::playlist_current;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
