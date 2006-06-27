@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.4 2006/06/27 14:43:44 byngmeister Exp $
+#$Id: genre.pm,v 1.5 2006/06/27 15:39:18 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -61,6 +61,7 @@ sub new {
 		tag  => "Id",
 		title => "Id",
 		primkey => 1,
+		displaytype => "hidden",
 
             },
             'name' => {
