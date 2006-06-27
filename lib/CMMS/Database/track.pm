@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.2 2006/06/27 14:32:36 byngmeister Exp $
+#$Id: track.pm,v 1.3 2006/06/27 14:39:10 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -68,7 +68,7 @@ sub new {
 		tag  => "Album",
 		title => "Album",
 		lookup => {
-		    table => "Album",
+		    table => "album",
 		    keycol => "id",
 		    valcol => "name",
 		    none => "NULL",
@@ -81,7 +81,7 @@ sub new {
 		tag  => "Artist",
 		title => "Artist",
 		lookup => {
-		    table => "Artist",
+		    table => "artist",
 		    keycol => "id",
 		    valcol => "name",
 		    none => "NULL",
@@ -94,7 +94,7 @@ sub new {
 		tag  => "Genre",
 		title => "Genre",
 		lookup => {
-		    table => "Genre",
+		    table => "genre",
 		    keycol => "id",
 		    valcol => "name",
 		    none => "NULL",

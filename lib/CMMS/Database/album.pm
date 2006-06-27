@@ -1,4 +1,4 @@
-#$Id: album.pm,v 1.2 2006/06/27 14:32:36 byngmeister Exp $
+#$Id: album.pm,v 1.3 2006/06/27 14:39:10 byngmeister Exp $
 
 package CMMS::Database::album;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
