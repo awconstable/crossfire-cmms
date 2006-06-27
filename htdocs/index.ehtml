@@ -1,1 +1,2 @@
 <A HREF="select_album.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Albums</A>
+<p><A HREF="select_playlist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Playlists</A>
