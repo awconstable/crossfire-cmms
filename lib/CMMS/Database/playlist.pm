@@ -1,4 +1,4 @@
-#$Id: playlist.pm,v 1.1 2006/06/07 16:01:05 byngmeister Exp $
+#$Id: playlist.pm,v 1.2 2006/06/27 14:32:36 byngmeister Exp $
 
 package CMMS::Database::playlist;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -52,7 +52,7 @@ sub new {
     list_display => [ "id", "name",  ],
     tagorder => [ "id", "name",  ],
     tagrelationorder => [ ],
-    relationshiporder => [ ],
+    relationshiporder => [ "playlist_track" ],
     no_broadcast => 1,
     no_clone => 1,
     elements => {
@@ -72,6 +72,17 @@ sub new {
 
     },
     relationships => {
+	'playlist_track' => {
+	    type => "one2many",
+	    localkey => "id",
+	    foreignkey => "playlist_id",
+	    title => "Track(s)",
+	    tag => "playlist_track",
+	    display => [
+	    		{ col => "track_id", title => "Track" },
+	    		{ col => "track_order", title => "Order" },
+			],
+	}
     },
   });
 
