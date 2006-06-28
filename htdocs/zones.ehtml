@@ -35,6 +35,8 @@ if($cgi->param('save')) {
 
 $zones->[(scalar @{$zones} - 1)]->{number} = (scalar @{$zones});
 
+unshift @{$zones}, pop @{$zones};
+
 -]
 <html>
 <head>
@@ -96,10 +98,10 @@ Off <input type="radio" value="" name="[+ $zone->{number} +]_time"[$ if $zone->{
 <td>Time format:</td>
 <td><input type="text" name="[+ $zone->{number} +]_timeformat" value="[+ $zone->{timeformat} +]"></td>
 </tr>
-[$ endforeach $]
 <tr>
-<td colspan="2" align="right"><input type="submit" value="Save"></td>
+<td colspan="2" align="right"><input type="button" onclick="this.form.submit();" value="Save"></td>
 </tr>
+[$ endforeach $]
 </form>
 </table>
 </body>
