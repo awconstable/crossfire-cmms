@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.5 2006/06/27 15:39:18 byngmeister Exp $
+#$Id: track.pm,v 1.6 2006/06/28 08:13:37 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -110,7 +110,7 @@ sub new {
 
             },
             'track_num' => {
-	        type => "smallint",
+	        type => "int",
 		tag  => "Track_num",
 		title => "Track_num",
 
@@ -122,7 +122,7 @@ sub new {
 
             },
             'ctime' => {
-	        type => "timestamp",
+	        type => "datetime",
 		tag  => "Ctime",
 		title => "Ctime",
 
