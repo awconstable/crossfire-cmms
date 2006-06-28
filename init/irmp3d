@@ -2,7 +2,7 @@
 #
 # irmp3d        Startup script for the irmp3d Daemon
 #
-# chkconfig: 2345 90 20
+# chkconfig: 2345 88 20
 # description: Daemon for irmp3d
 # processname: irmp3d
 

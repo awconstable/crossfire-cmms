@@ -2,7 +2,7 @@
 #
 # cmmsd.pl        Startup script for the CMMS Daemon
 #
-# chkconfig: 2345 90 20
+# chkconfig: 2345 89 20
 # description: Daemon for CMMS
 # processname: cmmsd.pl
 

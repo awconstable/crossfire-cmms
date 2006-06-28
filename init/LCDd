@@ -2,7 +2,7 @@
 #
 # LCDd        Startup script for the LCDd Daemon
 #
-# chkconfig: 2345 90 20
+# chkconfig: 2345 87 20
 # description: Daemon for LCDd
 # processname: LCDd
 

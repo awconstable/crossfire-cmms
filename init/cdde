@@ -2,7 +2,7 @@
 #
 # cdde        Startup script for the cdde Daemon
 #
-# chkconfig: 2345 90 20
+# chkconfig: 2345 86 20
 # description: Daemon for cdde
 # processname: cdde
 
