@@ -34,7 +34,6 @@ if($cgi->param('save')) {
 }
 
 $zones->[(scalar @{$zones} - 1)]->{number} = (scalar @{$zones});
-
 unshift @{$zones}, pop @{$zones};
 
 -]

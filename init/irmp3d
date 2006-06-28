@@ -22,6 +22,8 @@ getpids() {
 }
 start() {
         echo -n $"Starting $prog: "
+        rexima pcm 80
+        rexima vol 80
         $daemon -l /var/log/irmp3d.log 1>/dev/null 2>&1
         RETVAL=$?
         return $RETVAL
