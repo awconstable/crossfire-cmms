@@ -1,0 +1,111 @@
+[-
+
+use Config::General;
+use CGI;
+use Data::Dumper;
+
+$cgi = new CGI;
+%conf  = ParseConfig('/etc/cmms.conf');
+$zones = $conf{zones}->{zone};
+$save_zones = [];
+
+$restart = '';
+
+if($cgi->param('save')) {
+	foreach my $num (1..scalar @{$zones}) {
+		push @{$save_zones}, {
+			number => $cgi->param($num.'_number'),
+			host => $cgi->param($num.'_host'),
+			port => $cgi->param($num.'_port'),
+			location => $cgi->param($num.'_location'),
+			datapath => $cgi->param($num.'_datapath'),
+			time => $cgi->param($num.'_time'),
+			timeformat => $cgi->param($num.'_timeformat')
+		} if $cgi->param($num.'_host') ne '' && $cgi->param($num.'_port') ne '';
+	}
+
+	push @{$save_zones}, {};
+	$conf{zones}->{zone} = $save_zones;
+	$zones = $save_zones;
+	SaveConfig('/etc/cmms.conf',\%conf);
+
+	$restart = `./restart.sh`;
+	$restart =~ s/FAILED/\\<span class="failed">FAILED<\/span>/g;
+	$restart =~ s/OK/\\<span class="ok">OK<\/span>/g;
+}
+
+$zones->[(scalar @{$zones} - 1)]->{number} = (scalar @{$zones});
+
+-]
+<html>
+<head>
+<title>CMMS</title>
+<style>
+p, li, td, h2, h3 {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: smaller;
+}
+h2 {
+  font-size: larger;
+}
+span.failed {
+  color: red;
+}
+span.ok {
+  color: green;
+}
+</style>
+</head>
+<body>
+<h2>Zones</h2>
+<p><a href="/">Home</a></p>
+[$ if $restart ne '' $]
+<h3>cmmsd Restart</h3>
+<pre>[+ $restart +]</pre>
+[$ endif $]
+<table>
+<form>
+<input type="hidden" name="save" value="1">
+[$ foreach $zone (@{$zones}) $]
+<tr>
+<th colspan="2" align="centre"><br><h2>Zone [+ $zone->{number} +]</h2></th>
+</tr>
+<tr>
+<td>Number:</td>
+<td><input type="text" name="[+ $zone->{number} +]_number" value="[+ $zone->{number} +]"></td>
+</tr>
+<tr>
+<td>Host:</td>
+<td><input type="text" name="[+ $zone->{number} +]_host" value="[+ $zone->{host} +]"></td>
+</tr>
+<tr>
+<td>Port:</td>
+<td><input type="text" name="[+ $zone->{number} +]_port" value="[+ $zone->{port} +]"></td>
+</tr>
+<tr>
+<td>Location:</td>
+<td><input type="text" name="[+ $zone->{number} +]_location" value="[+ $zone->{location} +]"></td>
+</tr>
+<tr>
+<td>Data path:</td>
+<td><input type="text" name="[+ $zone->{number} +]_datapath" value="[+ $zone->{datapath} +]"></td>
+</tr>
+<tr>
+<td>Time display:</td>
+<td>
+On <input type="radio" value="1" name="[+ $zone->{number} +]_time"[$ if $zone->{time} eq 1 $]  checked[$ endif $]>
+Off <input type="radio" value="" name="[+ $zone->{number} +]_time"[$ if $zone->{time} ne 1 $]  checked[$ endif $]>
+</td>
+</tr>
+<tr>
+<td>Time format:</td>
+<td><input type="text" name="[+ $zone->{number} +]_timeformat" value="[+ $zone->{timeformat} +]"></td>
+</tr>
+[$ endforeach $]
+<tr>
+<td colspan="2" align="right"><input type="submit" value="Save"></td>
+</tr>
+</form>
+</table>
+</body>
+</html>

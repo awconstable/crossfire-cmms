@@ -1,2 +1,31 @@
-<A HREF="select_album.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Albums</A>
-<p><A HREF="select_playlist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Playlists</A>
+<html>
+<head>
+<title>CMMS</title>
+<style>
+p, li, td, h2, h3 {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: smaller;
+}
+h2 {
+  font-size: larger;
+}
+</style>
+</head>
+<body>
+<p>
+<h2>CMMS</h2>
+<ul>
+<li><A HREF="select_album.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Albums</A></li>
+<li><A HREF="select_artist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Artists</A></li>
+<li><A HREF="select_playlist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Playlists</A></li>
+</ul>
+</p>
+<p>
+<h2>Config</h2>
+<ul>
+<li><A HREF="zones.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Zones</A></li>
+<li><A HREF="network.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Network</A></li>
+</ul>
+</p>
+</body>
+</html>
