@@ -9,6 +9,12 @@ p, li, td, h2, h3 {
 h2 {
   font-size: larger;
 }
+span.failed {
+  color: red;
+}
+span.ok {
+  color: green;
+}
 </style>
 </head>
 <body>

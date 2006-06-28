@@ -2,7 +2,6 @@
 
 use Config::General;
 use CGI;
-use Data::Dumper;
 
 $cgi = new CGI;
 %conf  = ParseConfig('/etc/cmms.conf');
