@@ -13,7 +13,7 @@ $restart = '';
 if($cgi->param('save')) {
 	foreach my $num (1..scalar @{$zones}) {
 		push @{$save_zones}, {
-			number => $cgi->param($num.'_number'),
+			number => $num,
 			host => $cgi->param($num.'_host'),
 			port => $cgi->param($num.'_port'),
 			location => $cgi->param($num.'_location'),
@@ -68,10 +68,6 @@ span.ok {
 [$ foreach $zone (@{$zones}) $]
 <tr>
 <th colspan="2" align="centre"><br><h2>Zone [+ $zone->{number} +]</h2></th>
-</tr>
-<tr>
-<td>Number:</td>
-<td><input type="text" name="[+ $zone->{number} +]_number" value="[+ $zone->{number} +]"></td>
 </tr>
 <tr>
 <td>Host:</td>
