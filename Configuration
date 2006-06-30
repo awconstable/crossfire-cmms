@@ -3,11 +3,13 @@
 cp bin/ripper.pl /usr/bin/cmms_ripper.pl
 cp bin/crestron.pl /usr/bin/cmms_crestron.pl
 cp bin/zone.pl /usr/bin/cmms_zone.pl
+cp bin/player.pl /usr/bin/cmms_player.pl
 cp bin/cmmsd.pl /usr/bin/
 
 cp init/cmmsd /etc/rc.d/init.d/
 cp init/cdde /etc/rc.d/init.d/
 cp init/irmp3d /etc/rc.d/init.d/
+cp init/cmms_player /etc/rc.d/init.d/
 cp init/LCDd /etc/rc.d/init.d/
 
 cp conf/cmms.conf /etc/
@@ -18,12 +20,12 @@ patch /etc/fstab -i fstab.patch
 
 /sbin/chkconfig --add cdde
 /sbin/chkconfig --add LCDd
-/sbin/chkconfig --add irmp3d
+/sbin/chkconfig --add cmms_player
 /sbin/chkconfig --add cmmsd
 
 /sbin/service cdde start
 /sbin/service LCDd start
-/sbin/service irmp3d start
+/sbin/service cmms_player start
 /sbin/service cmmsd start
 
 framework_builder --config=conf/framework.conf
