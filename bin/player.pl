@@ -91,7 +91,7 @@ sub mux_input {
 }
 
 sub unload {
-	my $pid = `ps -efww | grep flac123 -R | awk {'print $2'}`;
+	my $pid = `ps -efww | grep flac123 | awk {'print $2'}`;
 	$pid =~ s/[\r\n\s]+/ /g;
 	`kill -9 $pid`;
 	exit(0);
