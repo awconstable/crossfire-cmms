@@ -24,7 +24,7 @@ start() {
         echo -n $"Starting $prog: "
         /usr/local/bin/rexima pcm 80
         /usr/local/bin/rexima vol 80
-        $daemon 1>/dev/null 2>&1
+        $daemon 1>/dev/null 2>&1 &
         RETVAL=$?
         return $RETVAL
 }
