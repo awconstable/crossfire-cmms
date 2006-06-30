@@ -7,6 +7,12 @@ use IPC::Open2;
 use Config::General;
 use POSIX qw(ceil);
 
+$SIG{TERM} = \&unload;
+$SIG{INT} = \&unload;
+$SIG{QUIT} = \&unload;
+$SIG{HUP} = \&unload;
+$SIG{__DIE__} = \&unload;
+
 my ($oup, $odown) = (0, 0);
 
 close(STDERR);
@@ -82,4 +88,11 @@ sub mux_input {
 			print $c $data."\r\n";
 		}
 	}
+}
+
+sub unload {
+	my $pid = `ps -efww | grep flac123 -R | awk {'print $2'}`;
+	$pid =~ s/[\r\n\s]+/ /g;
+	`kill -9 $pid`;
+	exit(0);
 }
