@@ -19,7 +19,7 @@ STDOUT->autoflush(1);
 my %conf = ParseConfig('/etc/cmms.conf');
 my $conf = $conf{player};
 
-my $pid = open2(\*RDR, \*MPG, 'flac123 -R 2>&1');
+my $pid = open2(\*RDR, \*MPG, '/usr/local/bin/flac123 -R 2>&1');
 
 my $mux  = new IO::Multiplex;
 
