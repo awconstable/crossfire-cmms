@@ -75,6 +75,8 @@ sub mux_input {
 			if($data =~ /\@P 0/) {
 				$data = "230: stop\r\n200: stop";
 			}
+		} else {
+			next;
 		}
 		foreach my $c ($mux->handles) {
 			print $c $data."\r\n";

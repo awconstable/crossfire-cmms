@@ -154,7 +154,7 @@ sub trackid2filename {
 		SELECT file_location, file_name 
 		FROM track_data 
 		WHERE track_id = %d 
-		AND file_name like '%%mp3'
+		AND file_name like '%%flac'
 	};
 
 	$sql = sprintf($sql, $trackid);
