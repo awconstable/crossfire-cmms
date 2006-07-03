@@ -28,5 +28,7 @@ patch /etc/fstab -i fstab.patch
 /sbin/service cmms_player start
 /sbin/service cmmsd start
 
+mkdir -p /usr/local/cmms/htdocs/media
+
 framework_builder --config=conf/framework.conf
 install_copier --source htdocs --destination /usr/local/cmms/htdocs --mkpath

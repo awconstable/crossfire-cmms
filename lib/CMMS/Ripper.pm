@@ -191,7 +191,7 @@ sub store {
 	my $cover = 'NULL';
 	my @imgs = <${folder}/cover.*>;
 	my $img = join('',@imgs) || '';
-	$cover = "'/scripts/cover.cgi$img'" if $img;
+	$cover = "'$img'" if $img;
 
 	$mc->query('INSERT INTO album (name,discid,year,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{DISCID}).','.$mc->quote($meta->{YEAR}).",$cover)");
 	$album_id = $mc->last_id;
