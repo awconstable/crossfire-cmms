@@ -1,4 +1,4 @@
-#$Id: playlist.pm,v 1.7 2006/07/03 14:50:54 byngmeister Exp $
+#$Id: playlist.pm,v 1.8 2006/07/03 14:57:56 byngmeister Exp $
 
 package CMMS::Database::playlist;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -101,7 +101,7 @@ sub get_track_list {
     my $selects = <<EndSelects
 playlist_track.*,
 playlist.name as playlist_id,
-track.name as track_id
+track.title as track_id
 EndSelects
     ;
 
