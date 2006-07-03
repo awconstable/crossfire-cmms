@@ -1,37 +1,168 @@
-<html>
-<head>
-<title>CMMS</title>
-<style>
-p, li, td, h2, h3 {
-  font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: smaller;
+[- 
+use CommunityNode;
+use CMMS::Database::MysqlConnection;
+use CMMS::Database::Theme::HTML;
+use TAER::Session::Session;
+use CommunityNode::Client;
+use Data::Dumper;
+use CGI;
+use File::Basename;
+use URI::Escape;
+
+$mc = new CMMS::Database::MysqlConnection;
+$ENV{'dbHost'} and $mc->host($ENV{'dbHost'});
+$ENV{'dbUser'} and $mc->user($ENV{'dbUser'});
+$ENV{'dbPassword'} and $mc->password($ENV{'dbPassword'});
+$ENV{'dbDatabase'} and $mc->database($ENV{'dbDatabase'});
+$mc->connect;
+
+$cgi = new CGI;
+$view = $cgi->param("v") || "summary";
+
+# Setup session parameters
+#
+$session_id = $ENV{'UNIQUE_ID'};
+$p_session_id = $cgi->param("session_id");
+$entity_type_id = $cgi->param("t");
+
+$p_session_id = $cgi->param("p_session_id") if ($fdat{'button_search.x'} or $cgi->param('search') );
+$p_session_id = 0 unless $p_session_id;
+
+$session_obj = new TAER::Session::Session($mc);
+
+# Read in permissioning cookies
+#
+$cookiename = "COMMUNITY_MEMBER";
+$logincookiename = "COMMUNITY_LOGIN";
+
+$cookie = $cgi->cookie($cookiename) || "";
+$logincookie = $cgi->cookie($logincookiename) || "";
+
+# Get general CGI parameters
+#
+$laf = new CMMS::Database::Theme::HTML();
+$ENV{'Theme'} and $laf->theme($ENV{'Theme'});
+$ENV{'ThemeDirectory'} and $laf->theme_root($ENV{'ThemeDirectory'});
+$laf->http_root($ENV{'DOCUMENT_ROOT'});
+
+# Create a session
+#
+my $clean_cgi = new CGI( $cgi );
+
+foreach $param ( $clean_cgi->param ) {
+    if ($param =~ /^(url.*$)/ ) {
+	$clean_cgi->delete($param);
+    }
+
+    if ($param =~ /^(button.*$)/ ) {
+	$clean_cgi->delete($param);
+    }
 }
-h2 {
-  font-size: larger;
+
+$surl = $clean_cgi->self_url();
+
+$session_obj->set_session($session_id,$p_session_id,$cookie,$surl);
+
+# Lookup success url based on parent session id
+#
+$parent_data = $session_obj->get_session($p_session_id);
+$success = $parent_data->{self_url};
+$success = $surl unless $success;
+
+# Retieve user profile
+#
+$cn = new CommunityNode::Client();
+$cn_result = $cn->decode_login_cookie( $logincookie );
+
+unless( $cn_result and $logincookie and $cn->check_against_user_cookie( $cookie ) ) {
+    $cgi->redirect( "login.ehtml?session_id=$session_id" );
 }
-span.failed {
-  color: red;
+
+# Act on any commands/redirects
+#
+my $redirect = $laf->form_button_redirect( $cgi );
+
+unless ( $redirect ) { 
+
+    if( $p_session_id ) {
+	$parent_data = $session_obj->get_session($p_session_id);
+	$success = $parent_data->{self_url};
+    }
 }
-span.ok {
-  color: green;
+else {
+    $cgi->redirect($redirect) if( $redirect );
+    return;
 }
-</style>
-</head>
-<body>
-<p>
-<h2>CMMS</h2>
-<ul>
-<li><A HREF="select_album.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Albums</A></li>
-<li><A HREF="select_artist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Artists</A></li>
-<li><A HREF="select_playlist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Playlists</A></li>
-</ul>
-</p>
-<p>
-<h2>Config</h2>
-<ul>
-<li><A HREF="zones.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Zones</A></li>
-<li><A HREF="network.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Network</A></li>
-</ul>
-</p>
-</body>
-</html>
+
+# Remove garbage cgi parameters
+#
+foreach $param ( $cgi->param ) {
+    if ($param =~ /^(url.*$)/ ) {
+	$cgi->delete($param);
+    }
+
+    if ($param =~ /^(button.*$)/ ) {
+	$cgi->delete($param);
+    }
+}
+
+# Build a selfurl for use in links
+#
+$selfurl = uri_escape($cgi->self_url, ";/\?:&%");
+$self_url = $cgi->self_url;
+
+# Setup tabs
+#
+@tabs = ( 
+        { title => "Summary", view => "summary" },
+        { title => "Playlist", view => "playlist" },
+        { title => "My Media", view => "media" },
+        { title => "Configuration", view => "configuration" }
+);
+
+# Setup alert styles
+$green = "background-color: #33cc33;";
+$yellow = "background-color: #cccc33;";
+$red = "background-color: #cc3333;";
+
+@alerts = ( $green, $yellow, $red );
+
+$this_dir = dirname($ENV{'SCRIPT_FILENAME'});
+-]
+
+[- Execute $laf->theme_root().$laf->theme()."/header.ehtm", title=>$title, search=>"&nbsp;", extratab=>$extratab, session_id=>$session_id -]
+
+<div align="center" class="title">Administration Menu</div>
+<BR />
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td width="100" valign="top"> 
+      <table height="100%" width="100%" border="0" cellspacing="0" cellpadding="0">
+[$ foreach $t ( @tabs ) $]
+[$ if $view eq $t->{view} $]
+        <tr> 
+          <td height="60" align="center" valign="middle" class="tabselect" [+ $t->{style} ? 'style="'.$t->{style}.'"' : "" +]> 
+            [+ $t->{title} || "[Unknown]" +]
+          </td>
+        </tr>
+[$ elsif (-f $this_dir."/index-".$t->{view}.".ehtm") $]
+        <tr> 
+          <td height="60" align="center" valign="middle" class="tab" [+ $t->{style} ? 'style="'.$t->{style}.'"' : "" +]> 
+            <a href="index.ehtml?v=[+ $t->{view} +]">[+ $t->{title} || "[Unknown]" +]</a>
+          </td>
+        </tr>
+[$ endif $]
+[$ endforeach $]
+        <tr> 
+          <td height="100%" class="tabend">&nbsp;</td>
+        </tr>
+      </table>
+    </td>
+    <td align="left" valign="top" class="maintable">
+[- Execute "index-$view.ehtm", $session_id, $cgi, $mc  -]
+</td>
+</tr>
+</table>
+<br />
+<br />
+[- Execute $laf->theme_root().$laf->theme()."/footer.ehtm" -]

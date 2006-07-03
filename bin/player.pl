@@ -65,13 +65,13 @@ sub mux_input {
 				$oup = $up;
 				$odown = $down;
 				$data = "230: time $up $down";
-				$data .= "\r\n230: endofsong\r\n200: endofsong\r\n" if $down == 0;
+				$data .= "230: endofsong\r\n200: endofsong\r\n" if $down == 0;
 			}
 			if($data =~ /\@P 1/) {
 				$data = "230: pause\r\n200: pause";
 			}
 			if($data =~ /\@P 2/) {
-				$data = "230: pause\r\n\r\n200: unpause";
+				$data = "230: pause\r\n200: unpause";
 			}
 			if($data =~ /\@I (\/.+)/) {
 				my $file = $1;

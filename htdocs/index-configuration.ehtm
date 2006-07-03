@@ -1,0 +1,85 @@
+[-
+($session_id, $cgi, $mc) = @param;
+
+use Config::General;
+
+%conf  = ParseConfig('/etc/cmms.conf');
+$zones = $conf{zones}->{zone};
+$save_zones = [];
+
+$restart = '';
+
+if($cgi->param('save')) {
+	foreach my $num (1..scalar @{$zones}) {
+		push @{$save_zones}, {
+			number => $num,
+			host => $cgi->param($num.'_host'),
+			port => $cgi->param($num.'_port'),
+			location => $cgi->param($num.'_location'),
+			datapath => $cgi->param($num.'_datapath'),
+			time => $cgi->param($num.'_time'),
+			timeformat => $cgi->param($num.'_timeformat')
+		} if $cgi->param($num.'_host') ne '' && $cgi->param($num.'_port') ne '';
+	}
+
+	push @{$save_zones}, {};
+	$conf{zones}->{zone} = $save_zones;
+	$zones = $save_zones;
+	SaveConfig('/etc/cmms.conf',\%conf);
+
+	$restart = `./restart.sh`;
+	$restart =~ s/FAILED/\\<font color="red">FAILED<\/font>/g;
+	$restart =~ s/OK/\\<font color="green">OK<\/font>/g;
+}
+
+$zones->[(scalar @{$zones} - 1)]->{number} = (scalar @{$zones});
+unshift @{$zones}, pop @{$zones};
+
+-]
+<div class="subtitle">Configuration</div>
+
+[$ if $restart ne '' $]
+<h3>cmmsd Restart</h3>
+<pre>[+ $restart +]</pre>
+[$ endif $]
+<table>
+<form>
+<input type="hidden" name="save" value="1">
+<input type="hidden" name="v" value="configuration">
+[$ foreach $zone (@{$zones}) $]
+<tr>
+<th colspan="2" align="centre"><br><h2>Zone [+ $zone->{number} +]</h2></th>
+</tr>
+<tr>
+<td>Host:</td>
+<td><input type="text" name="[+ $zone->{number} +]_host" value="[+ $zone->{host} +]"></td>
+</tr>
+<tr>
+<td>Port:</td>
+<td><input type="text" name="[+ $zone->{number} +]_port" value="[+ $zone->{port} +]"></td>
+</tr>
+<tr>
+<td>Location:</td>
+<td><input type="text" name="[+ $zone->{number} +]_location" value="[+ $zone->{location} +]"></td>
+</tr>
+<tr>
+<td>Data path:</td>
+<td><input type="text" name="[+ $zone->{number} +]_datapath" value="[+ $zone->{datapath} +]"></td>
+</tr>
+<tr>
+<td>Time display:</td>
+<td>
+On <input type="radio" value="1" name="[+ $zone->{number} +]_time"[$ if $zone->{time} eq 1 $]  checked[$ endif $]>
+Off <input type="radio" value="" name="[+ $zone->{number} +]_time"[$ if $zone->{time} ne 1 $]  checked[$ endif $]>
+</td>
+</tr>
+<tr>
+<td>Time format:</td>
+<td><input type="text" name="[+ $zone->{number} +]_timeformat" value="[+ $zone->{timeformat} +]"></td>
+</tr>
+<tr>
+<td colspan="2" align="right"><input type="button" onclick="this.form.submit();" value="Save"></td>
+</tr>
+[$ endforeach $]
+</form>
+</table>

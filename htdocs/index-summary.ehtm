@@ -1,0 +1,20 @@
+[-
+($session_id, $cgi, $mc) = @param;
+
+$albums = $mc->query_and_get('select count(id) as total from album') || [];
+$albums = $albums->[0]->{total};
+
+$tracks = $mc->query_and_get('select count(id) as total from track') || [];
+$tracks = $tracks->[0]->{total};
+
+$genres = $mc->query_and_get('select count(id) as total from genre') || [];
+$genres = $genres->[0]->{total};
+-]
+<div class="subtitle">CMMS Manager</div>
+<p>Total albums: [+ $albums +]</p>
+<p>Total tracks: [+ $tracks +]</p>
+<p>Total genres: [+ $genres +]</p>
+<UL>
+<li><A HREF="select_album.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Albums</A></li>
+<li><A HREF="select_artist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Artists</A></li>
+</UL>
