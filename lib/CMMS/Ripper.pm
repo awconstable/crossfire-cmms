@@ -188,7 +188,12 @@ sub store {
 
 	my($sql,$artist_id,$album_id,$genre_id);
 
-	$mc->query('INSERT INTO album (name,discid,year) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{DISCID}).','.$mc->quote($meta->{YEAR}).')');
+	my $cover = 'NULL';
+	my @imgs = <${folder}/cover.*>;
+	my $img = join('',@imgs) || '';
+	$cover = "'/scripts/cover.cgi$img'" if $img;
+
+	$mc->query('INSERT INTO album (name,discid,year,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{DISCID}).','.$mc->quote($meta->{YEAR}).",$cover)");
 	$album_id = $mc->last_id;
 
 	$sql = 'SELECT id FROM genre WHERE name = '.$mc->quote($meta->{GENRE});
