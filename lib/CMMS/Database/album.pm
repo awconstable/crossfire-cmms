@@ -1,4 +1,4 @@
-#$Id: album.pm,v 1.6 2006/07/03 14:43:31 byngmeister Exp $
+#$Id: album.pm,v 1.7 2006/07/03 14:50:54 byngmeister Exp $
 
 package CMMS::Database::album;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -136,7 +136,7 @@ EndTables
     ;
 
     my $where = <<EndWhere
-track.id = $id
+track.album_id = $id
 and album.id = track.album_id
 and artist.id = track.artist_id
 and genre.id = track.genre_id
