@@ -4,7 +4,7 @@
 use Config::General;
 
 %conf  = ParseConfig('/etc/cmms.conf');
-$zones = $conf{zones}->{zone};
+$zones = $conf{zones}->{zone} || [];
 $save_zones = [];
 
 $restart = '';

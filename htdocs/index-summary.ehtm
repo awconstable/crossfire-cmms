@@ -17,4 +17,5 @@ $genres = $genres->[0]->{total};
 <UL>
 <li><A HREF="select_album.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Albums</A></li>
 <li><A HREF="select_artist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Artists</A></li>
+<li><A HREF="select_genre.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Genres</A></li>
 </UL>

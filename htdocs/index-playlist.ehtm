@@ -1,0 +1,8 @@
+[-
+($session_id, $cgi, $mc) = @param;
+-]
+<div class="subtitle">Playlist</div>
+<UL>
+<li><A HREF="select_playlist_current.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Now Playing</A></li>
+<li><A HREF="select_playlist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Playlists</A></li>
+</UL>

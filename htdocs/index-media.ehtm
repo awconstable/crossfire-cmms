@@ -1,0 +1,7 @@
+[-
+($session_id, $cgi, $mc) = @param;
+-]
+<div class="subtitle">My Media</div>
+<UL>
+<li><A HREF="select_track.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Tracks</A></li>
+</UL>
