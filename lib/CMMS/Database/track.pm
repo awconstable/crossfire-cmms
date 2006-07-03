@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.7 2006/07/03 14:15:14 byngmeister Exp $
+#$Id: track.pm,v 1.9 2006/07/03 14:26:04 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -182,7 +182,7 @@ sub get_self {
     my $selects = <<EndSelects
 track.*,
 album.name as album_id,
-arist.name as aritst_id,
+artist.name as artist_id,
 genre.name as genre_id
 EndSelects
     ;
@@ -190,7 +190,7 @@ EndSelects
     my $tables = <<EndTables
 track,
 album,
-arist,
+artist,
 genre
 EndTables
     ;
@@ -198,12 +198,12 @@ EndTables
     my $where = <<EndWhere
 $extras
 and album.id = track.album_id
-and arist.id = track.arist_id
+and artist.id = track.artist_id
 and genre.id = track.genre_id
 EndWhere
     ;
 
-    my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+    my $res = $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 
     return $res;
 

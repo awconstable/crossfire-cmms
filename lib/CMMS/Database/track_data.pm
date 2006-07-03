@@ -1,4 +1,4 @@
-#$Id: track_data.pm,v 1.5 2006/07/03 14:15:14 byngmeister Exp $
+#$Id: track_data.pm,v 1.6 2006/07/03 14:26:04 byngmeister Exp $
 
 package CMMS::Database::track_data;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -150,7 +150,7 @@ and track.id = track_data.track_id
 EndWhere
     ;
 
-    my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+    my $res = $self->get_list( "track_data", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 
     return $res;
 

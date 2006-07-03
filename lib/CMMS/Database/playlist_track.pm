@@ -1,4 +1,4 @@
-#$Id: playlist_track.pm,v 1.6 2006/07/03 14:15:14 byngmeister Exp $
+#$Id: playlist_track.pm,v 1.7 2006/07/03 14:26:04 byngmeister Exp $
 
 package CMMS::Database::playlist_track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -153,7 +153,7 @@ and track.id = playlist_track.track_id
 EndWhere
     ;
 
-    my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+    my $res = $self->get_list( "playlist_track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 
     return $res;
 
