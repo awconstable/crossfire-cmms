@@ -1,4 +1,4 @@
-#$Id: zone_mem.pm,v 1.9 2006/07/03 11:50:18 byngmeister Exp $
+#$Id: zone_mem.pm,v 1.10 2006/07/03 13:23:43 byngmeister Exp $
 
 package CMMS::Database::zone_mem;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -48,9 +48,9 @@ sub new {
     name => "zone_mem",
     tag => "zone_mem",
     title => "zone_mem",
-    display => [ "id", "zone", "key", "value",  ],
-    list_display => [ "id", "zone", "key", "value",  ],
-    tagorder => [ "id", "zone", "key", "value",  ],
+    display => [ "id", "zone", "param", "value",  ],
+    list_display => [ "id", "zone", "param", "value",  ],
+    tagorder => [ "id", "zone", "param", "value",  ],
     tagrelationorder => [ ],
     relationshiporder => [ ],
     no_broadcast => 1,
@@ -68,14 +68,19 @@ sub new {
 	        type => "int",
 		tag  => "Zone",
 		title => "Zone",
-		primkey => 1,
+		lookup => {
+		    table => "zone",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		},
 
             },
-            'key' => {
+            'param' => {
 	        type => "varchar",
-		tag  => "Key",
-		title => "Key",
-		primkey => 1,
+		tag  => "Param",
+		title => "Param",
 
             },
             'value' => {
@@ -93,6 +98,41 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+sub get_self {
+    my $self = shift;
+    my $page = shift;
+    my $size = shift;
+    my $extras = shift;
+
+    $extras = "1=1" unless $extras;
+
+    my $selects = <<EndSelects
+zone.name as zone
+EndSelects
+    ;
+
+    my $tables = <<EndTables
+zone_mem
+zone
+EndTables
+    ;
+
+    my $where = <<EndWhere
+$extras
+and zone.id = zone_mem.zone
+EndWhere
+    ;
+
+    use Data::Dumper;
+    my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+    open(DMP,'> /tmp/dumper.out');
+    print DMP Dumper($res);
+    close(DMP);
+
+    return $res;
+
 }
 
 1;

@@ -37,6 +37,9 @@ unshift @{$zones}, pop @{$zones};
 
 -]
 <div class="subtitle">Configuration</div>
+<UL>
+<li><A HREF="select_zone.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Zones</A></li>
+</UL>
 
 [$ if $restart ne '' $]
 <h3>cmmsd Restart</h3>

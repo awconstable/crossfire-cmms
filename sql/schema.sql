@@ -120,15 +120,17 @@ CREATE TABLE zone (
   PRIMARY KEY (id)
 );
 
+INSERT INTO zone (id,name) VALUES (1,'Lounge');
+
 CREATE TABLE zone_mem (
   id INT(11) NOT NULL auto_increment,
   zone INT(11) NOT NULL,
-  `key` varchar(32) NOT NULL,
+  param varchar(32) NOT NULL,
   value varchar(64),
   _perm_user INT(16) DEFAULT '1',
   _perm_group INT(16) DEFAULT '1',
   _perm_access INT(16) DEFAULT '664',
-  UNIQUE zone_key (zone,`key`),
+  UNIQUE zone_key (zone,param),
   PRIMARY KEY (id)
 );
 

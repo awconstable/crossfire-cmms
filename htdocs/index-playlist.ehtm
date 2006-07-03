@@ -1,8 +1,15 @@
 [-
 ($session_id, $cgi, $mc) = @param;
+
+$zones = $mc->query_and_get('select id,name from zone order by id') || [];
+
 -]
 <div class="subtitle">Playlist</div>
+
+<br><div class="subtitle">Now Playing</div>
 <UL>
-<li><A HREF="select_playlist_current.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Now Playing</A></li>
-<li><A HREF="select_playlist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Playlists</A></li>
+[$ foreach $zone (@{$zones}) $]
+<li><A HREF="select_playlist_current.ehtml?zone=[+ $zone->{id} +]&amp;session_id=[+ $ENV{'UNIQUE_ID'} +]">[+ $zone->{name} +]</A></li>
+[$ endforeach $]
 </UL>
+<p><A HREF="select_playlist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Playlists</A></p>
