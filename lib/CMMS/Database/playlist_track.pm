@@ -1,4 +1,4 @@
-#$Id: playlist_track.pm,v 1.11 2006/07/03 15:11:13 byngmeister Exp $
+#$Id: playlist_track.pm,v 1.12 2006/07/03 15:42:07 byngmeister Exp $
 
 package CMMS::Database::playlist_track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -151,9 +151,10 @@ EndTables
 $extras
 and playlist.id = playlist_track.playlist_id
 and track.id = playlist_track.track_id
-order by playlist_track.track_order
 EndWhere
     ;
+
+    $where .= ' order by playlist_track.track_order' unless $extras =~ /order by/i;
 
     return $self->get_list( "playlist_track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 }

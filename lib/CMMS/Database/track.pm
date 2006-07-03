@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.13 2006/07/03 15:16:04 byngmeister Exp $
+#$Id: track.pm,v 1.14 2006/07/03 15:42:07 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -201,9 +201,10 @@ $extras
 and album.id = track.album_id
 and artist.id = track.artist_id
 and genre.id = track.genre_id
-order by track.album_id, track.track_num
 EndWhere
     ;
+
+    $where .= ' order by track.album_id, track.track_num' unless $extras =~ /order by/i;
 
     return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 }
