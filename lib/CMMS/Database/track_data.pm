@@ -1,4 +1,4 @@
-#$Id: track_data.pm,v 1.7 2006/07/03 14:43:31 byngmeister Exp $
+#$Id: track_data.pm,v 1.8 2006/07/03 15:11:13 byngmeister Exp $
 
 package CMMS::Database::track_data;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -147,6 +147,7 @@ EndTables
     my $where = <<EndWhere
 $extras
 and track.id = track_data.track_id
+order by track_data.track_id, track_data.file_location, track_data.file_name
 EndWhere
     ;
 

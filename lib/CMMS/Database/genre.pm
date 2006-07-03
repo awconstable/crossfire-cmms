@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.7 2006/07/03 14:50:54 byngmeister Exp $
+#$Id: genre.pm,v 1.8 2006/07/03 15:11:13 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -122,6 +122,7 @@ track.genre_id = $id
 and album.id = track.album_id
 and artist.id = track.artist_id
 and genre.id = track.genre_id
+order by track.title
 EndWhere
     ;
 

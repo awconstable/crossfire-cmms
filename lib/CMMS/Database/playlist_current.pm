@@ -1,4 +1,4 @@
-#$Id: playlist_current.pm,v 1.11 2006/07/03 15:00:27 byngmeister Exp $
+#$Id: playlist_current.pm,v 1.12 2006/07/03 15:11:13 byngmeister Exp $
 
 package CMMS::Database::playlist_current;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -156,6 +156,7 @@ EndTables
 $extras
 and zone.id = playlist_current.zone
 and track.id = playlist_current.track_id
+order by playlist_current.track_order
 EndWhere
     ;
 
@@ -182,6 +183,7 @@ EndTables
     my $where = <<EndWhere
 track.id = $id
 and track.id = track_data.track_id
+order by track_data.file_location, track_data.file_name
 EndWhere
     ;
 
