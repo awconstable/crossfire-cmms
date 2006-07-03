@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.6 2006/06/28 08:13:37 byngmeister Exp $
+#$Id: track.pm,v 1.7 2006/07/03 14:15:14 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -118,13 +118,13 @@ sub new {
             'length_seconds' => {
 	        type => "int",
 		tag  => "Length_seconds",
-		title => "Length_seconds",
+		title => "Track length",
 
             },
             'ctime' => {
 	        type => "datetime",
 		tag  => "Ctime",
-		title => "Ctime",
+		title => "Created time",
 
             },
             'comment' => {
@@ -169,6 +169,44 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+sub get_self {
+    my $self = shift;
+    my $page = shift;
+    my $size = shift;
+    my $extras = shift;
+
+    $extras = "1=1" unless $extras;
+
+    my $selects = <<EndSelects
+track.*,
+album.name as album_id,
+arist.name as aritst_id,
+genre.name as genre_id
+EndSelects
+    ;
+
+    my $tables = <<EndTables
+track,
+album,
+arist,
+genre
+EndTables
+    ;
+
+    my $where = <<EndWhere
+$extras
+and album.id = track.album_id
+and arist.id = track.arist_id
+and genre.id = track.genre_id
+EndWhere
+    ;
+
+    my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+
+    return $res;
+
 }
 
 1;

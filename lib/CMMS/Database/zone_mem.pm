@@ -1,4 +1,4 @@
-#$Id: zone_mem.pm,v 1.10 2006/07/03 13:23:43 byngmeister Exp $
+#$Id: zone_mem.pm,v 1.11 2006/07/03 14:15:14 byngmeister Exp $
 
 package CMMS::Database::zone_mem;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -109,12 +109,13 @@ sub get_self {
     $extras = "1=1" unless $extras;
 
     my $selects = <<EndSelects
+zone_mem.*,
 zone.name as zone
 EndSelects
     ;
 
     my $tables = <<EndTables
-zone_mem
+zone_mem,
 zone
 EndTables
     ;
@@ -125,11 +126,7 @@ and zone.id = zone_mem.zone
 EndWhere
     ;
 
-    use Data::Dumper;
     my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
-    open(DMP,'> /tmp/dumper.out');
-    print DMP Dumper($res);
-    close(DMP);
 
     return $res;
 

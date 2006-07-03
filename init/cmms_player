@@ -48,7 +48,7 @@ status() {
 case "$1" in
   start)
 	if getpids ; then
-		echo "$prog ($PIDS) is allready running..."
+		echo "$prog ($PIDS) is already running..."
 	else
 		start && success || failure
 	fi

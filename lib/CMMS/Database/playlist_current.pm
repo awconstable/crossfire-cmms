@@ -1,4 +1,4 @@
-#$Id: playlist_current.pm,v 1.5 2006/07/03 11:50:18 byngmeister Exp $
+#$Id: playlist_current.pm,v 1.6 2006/07/03 14:15:14 byngmeister Exp $
 
 package CMMS::Database::playlist_current;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -68,7 +68,13 @@ sub new {
 	        type => "int",
 		tag  => "Zone",
 		title => "Zone",
-		primkey => 1,
+		lookup => {
+		    table => "zone",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		},
 
             },
             'track_id' => {
@@ -121,6 +127,41 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+sub get_self {
+    my $self = shift;
+    my $page = shift;
+    my $size = shift;
+    my $extras = shift;
+
+    $extras = "1=1" unless $extras;
+
+    my $selects = <<EndSelects
+playlist_current.*,
+zone.name as zone_id,
+track.name as track_id
+EndSelects
+    ;
+
+    my $tables = <<EndTables
+playlist_current,
+zone,
+track
+EndTables
+    ;
+
+    my $where = <<EndWhere
+$extras
+and zone.id = playlist_current.zone_id
+and track.id = playlist_current.track_id
+EndWhere
+    ;
+
+    my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+
+    return $res;
+
 }
 
 1;
