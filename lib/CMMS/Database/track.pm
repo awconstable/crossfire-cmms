@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.9 2006/07/03 14:26:04 byngmeister Exp $
+#$Id: track.pm,v 1.10 2006/07/03 14:43:31 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -162,6 +162,7 @@ sub new {
 	    		{ col => "filesize", title => "Size" },
 	    		{ col => "info_source", title => "Meta Source" },
 			],
+	    list_method => 'get_track_list'
 	}
     },
   });
@@ -203,10 +204,33 @@ and genre.id = track.genre_id
 EndWhere
     ;
 
-    my $res = $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+    return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+}
 
-    return $res;
+sub get_track_list {
+    my ($self,$page,$size) = @_;
 
+    my $id = $self->get('id');
+
+    my $selects = <<EndSelects
+track_data.*,
+track.name as track_id
+EndSelects
+    ;
+
+    my $tables = <<EndTables
+track_data,
+track
+EndTables
+    ;
+
+    my $where = <<EndWhere
+$extras
+and track.id = track_data.track_id
+EndWhere
+    ;
+
+    return $self->get_list( "track_data", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 }
 
 1;

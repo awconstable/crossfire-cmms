@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.5 2006/06/27 15:39:18 byngmeister Exp $
+#$Id: genre.pm,v 1.6 2006/07/03 14:43:31 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -86,6 +86,7 @@ sub new {
 	    		{ col => "track_num", title => "Track No." },
 	    		{ col => "length_seconds", title => "Length" },
 			],
+	    list_method => 'get_track_list'
 	}
     },
   });
@@ -93,6 +94,38 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+sub get_track_list {
+    my ($self,$page,$size) = @_;
+
+    my $id = $self->get('id');
+
+    my $selects = <<EndSelects
+track.*,
+album.name as album_id,
+artist.name as artist_id,
+genre.name as genre_id
+EndSelects
+    ;
+
+    my $tables = <<EndTables
+track,
+album,
+artist,
+genre
+EndTables
+    ;
+
+    my $where = <<EndWhere
+track.id = $id
+and album.id = track.album_id
+and artist.id = track.artist_id
+and genre.id = track.genre_id
+EndWhere
+    ;
+
+    return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 }
 
 1;

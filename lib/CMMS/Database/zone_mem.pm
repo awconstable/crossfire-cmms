@@ -1,4 +1,4 @@
-#$Id: zone_mem.pm,v 1.11 2006/07/03 14:15:14 byngmeister Exp $
+#$Id: zone_mem.pm,v 1.12 2006/07/03 14:43:31 byngmeister Exp $
 
 package CMMS::Database::zone_mem;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -126,10 +126,7 @@ and zone.id = zone_mem.zone
 EndWhere
     ;
 
-    my $res = $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
-
-    return $res;
-
+    return $self->get_list( "zone_mem", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 }
 
 1;
