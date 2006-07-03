@@ -1,14 +1,14 @@
-#$Id: zone_mem.pm,v 1.9 2006/07/03 11:50:18 byngmeister Exp $
+#$Id: zone.pm,v 1.1 2006/07/03 11:50:33 byngmeister Exp $
 
-package CMMS::Database::zone_mem;
+package CMMS::Database::zone;
 
 =head1 NAME
 
-CMMS::Database::zone_mem
+CMMS::Database::zone
 
 =head1 SYNOPSIS
 
-  use CMMS::Database::zone_mem;
+  use CMMS::Database::zone;
 
 =head1 DESCRIPTION
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -33,7 +33,7 @@ sub new {
   
   # Create the object
   #
-  my $self = new CMMS::Database::Object( $dbInterface, "zone_mem", $id );
+  my $self = new CMMS::Database::Object( $dbInterface, "zone", $id );
  
   # Bless the object
   #
@@ -45,12 +45,12 @@ sub new {
   # Setup object definitions
   #
   $self->definition({
-    name => "zone_mem",
-    tag => "zone_mem",
-    title => "zone_mem",
-    display => [ "id", "zone", "key", "value",  ],
-    list_display => [ "id", "zone", "key", "value",  ],
-    tagorder => [ "id", "zone", "key", "value",  ],
+    name => "zone",
+    tag => "zone",
+    title => "zone",
+    display => [ "id", "name",  ],
+    list_display => [ "id", "name",  ],
+    tagorder => [ "id", "name",  ],
     tagrelationorder => [ ],
     relationshiporder => [ ],
     no_broadcast => 1,
@@ -64,24 +64,10 @@ sub new {
 		displaytype => "hidden",
 
             },
-            'zone' => {
-	        type => "int",
-		tag  => "Zone",
-		title => "Zone",
-		primkey => 1,
-
-            },
-            'key' => {
+            'name' => {
 	        type => "varchar",
-		tag  => "Key",
-		title => "Key",
-		primkey => 1,
-
-            },
-            'value' => {
-	        type => "varchar",
-		tag  => "Value",
-		title => "Value",
+		tag  => "Name",
+		title => "Name",
 
             },
 
@@ -109,7 +95,7 @@ Generated from TAER::Object::Template version 1.007 by taer_build_objects.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 Coreware Limited. England.  All rights reserved.
+Copyright (c) 2006 Coreware Limited. England.  All rights reserved.
 
 You must obtain a written license to use this software.
 

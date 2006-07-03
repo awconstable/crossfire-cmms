@@ -80,13 +80,15 @@ CREATE TABLE playlist (
 -- order when we will be changing track order.
 --  
 CREATE TABLE playlist_track (
+  id INT(11) NOT NULL auto_increment, 
   playlist_id INT(11) NOT NULL,
   track_id INT(11) NOT NULL,
   track_order INT NOT NULL,
   _perm_user INT(16) DEFAULT '1',
   _perm_group INT(16) DEFAULT '1',
   _perm_access INT(16) DEFAULT '664',
-  UNIQUE playlist_track (playlist_id,track_id,track_order)
+  UNIQUE playlist_track (playlist_id,track_id,track_order),
+  PRIMARY KEY (id)
 );
 
 --
@@ -96,6 +98,7 @@ CREATE TABLE playlist_track (
 -- after session duration
 --
 CREATE TABLE playlist_current (
+  id INT(11) NOT NULL auto_increment,
   zone INT(11) NOT NULL,
   track_id INT(11) NOT NULL,
   track_order INT(11) NOT NULL,
@@ -103,17 +106,30 @@ CREATE TABLE playlist_current (
   _perm_user INT(16) DEFAULT '1',
   _perm_group INT(16) DEFAULT '1',
   _perm_access INT(16) DEFAULT '664',
-  UNIQUE playlist_track (zone,track_id,track_order)
+  UNIQUE playlist_track (zone,track_id,track_order),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE zone (
+  id INT(11) NOT NULL auto_increment,
+  name VARCHAR(124) NOT NULL,
+  _perm_user INT(16) DEFAULT '1',
+  _perm_group INT(16) DEFAULT '1',
+  _perm_access INT(16) DEFAULT '664',
+  UNIQUE name (name),
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE zone_mem (
+  id INT(11) NOT NULL auto_increment,
   zone INT(11) NOT NULL,
   `key` varchar(32) NOT NULL,
   value varchar(64),
   _perm_user INT(16) DEFAULT '1',
   _perm_group INT(16) DEFAULT '1',
   _perm_access INT(16) DEFAULT '664',
-  UNIQUE zone_key (zone,`key`)
+  UNIQUE zone_key (zone,`key`),
+  PRIMARY KEY (id)
 );
 
 CREATE TABLE `Session` (
