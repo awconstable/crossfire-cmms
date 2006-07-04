@@ -156,9 +156,9 @@ sub amazon_cover {
 
 	my $artist = safe_chars($meta->{ARTIST});
 	my $album = safe_chars($meta->{ALBUM});
-	my $comments = safe_chars($meta->{COMMENTS});
+	my $comment = safe_chars($meta->{COMMENT});
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$artist/$album/";
-	$folder .= "$comments/" if $comments;
+	$folder .= "$comment/" if $comment;
 	`mkdir -p $folder` unless -d $folder;
 
 	open(IMG,"> ${folder}cover.$ext");
@@ -174,9 +174,9 @@ sub store {
 
 	my $aartist = safe_chars($meta->{ARTIST});
 	my $album = safe_chars($meta->{ALBUM});
-	my $comments = substr(safe_chars($meta->{COMMENTS}),0,32);
+	my $comment = substr(safe_chars($meta->{COMMENT}),0,32);
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
-	$folder .= "$comments/" if $comments;
+	$folder .= "$comment/" if $comment;
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
@@ -193,7 +193,7 @@ sub store {
 	my $img = join('',@imgs) || '';
 	$cover = "'$img'" if $img;
 
-	$mc->query('INSERT INTO album (name,discid,year,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{DISCID}).','.$mc->quote($meta->{YEAR}).",$cover)");
+	$mc->query('INSERT INTO album (name,discid,year,comment,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{DISCID}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($meta->{COMMENT}).",$cover)");
 	$album_id = $mc->last_id;
 
 	$sql = 'SELECT id FROM genre WHERE name = '.$mc->quote($meta->{GENRE});

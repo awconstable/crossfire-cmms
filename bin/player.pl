@@ -66,20 +66,18 @@ sub mux_input {
 				$odown = $down;
 				$data = "230: time $up $down";
 				$data .= "230: endofsong\r\n200: endofsong\r\n" if $down == 0;
-			}
-			if($data =~ /\@P 1/) {
+			} elsif($data =~ /\@P 1/) {
 				$data = "230: pause\r\n200: pause";
-			}
-			if($data =~ /\@P 2/) {
+			} elsif($data =~ /\@P 2/) {
 				$data = "230: pause\r\n200: unpause";
-			}
-			if($data =~ /\@I (\/.+)/) {
+			} elsif($data =~ /\@I (\/.+)/) {
 				my $file = $1;
 				$file .= '.flac' unless $file =~ /\.flac$/;
 				$data = "240: songtype $file\r\n220: canplay mod_flac123 $file\r\n230: play mod_flac123 $file\r\n230: playing\r\n200: play mod_flac123 $file";
-			}
-			if($data =~ /\@P 0/) {
+			} elsif($data =~ /\@P 0/) {
 				$data = "230: stop\r\n200: stop";
+			} else {
+				next;
 			}
 		} else {
 			next;

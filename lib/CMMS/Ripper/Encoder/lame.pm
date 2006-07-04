@@ -8,8 +8,8 @@ use CMMS::File;
 use MP3::Tag;
 
 sub _encode {
-	my($self,$number,$track,$artist,$album,$comments,$year,$genre,$aartist) = @_;
-	($number,$track,$artist,$album,$comments,$year,$genre,$aartist) = map{s/[\r\n+]//g;$_}($number,$track,$artist,$album,$comments,$year,$genre,$aartist);
+	my($self,$number,$track,$artist,$album,$comment,$year,$genre,$aartist) = @_;
+	($number,$track,$artist,$album,$comment,$year,$genre,$aartist) = map{s/[\r\n+]//g;$_}($number,$track,$artist,$album,$comment,$year,$genre,$aartist);
 
 	$artist = 'Unknown' if $artist =~ /^unknown/i;
 
@@ -70,7 +70,7 @@ sub _encode {
 
 	close($LAME);
 
-	my($artist1,$album1,$track1,$comments1) = map{s/"/\\"/g;$_}($artist,$album,$track,$comments);
+	my($artist1,$album1,$track1,$comment1) = map{s/"/\\"/g;$_}($artist,$album,$track,$comment);
 
 	my $mp3 = MP3::Tag->new("$tmp$file.mp3");
 	my $id3v2 = $mp3->new_tag('ID3v2');
@@ -78,7 +78,7 @@ sub _encode {
 	$id3v2->add_frame('TALB',$album1) if $album;
 	$id3v2->add_frame('TPE1',$artist1) if $artist;
 	$id3v2->add_frame('TIT2',$track1) if $track;
-	$id3v2->add_frame('COMM',$comments1) if $comments;
+	$id3v2->add_frame('COMM',$comment1) if $comment;
 	$id3v2->add_frame('TRCK',$number) if $number;
 	$id3v2->add_frame('TPRO',"$year ") if $year;
 	$id3v2->add_frame('TCON',$genre) if $genre;
@@ -86,10 +86,10 @@ sub _encode {
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);
-	$comments = substr(safe_chars($comments),0,32);
+	$comment = substr(safe_chars($comment),0,32);
 
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
-	$folder .= "$comments/" if $comments;
+	$folder .= "$comment/" if $comment;
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.mp3 $folder` if -f "$tmp$file.mp3";

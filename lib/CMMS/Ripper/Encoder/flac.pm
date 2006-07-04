@@ -7,8 +7,8 @@ use CMMS::Psudo;
 use CMMS::File;
 
 sub _encode {
-	my($self,$number,$track,$artist,$album,$comments,$year,$genre,$aartist) = @_;
-	($number,$track,$artist,$album,$comments,$year,$genre,$aartist) = map{s/[\r\n+]//g;$_}($number,$track,$artist,$album,$comments,$year,$genre,$aartist);
+	my($self,$number,$track,$artist,$album,$comment,$year,$genre,$aartist) = @_;
+	($number,$track,$artist,$album,$comment,$year,$genre,$aartist) = map{s/[\r\n+]//g;$_}($number,$track,$artist,$album,$comment,$year,$genre,$aartist);
 
 	$artist = 'Unknown' if $artist =~ /^unknown/i;
 
@@ -53,10 +53,10 @@ sub _encode {
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);
-	$comments = substr(safe_chars($comments),0,32);
+	$comment = substr(safe_chars($comment),0,32);
 
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
-	$folder .= "$comments/" if $comments;
+	$folder .= "$comment/" if $comment;
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.flac $folder` if -f "$tmp$file.flac";

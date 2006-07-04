@@ -1,4 +1,4 @@
-package CMMS::Ripper::DiscID::freedb;
+package CMMS::Ripper::DiscID::FreeDB;
 
 use strict;
 use warnings;
@@ -31,7 +31,7 @@ sub metadata {
 	$self->{DISCID}   = $metadata->{DISCID};
 	$self->{ARTIST}   = $metadata->{ARTIST};
 	$self->{ALBUM}    = $metadata->{ALBUM};
-	$self->{COMMENTS} = $albumdata->extd;
+	$self->{COMMENT} = $albumdata->extd;
 	$self->{YEAR}     = $albumdata->year;
 	my @tracks        = $albumdata->tracks;
 	$self->{TRACKS}   = \@tracks;

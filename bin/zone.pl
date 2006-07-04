@@ -6,7 +6,7 @@ use Getopt::Long;
 use Config::General;
 use CMMS::Zone::Sender;
 use CMMS::Zone::Status;
-use CMMS::Database::MysqlConnection;
+use CMMS::Database::MysqlConnectionEscape;
 
 # load config & configure multiplexer
 my %conf = ParseConfig('/etc/cmms.conf');

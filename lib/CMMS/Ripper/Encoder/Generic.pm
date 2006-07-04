@@ -90,7 +90,7 @@ sub encode {
 		my $file = safe_chars(sprintf('%02d',$track->number).' '.$artist.' '.$track->title);
 		if(-f "$tmp$file.wav") {
 			print STDERR "$tmp$file.wav\n";
-			$self->_encode($track->number,$track->title,$track->artist,$metadata->{ALBUM},$metadata->{COMMENTS},$metadata->{YEAR},$metadata->{GENRE},$metadata->{ARTIST});
+			$self->_encode($track->number,$track->title,$track->artist,$metadata->{ALBUM},$metadata->{COMMENT},$metadata->{YEAR},$metadata->{GENRE},$metadata->{ARTIST});
 		}
 	}
 

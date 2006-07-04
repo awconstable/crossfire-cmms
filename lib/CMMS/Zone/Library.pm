@@ -236,9 +236,10 @@ sub sql_prepare_where {
 
 	my @where;
 	my $i = 0;
-	push(@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id} );
+	push(@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id});
 	push(@where, sprintf("artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
-	push(@where, sprintf("album_id=%d",  $mem{album_id} )) if ($mem{album_id} );
+	push(@where, sprintf("album_id=%d",  $mem{album_id} )) if ($mem{album_id});
+	push(@where, sprintf("playlist_id=%d",  $mem{playlist_id} )) if ($mem{playlist_id});
 
 	if($mem{search}) {
 		my $search_column = 'name';
@@ -346,7 +347,7 @@ sub sql_track_where_num {
 	my ($self, $where) = @_;
 
   return qq{
-         SELECT id, title as text
+         SELECT track.id, track.title as text
          FROM track 
          $where
          ORDER BY track_num
@@ -429,6 +430,22 @@ sub select_tracks {
   }
 
   my $rows = $self->make_select($q);
+  if($rows > 0) {
+      for(my $i = 0; $i<$rows; $i++) {
+          my $id = $mem{lines}{$i}{id};
+          $mem{lines}{$i}{track_id} = $id;
+          $mem{lines}{$i}{cmd} = 'play';
+      }
+      return 1;
+  } else {
+      return 0;
+  }
+}
+
+sub select_playlist_tracks {
+	my $self = shift;
+
+  my $rows = $self->make_select($self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}"));
   if($rows > 0) {
       for(my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
@@ -628,7 +645,7 @@ sub queueall {
 	print hash2cmd(
 		zone => $self->{zone}->{number},
 		cmd => 'transport',
-		playlist => $pos.'/'.$total.' - Default'
+		playlist => $pos.'/'.$total.' - Now Playing'
 	);
 
 	return 0;
@@ -763,21 +780,29 @@ sub menu_playplaylist {
 	my $line = $data->{line_number};
 	return 0 unless exists $mem{lines}{$line}{playlist_id};
 
-	$self->empty_queue;
 	$mem{playlist_id} = $mem{lines}{$line}{playlist_id};
-	
-	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
-	my $ret = $mc->query($sql);
 
 	$sql = "REPLACE INTO zone_mem (zone,`key`,value) VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
-
 	$mc->query($sql);
 
-	my $command = $self->{now_play}->play;
+	# check, whether we'd like to change or do any other command!
+	$mem{offset} = 0;
+	$mem{search} = undef;
+	$mem{category}  = 'playlist_tracks';
 
+	$self->empty_queue;
+	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
+	my $ret = $mc->query($sql);
+	my $command = $self->{now_play}->play;
 	send2player($self->{handle}, $command);
 
-	return 0;
+	$self->history_add;
+
+	# instead calling:  return &prepare_memory();
+	# we'll trick the program, so it''ll draw empty screen when there are no records
+	$self->prepare_memory;
+
+	return 1;
 }
 
 sub menu_select {
@@ -847,6 +872,9 @@ sub prepare_memory {
 		return $self->select_artists;
 	} elsif($c eq 'albums') {
 		return $self->select_albums;
+	} elsif($c eq 'playlist_tracks') {
+		return $self->select_playlist_tracks;
+		return 0;
 	} elsif($c eq 'tracks') {
 		return $self->select_tracks;
 		return 0;
