@@ -445,7 +445,10 @@ sub select_tracks {
 sub select_playlist_tracks {
 	my $self = shift;
 
-  my $rows = $self->make_select($self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}"));
+	my $sql = $self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}");
+	$sql = $self->sql_track_where_num(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'") if $mem{playlist_id} == -1;
+
+  my $rows = $self->make_select($sql);
   if($rows > 0) {
       for(my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
@@ -475,11 +478,13 @@ sub select_playlists {
 	my $self = shift;
 
 	my $q = $self->sql_playlist($self->sql_prepare_where);
-  
+
   my $rows = $self->make_select($q);
   if ($rows > 0) {
+      $mem{lines}{0}{playlist_id} = -1;
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
+          $i++
           $mem{lines}{$i}{playlist_id} = $id;
           $mem{lines}{$i}{cmd} = 'playplaylist';
           $mem{lines}{$i}{category} = 'playlists';
@@ -782,7 +787,7 @@ sub menu_playplaylist {
 
 	$mem{playlist_id} = $mem{lines}{$line}{playlist_id};
 
-	$sql = "REPLACE INTO zone_mem (zone,`key`,value) VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
+	my $sql = "REPLACE INTO zone_mem (zone,`key`,value) VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
 	$mc->query($sql);
 
 	# check, whether we'd like to change or do any other command!
@@ -790,11 +795,13 @@ sub menu_playplaylist {
 	$mem{search} = undef;
 	$mem{category}  = 'playlist_tracks';
 
-	$self->empty_queue;
-	my $sql = $self->sql_playlist2playlist($mem{playlist_id});
-	my $ret = $mc->query($sql);
-	my $command = $self->{now_play}->play;
-	send2player($self->{handle}, $command);
+	unless($mem{playlist_id} == -1) {
+		$self->empty_queue;
+		$sql = $self->sql_playlist2playlist($mem{playlist_id});
+		my $ret = $mc->query($sql);
+		my $command = $self->{now_play}->play;
+		send2player($self->{handle}, $command);
+	}
 
 	$self->history_add;
 

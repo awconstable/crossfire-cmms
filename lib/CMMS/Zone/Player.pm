@@ -451,6 +451,8 @@ sub get_fulltrack_info {
 sub get_playlist_name {
 	my ($self, $playlist_id) = @_;
 
+	return 'Now Playing' if $playlist_id == -1;
+
 	my $mc = $self->mysqlConnection;
 
 	my $sql = sprintf('SELECT name FROM playlist WHERE id=%d', $playlist_id);

@@ -31,7 +31,7 @@ sub metadata {
 	$self->{DISCID}   = $metadata->{DISCID};
 	$self->{ARTIST}   = $metadata->{ARTIST};
 	$self->{ALBUM}    = $metadata->{ALBUM};
-	$self->{COMMENT} = $albumdata->extd;
+	$self->{COMMENTS} = $albumdata->extd;
 	$self->{YEAR}     = $albumdata->year;
 	my @tracks        = $albumdata->tracks;
 	$self->{TRACKS}   = \@tracks;

@@ -23,7 +23,7 @@ foreach(@{$conf{zones}->{zone}}) {
 }
 
 my $db = $conf{mysql};
-my $mc = new CMMS::Database::MysqlConnection;
+my $mc = new CMMS::Database::MysqlConnectionEscape;
 $mc and $db->{host} and $mc->host( $db->{host} );
 $mc and $db->{database} and $mc->database( $db->{database} );
 $mc and $db->{user} and $mc->user( $db->{user} );
