@@ -79,7 +79,7 @@ case "$1" in
         fi
 	;;
   *)
-	echo $"Usage: cmmsd {start|stop|restart|condrestart|status}"
+	echo $"Usage: cmms_player {start|stop|restart|condrestart|status}"
 	exit 1
 esac
 

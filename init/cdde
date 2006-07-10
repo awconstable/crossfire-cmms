@@ -77,7 +77,7 @@ case "$1" in
         fi
 	;;
   *)
-	echo $"Usage: cmmsd {start|stop|restart|condrestart|status}"
+	echo $"Usage: cdde {start|stop|restart|condrestart|status}"
 	exit 1
 esac
 

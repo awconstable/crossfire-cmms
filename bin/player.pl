@@ -7,11 +7,7 @@ use IPC::Open2;
 use Config::General;
 use POSIX qw(ceil);
 
-$SIG{TERM} = \&unload;
-$SIG{INT} = \&unload;
-$SIG{QUIT} = \&unload;
-$SIG{HUP} = \&unload;
-$SIG{__DIE__} = \&unload;
+$SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = $SIG{__DIE__} = \&unload;
 
 my ($oup, $odown) = (0, 0);
 
@@ -65,7 +61,7 @@ sub mux_input {
 				$oup = $up;
 				$odown = $down;
 				$data = "230: time $up $down";
-				$data .= "230: endofsong\r\n200: endofsong\r\n" if $down == 0;
+				$data .= "\r\n230: endofsong\r\n200: endofsong\r\n" if $down == 0;
 			} elsif($data =~ /\@P 1/) {
 				$data = "230: pause\r\n200: pause";
 			} elsif($data =~ /\@P 2/) {
