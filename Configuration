@@ -4,6 +4,7 @@ cp bin/ripper.pl /usr/bin/cmms_ripper.pl
 cp bin/crestron.pl /usr/bin/cmms_crestron.pl
 cp bin/zone.pl /usr/bin/cmms_zone.pl
 cp bin/player.pl /usr/bin/cmms_player.pl
+cp bin/poll.pl /usr/bin/cmms_poll.pl
 cp bin/cmmsd.pl /usr/bin/
 
 cp init/cmmsd /etc/rc.d/init.d/
@@ -15,6 +16,7 @@ cp init/LCDd /etc/rc.d/init.d/
 cp conf/cmms.conf /etc/
 cp conf/cdde.xml /etc/
 cp conf/LCDd.conf /etc/
+cp conf/cmms /etc/cron.d
 
 patch /etc/fstab -i fstab.patch
 
@@ -27,6 +29,7 @@ patch /etc/fstab -i fstab.patch
 /sbin/service LCDd start
 /sbin/service cmms_player start
 /sbin/service cmmsd start
+/sbin/service crond restart
 
 mkdir -p /usr/local/cmms/htdocs/media
 
