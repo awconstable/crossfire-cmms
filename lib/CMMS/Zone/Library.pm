@@ -481,18 +481,29 @@ sub select_playlists {
 
   my $rows = $self->make_select($q);
   if ($rows > 0) {
-      $mem{lines}{0}{playlist_id} = -1;
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
-          $i++
           $mem{lines}{$i}{playlist_id} = $id;
           $mem{lines}{$i}{cmd} = 'playplaylist';
           $mem{lines}{$i}{category} = 'playlists';
       }
-      return 1;
-  } else {
-      return 0;
   }
+
+	my %hash = ();
+	my $i = 1;
+	my $tmp = $mem{lines};
+	foreach(values %{tmp}) {
+		$hash{$i++} = $_;
+	}
+	$hash{0} = {
+		playlist_id => -1,
+		text => 'Now Playing',
+		cmd => 'playplaylist',
+		category => 'playlists'
+  	};
+  	$mem{lines} = \%hash;
+
+	return 1;
 }
 
 
@@ -687,6 +698,9 @@ sub page_next {
 		$total = $self->make_select_no_limit($self->sql_album_where($self->sql_prepare_where||''));
 	} elsif($c eq 'tracks') {
 		$total = $self->make_select_no_limit($self->sql_track_where($self->sql_prepare_where||''));
+	} elsif($c eq 'playlist_tracks') {
+		$total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}"));
+		$total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'")) if $mem{playlist_id} == -1;
 	} elsif($c eq 'playlists') {
 		$total = $self->make_select_no_limit($self->sql_playlist($self->sql_prepare_where||''));
 	}
@@ -694,7 +708,6 @@ sub page_next {
 
 	if($mem{offset} eq $total) {
 		# we are at end, so return without screen redrawing
-		# Hack :(
 		$mem{offset} += $limit;
 		return $self->page_prev;
 	}
