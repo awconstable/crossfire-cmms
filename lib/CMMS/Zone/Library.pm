@@ -708,11 +708,11 @@ sub page_next {
 		$total = $self->make_select_no_limit($self->sql_artist_where($self->sql_prepare_where||''));
 	} elsif($c eq 'albums') {
 		$total = $self->make_select_no_limit($self->sql_album_where($self->sql_prepare_where||''));
+        } elsif($c eq 'tracks' && $mem{playlist_id}) {
+                $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}"));
+                $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'")) if $mem{playlist_id} == -1;
 	} elsif($c eq 'tracks') {
 		$total = $self->make_select_no_limit($self->sql_track_where($self->sql_prepare_where||''));
-	} elsif($c eq 'playlist_tracks') {
-		$total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}"));
-		$total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'")) if $mem{playlist_id} == -1;
 	} elsif($c eq 'playlists') {
 		$total = $self->make_select_no_limit($self->sql_playlist($self->sql_prepare_where||''));
 	}
@@ -818,7 +818,7 @@ sub menu_playplaylist {
 	# check, whether we'd like to change or do any other command!
 	$mem{offset} = 0;
 	$mem{search} = undef;
-	$mem{category}  = 'playlist_tracks';
+	$mem{category}  = 'tracks';
 
 	unless($mem{playlist_id} == -1) {
 		$self->empty_queue;
@@ -904,7 +904,7 @@ sub prepare_memory {
 		return $self->select_artists;
 	} elsif($c eq 'albums') {
 		return $self->select_albums;
-	} elsif($c eq 'playlist_tracks') {
+	} elsif($c eq 'tracks' && $mem{playlist_id}) {
 		return $self->select_playlist_tracks;
 		return 0;
 	} elsif($c eq 'tracks') {
