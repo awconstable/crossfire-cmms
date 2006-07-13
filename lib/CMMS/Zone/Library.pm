@@ -354,7 +354,19 @@ sub sql_track_where_num {
          LIMIT ? OFFSET ? 
   };
 }
-                                                   
+
+sub sql_track_where_order {
+        my ($self, $where) = @_;
+
+  return qq{
+         SELECT track.id, track.title as text
+         FROM track
+         $where
+         ORDER BY track_order
+         LIMIT ? OFFSET ?
+  };
+}
+
 sub sql_track_where {
 	my ($self, $where) = @_;
 
@@ -445,8 +457,8 @@ sub select_tracks {
 sub select_playlist_tracks {
 	my $self = shift;
 
-	my $sql = $self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}");
-	$sql = $self->sql_track_where_num(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'") if $mem{playlist_id} == -1;
+	my $sql = $self->sql_track_where_order(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}");
+	$sql = $self->sql_track_where_order(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'") if $mem{playlist_id} == -1;
 
   my $rows = $self->make_select($sql);
   if($rows > 0) {
@@ -492,7 +504,7 @@ sub select_playlists {
 	my %hash = ();
 	my $i = 1;
 	my $tmp = $mem{lines};
-	foreach(values %{tmp}) {
+	foreach(values %{$tmp}) {
 		$hash{$i++} = $_;
 	}
 	$hash{0} = {
