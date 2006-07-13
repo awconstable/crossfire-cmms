@@ -497,7 +497,7 @@ sub select_playlists {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{playlist_id} = $id;
           $mem{lines}{$i}{cmd} = 'playplaylist';
-          $mem{lines}{$i}{category} = 'playlists';
+          $mem{lines}{$i}{category} = 'tracks';
       }
   }
 
@@ -511,7 +511,7 @@ sub select_playlists {
 		playlist_id => -1,
 		text => 'Now Playing',
 		cmd => 'playplaylist',
-		category => 'playlists'
+		category => 'tracks'
   	};
   	$mem{lines} = \%hash;
 
