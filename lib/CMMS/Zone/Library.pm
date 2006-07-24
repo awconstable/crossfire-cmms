@@ -660,7 +660,7 @@ sub queueall {
 	my $ret = $mc->query($sql);
 
 	# we are playing current playlist
-	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND `key`='playlist'");
+	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND param='playlist'");
 
 	$pos = 1;
 	$rows = $mc->query_and_get("select track_order as pos from playlist_current where zone = '$self->{zone}->{number}' and track_played is not null order by track_order desc limit 1")||[];
@@ -687,7 +687,7 @@ sub playall {
 
 	$self->empty_queue;
 	$self->queueall;
-	$mc->query("REPLACE INTO zone_mem (zone,`key`,value) values('$self->{zone}->{number}','state','stop')");
+	$mc->query("REPLACE INTO zone_mem (zone,param,value) values('$self->{zone}->{number}','state','stop')");
 
 	my $command = $self->{now_play}->play;
 	send2player($self->{handle}, $command);
@@ -783,7 +783,7 @@ sub menu_play {
 
 	$mc->query("update playlist_current set track_played = 1 where zone='$self->{zone}->{number}' and track_order < $trk{number}");
 
-	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND `key`='playlist'");
+	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND param='playlist'");
 
 	my $command = $self->{player}->playtrack($track);
 	send2player($self->{handle}, $command);
@@ -812,7 +812,7 @@ sub menu_playplaylist {
 
 	$mem{playlist_id} = $mem{lines}{$line}{playlist_id};
 
-	my $sql = "REPLACE INTO zone_mem (zone,`key`,value) VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
+	my $sql = "REPLACE INTO zone_mem (zone,param,value) VALUES ('$self->{zone}->{number}', 'playlist', '$mem{playlist_id}')";
 	$mc->query($sql);
 
 	# check, whether we'd like to change or do any other command!

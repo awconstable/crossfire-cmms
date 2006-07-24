@@ -132,7 +132,7 @@ sub play_stop_by_state {
 
 	my $mc = $self->mysqlConnection;
 
-	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'state'")||[];
+	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND param = 'state'")||[];
 	$row = $row->[0];
 	my $state = $row->{value};
 
@@ -155,15 +155,15 @@ sub random {
 
 	my $mc = $self->mysqlConnection;
 
-	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'random'")||[];
+	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND param = 'random'")||[];
 	$row = $row->[0];
 	my $random = $row->{value};
 
 	if($random) {
-		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'random'");
+		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND param = 'random'");
 		$random = undef;
 	} else {
-		$mc->query_and_get("REPLACE INTO zone_mem (zone,`key`,value) values('$self->{zone}->{number}', 'random', 1)");
+		$mc->query_and_get("REPLACE INTO zone_mem (zone,param,value) values('$self->{zone}->{number}', 'random', 1)");
 		$random = 1;
 	}
 
@@ -183,15 +183,15 @@ sub repeat {
 
 	my $mc = $self->mysqlConnection;
 
-	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'repeat'")||[];
+	my $row = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND param = 'repeat'")||[];
 	$row = $row->[0];
 	my $repeat = $row->{value};
 
 	if($repeat) {
-		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'repeat'");
+		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND param = 'repeat'");
 		$repeat = undef;
 	} else {
-		$mc->query_and_get("REPLACE INTO zone_mem (zone,`key`,value) values('$self->{zone}->{number}', 'repeat', 1)");
+		$mc->query_and_get("REPLACE INTO zone_mem (zone,param,value) values('$self->{zone}->{number}', 'repeat', 1)");
 		$repeat = 1;
 	}
 

@@ -242,11 +242,11 @@ sub get_next_track {
 
 	my ($tr, $to, $random, $repeat);
 
-	my $row = $mc->query_and_get("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'random'")||[];
+	my $row = $mc->query_and_get("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND param = 'random'")||[];
 	$row = $row->[0];
 	$random = $row->{value};
 
-	$row = $mc->query_and_get("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND `key` = 'repeat'")||[];
+	$row = $mc->query_and_get("SELECT value from zone_mem WHERE zone = '$self->{zone}->{number}' AND param = 'repeat'")||[];
 	$row = $row->[0];
 	$repeat = $row->{value};
 
@@ -400,11 +400,11 @@ sub get_fulltrack_info {
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 
-	my $row2 = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'playlist'")||[];
+	my $row2 = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND param = 'playlist'")||[];
 	$row2 = $row2->[0];
 	my $playlist_id = $row2->{value};
 
-	$row2 = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND `key` = 'state'")||[];
+	$row2 = $mc->query_and_get("SELECT value from zone_mem where zone = '$self->{zone}->{number}' AND param = 'state'")||[];
 	$row2 = $row2->[0];
 	my $play_state = $row2->{value};
 
