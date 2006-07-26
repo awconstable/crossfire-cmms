@@ -1,0 +1,7 @@
+--- /etc/fstab		2006-07-26 16:08:45.000000000 +0100
++++ /root/smb.fstab	2006-07-26 16:18:05.000000000 +0100
+@@ -7,3 +7,4 @@
+ none                    /sys                    sysfs   defaults        0 0
+ LABEL=SWAP-hda3         swap                    swap    defaults        0 0
+ /dev/sda                /media/usbdisk          vfat    pamconsole,exec,noauto,iocharset=utf8,noatime,sync,managed 0 0
++//cmms-master/media     /usr/local/cmms/htdocs/media          smbfs    userid=root,passwd=cmms,rw 0 0
