@@ -3,7 +3,7 @@
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-	      'NAME'         => 'cmms-ripper',
+	      'NAME'         => 'cmms',
 	      'VERSION_FROM' => 'lib/CMMS/Ripper.pm', # finds $VERSION
 	      'PREREQ_PM'    => {
 				 'TAER'             => 0.08,
