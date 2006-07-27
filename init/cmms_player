@@ -22,10 +22,12 @@ getpids() {
 }
 start() {
         echo -n $"Starting $prog: "
-        #/usr/local/bin/rexima pcm 80
-        #/usr/local/bin/rexima vol 80
-	/usr/bin/amixer sset DAC,0 80%,80%
-	/usr/bin/amixer sset DAC,1 80%,80%
+        /usr/local/bin/rexima pcm 80 1>/dev/null 2>&1
+        /usr/local/bin/rexima vol 80 1>/dev/null 2>&1
+	/usr/bin/amixer sset DAC,0 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer sset DAC,1 80%,80% 1>/dev/null 2>&1
+	# Make sure samba share mounted :)
+	mount -a
         $daemon 1>/dev/null 2>&1 &
         RETVAL=$?
         return $RETVAL
