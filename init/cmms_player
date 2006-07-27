@@ -1,0 +1,90 @@
+#!/bin/bash
+#
+# cmms_player        Startup script for the CMMS player server
+#
+# chkconfig: 2345 88 20
+# description: Daemon for cmms_player
+# processname: cmms_player
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Path to binary
+daemon=/usr/bin/cmms_player.pl
+prog=cmms_player
+RETVAL=0
+
+# subs
+getpids() {
+        PIDS=`ps -efww | grep perl | grep $prog | awk {'print $2'}`
+	PIDS=`echo ${PIDS//\n/''}`
+        [ -z "$PIDS" ] && return 1 || return 0
+}
+start() {
+        echo -n $"Starting $prog: "
+        /usr/local/bin/rexima pcm 80 1>/dev/null 2>&1
+        /usr/local/bin/rexima vol 80 1>/dev/null 2>&1
+	/usr/bin/amixer sset DAC,0 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer sset DAC,1 80%,80% 1>/dev/null 2>&1
+	# Make sure samba share mounted :)
+	mount -a
+        $daemon 1>/dev/null 2>&1 &
+        RETVAL=$?
+        return $RETVAL
+}
+stop() {
+	echo -n $"Stopping $prog: "
+	getpids && [ -w / ] && kill $PIDS
+	RETVAL=$?
+	return $RETVAL
+}
+status() {
+	if getpids ; then
+		echo "$prog ($PIDS) is running..."
+	else
+		echo "$prog is stopped"
+		RETVAL=1
+	fi
+	echo
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	if getpids ; then
+		echo "$prog ($PIDS) is already running..."
+	else
+		start && success || failure
+	fi
+	echo
+	;;
+  stop)
+	stop && success || failure
+	echo
+	;;
+  status)
+        status
+	RETVAL=$?
+	;;
+  restart)
+        stop && success || failure
+        echo
+        start && success || failure
+        echo
+        ;;
+  condrestart)
+        if getpids ; then
+                stop && success || failure
+                echo
+                start && success || failure
+                echo
+        else
+                echo "$prog is stopped"
+        fi
+	;;
+  *)
+	echo $"Usage: cmms_player {start|stop|restart|condrestart|status}"
+	exit 1
+esac
+
+exit $RETVAL
