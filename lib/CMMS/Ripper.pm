@@ -308,14 +308,14 @@ sub store_xml {
 			my $bitrate = (/\.mp3$/?160:'');
 
 			$xml .= qq(
-				      <data>
-				        <file_location>$file_location</file_location>
-				        <file_name>$file_name</file_name>
-				        <file_type>$file_type</file_type>
-				        <bitrate>$bitrate</bitrate>
-				        <filesize>$filesize</filesize>
-				        <info_source>$self->{conf}->{ripper}->{metadata}</info_source>
-				      </data>
+				        <data>
+				          <file_location>$file_location</file_location>
+				          <file_name>$file_name</file_name>
+				          <file_type>$file_type</file_type>
+				          <bitrate>$bitrate</bitrate>
+				          <filesize>$filesize</filesize>
+				          <info_source>$self->{conf}->{ripper}->{metadata}</info_source>
+				        </data>
 			);
 		}
 
