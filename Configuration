@@ -18,7 +18,7 @@ cp conf/cdde.xml /etc/
 cp conf/LCDd.conf /etc/
 cp conf/cmms /etc/cron.d
 
-patch /etc/fstab -i fstab.patch
+/bin/bash cdrom.sh
 
 /sbin/chkconfig --add cdde
 /sbin/chkconfig --add LCDd

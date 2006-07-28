@@ -193,7 +193,7 @@ sub store {
 	my $img = join('',@imgs) || '';
 	$cover = "'$img'" if $img;
 
-	$mc->query('INSERT INTO album (name,discid,year,comment,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{DISCID}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($meta->{COMMENT}).",$cover)");
+	$mc->query('INSERT INTO album (name,discid,year,comment,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($meta->{COMMENT}).",$cover)");
 	$album_id = $mc->last_id;
 
 	$sql = 'SELECT id FROM genre WHERE name = '.$mc->quote($meta->{GENRE});
@@ -210,6 +210,9 @@ sub store {
 		@files = <$folder/$title.*>;
 		next unless scalar @files;
 
+		my $ttitle = $track->title;
+		$ttitle =~ s/[\r\n]+//g;
+
 		$artist = $mc->quote($artist);
 		($_) = @{$mc->query_and_get('SELECT id FROM artist WHERE name = '.$artist)||[]};
 		$artist_id = 0;
@@ -217,7 +220,7 @@ sub store {
 			$mc->query('INSERT INTO artist (name) VALUES('.$artist.')');
 			$artist_id = $mc->last_id;
 		}
-		$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$genre_id,$track->title,$track->number,$track->length)).',NOW())';
+		$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$genre_id,$ttitle,$track->number,$track->length)).',NOW())';
 		$mc->query($sql);
 
 		my $track_id = $mc->last_id;
@@ -234,12 +237,103 @@ sub store {
 	}
 }
 
+sub store_xml {
+	my($self,$meta) = @_;
+
+	my $aartist = safe_chars($meta->{ARTIST});
+	my $album = safe_chars($meta->{ALBUM});
+	my $comment = substr(safe_chars($meta->{COMMENT}),0,32);
+	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
+	$folder .= "$comment/" if $comment;
+	$folder =~ s/\/$//;
+	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
+
+	print STDERR "$folder\n";
+
+	die("No tracks for this album") unless scalar @files; # Don't store album if no tracks
+
+	my($artist_id,$album_id,$genre_id);
+
+	my $cover = '';
+	my @imgs = <${folder}/cover.*>;
+	my $img = join('',@imgs) || '';
+	$cover = $img if $img;
+
+	my $xml = qq(
+		<?xml version="1.0" encoding="ISO-8859-1"?>
+		  <import>
+		    <album>
+		      <name>$meta->{ALBUM}</name>
+		      <discid>$meta->{discid}</discid>
+		      <year>$meta->{YEAR}</year>
+		      <comment>$meta->{COMMENT}</comment>
+		      <cover>$cover</cover>
+		      <genre>$meta->{GENRE}</genre>
+		      <folder>$folder</folder>
+		    </album>
+		    <tracks>
+	);
+
+	@files = ();
+	foreach my $track (@{$meta->{TRACKS}}) {
+		my $track_num = sprintf('%02d',$track->number);
+		my $artist = $track->artist;
+		$artist = 'Unknown' if $artist =~ /^unknown/i;
+		my $title = $track->title;
+		$title = safe_chars("$track_num $artist $title");
+		@files = <$folder/$title.*>;
+		next unless scalar @files;
+
+		my $ttitle = $track->title;
+		$ttitle =~ s/[\r\n]+//g;
+
+		$xml .= qq(
+			      <track>
+			        <artist>$artist</artist>
+			        <title>$ttitle</title>
+			        <track_num>).$track->number.qq(</track_num>
+			        <length_seconds>).$track->length.qq(</length_seconds>
+		);
+
+		foreach(@files) {
+			print STDERR "$_\n";
+			my($file_location,$file_name,$file_type) = (/^(.+\/)([^\/]+\.(.+))$/);
+			my $filesize = -s $_;
+			my $bitrate = (/\.mp3$/?160:'');
+
+			$xml .= qq(
+				      <data>
+				        <file_location>$file_location</file_location>
+				        <file_name>$file_name</file_name>
+				        <file_type>$file_type</file_type>
+				        <bitrate>$bitrate</bitrate>
+				        <filesize>$filesize</filesize>
+				        <info_source>$self->{conf}->{ripper}->{metadata}</info_source>
+				      </data>
+			);
+		}
+
+		$xml .= qq(
+			      </track>
+		);
+	}
+
+	$xml .= qq(
+		    </tracks>
+		  </import>
+	);
+
+	open(XML,"> $folder/export.xml");
+	print XML $xml;
+	close(XML);
+}
+
 sub check {
 	my($self,$meta) = @_;
 
 	my $mc = $self->mysqlConnection;
 
-	($_) = @{$mc->query_and_get('SELECT id FROM album WHERE discid = '.$mc->quote($meta->{DISCID}))||[]};
+	($_) = @{$mc->query_and_get('SELECT id FROM album WHERE discid = '.$mc->quote($meta->{discid}))||[]};
 	if($_->{id}) {
 		warn('Album already ripped');
 		return 0;
