@@ -193,7 +193,10 @@ sub store {
 	my $img = join('',@imgs) || '';
 	$cover = "'$img'" if $img;
 
-	$mc->query('INSERT INTO album (name,discid,year,comment,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($meta->{COMMENT}).",$cover)");
+	my $acomment = $meta->{COMMENT};
+	$acomment =~ s/[\r\n]+$//g;
+
+	$mc->query('INSERT INTO album (name,discid,year,comment,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover)");
 	$album_id = $mc->last_id;
 
 	$sql = 'SELECT id FROM genre WHERE name = '.$mc->quote($meta->{GENRE});
@@ -259,6 +262,9 @@ sub store_xml {
 	my $img = join('',@imgs) || '';
 	$cover = $img if $img;
 
+	my $acomment = $meta->{COMMENT};
+	$acomment =~ s/[\r\n]+$//g;
+
 	my $xml = qq(
 		<?xml version="1.0" encoding="ISO-8859-1"?>
 		  <import>
@@ -266,7 +272,7 @@ sub store_xml {
 		      <name>$meta->{ALBUM}</name>
 		      <discid>$meta->{discid}</discid>
 		      <year>$meta->{YEAR}</year>
-		      <comment>$meta->{COMMENT}</comment>
+		      <comment>$acomment</comment>
 		      <cover>$cover</cover>
 		      <genre>$meta->{GENRE}</genre>
 		      <folder>$folder</folder>
