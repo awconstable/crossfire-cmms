@@ -114,10 +114,11 @@ $self_url = $cgi->self_url;
 # Setup tabs
 #
 @tabs = ( 
-        { title => "Summary", view => "summary" },
-        { title => "Playlist", view => "playlist" },
-        { title => "My Media", view => "media" },
-        { title => "Configuration", view => "configuration" }
+        { title => "Summary", view => "summary", icon=>"/icons/32x32/shadow/target.png" },
+        { title => "Playlists", view => "playlist", icon=>"/icons/32x32/shadow/loudspeaker2.png" },
+        { title => "My Albums", view => "albums", icon=>"/icons/32x32/shadow/cd_gold.png" },
+        { title => "Track Search", view => "tracks", icon=>"/icons/32x32/shadow/chrystal_ball.png" },
+        { title => "Configuration", view => "configuration", icon=>"/icons/32x32/shadow/wrench.png" }
 );
 
 # Setup alert styles
@@ -141,13 +142,15 @@ $this_dir = dirname($ENV{'SCRIPT_FILENAME'});
 [$ foreach $t ( @tabs ) $]
 [$ if $view eq $t->{view} $]
         <tr> 
-          <td height="60" align="center" valign="middle" class="tabselect" [+ $t->{style} ? 'style="'.$t->{style}.'"' : "" +]> 
+          <td height="70" align="center" valign="middle" class="tabselect" [+ $t->{style} ? 'style="'.$t->{style}.'"' : "" +]> 
+[$ if $t->{icon} $]<div class="icon"><img src="[+ $t->{icon} +]" width="32" height="32" class="icon"></div>[$ endif $]
             [+ $t->{title} || "[Unknown]" +]
           </td>
         </tr>
 [$ elsif (-f $this_dir."/index-".$t->{view}.".ehtm") $]
         <tr> 
-          <td height="60" align="center" valign="middle" class="tab" [+ $t->{style} ? 'style="'.$t->{style}.'"' : "" +]> 
+<td height="70" align="center" valign="middle" class="tab" [+ $t->{style} ? 'style="'.$t->{style}.'"' : "" +]> 
+[$ if $t->{icon} $]<div class="icon"><a href="index.ehtml?v=[+ $t->{view} +]"><img src="[+ $t->{icon} +]" width="32" height="32" border="0" class="icon"></a></div>[$ endif $]
             <a href="index.ehtml?v=[+ $t->{view} +]">[+ $t->{title} || "[Unknown]" +]</a>
           </td>
         </tr>

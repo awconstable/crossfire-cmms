@@ -25,6 +25,7 @@ sub new {
 	my $self = {};
 	$self->{conf} = $params{conf};
 	$self->{metadata} = $params{metadata};
+	$self->{timeout} = 0;
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
@@ -83,7 +84,8 @@ sub rip {
 	print STDERR $metadata->{ALBUM}."\n";
 
 	foreach my $track (@{$metadata->{TRACKS}}) {
-		$self->_rip($track->number,$track->title,$track->artist);
+		eval "\$self->_rip(\$track->number,\$track->title,\$track->artist)";
+		$self->{timeout} = 1 if $@ && $@ =~ /Ripping timed out/;
 	}
 
 	$self->{track}->set(data => '');
@@ -106,6 +108,7 @@ sub rip {
 	undef $self->{client};
 	$self->{client} = undef;
 
+	return undef if $self->{timeout};
 	return 1;
 }
 

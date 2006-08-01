@@ -2,8 +2,12 @@
 
 use strict;
 use CMMS::Ripper;
+use Getopt::Long;
 
-my $ripper = new CMMS::Ripper(conf => '/etc/cmms.conf');
+my $mode;
+GetOptions(mode => \$mode);
+
+my $ripper = new CMMS::Ripper(conf => ($mode?'/etc/cmms2.conf':'/etc/cmms.conf'));
 
 # Lock CD
 #`cdctl -o1`;
@@ -11,7 +15,7 @@ my $ripper = new CMMS::Ripper(conf => '/etc/cmms.conf');
 my $album = $ripper->metadata;
 
 $ripper->check($album) or &error; # Must unlock draw before dying!
-$ripper->rip($album);
+$ripper->rip($album) or die("Album: $album->{ALBUM} timed out");
 
 # Unlock CD
 #`cdctl -o0`;

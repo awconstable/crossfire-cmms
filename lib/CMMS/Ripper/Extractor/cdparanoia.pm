@@ -5,6 +5,7 @@ use warnings;
 use base qw(CMMS::Ripper::Extractor::Generic);
 use CMMS::Psudo;
 use CMMS::File;
+use POSIX qw(mktime);
 
 our %smilies = (
 #             12345678901234567890
@@ -20,11 +21,19 @@ our %smilies = (
     ';-(' => 'skip                '
 );
 
+# Timeout
+my $start   = mktime(localtime());
+my $timeout = 10*60;
+
 our($CDPARANOIA,$pid);
 $SIG{ALRM} = \&_grim_reaper;
 
 sub _rip {
 	my($self,$number,$track,$artist) = @_;
+
+	# Timeout
+	$start = mktime(localtime());
+
 	$number =~ s/[\r\n+]//g;
 	$track =~ s/[\r\n+]//g;
 	$artist =~ s/[\r\n+]//g;
@@ -38,7 +47,7 @@ sub _rip {
 	my $file = safe_chars(sprintf('%02d',$number)." $artist $track");
 	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
-	($CDPARANOIA,$pid) = psudo_tty("cdparanoia -w -e $number $tmp$file.wav");
+	($CDPARANOIA,$pid) = psudo_tty('cdparanoia'.($self->{conf}->{ripper}->{device}?" -d $self->{conf}->{ripper}->{device}":'')." -w -e $number $tmp$file.wav");
 
 	my $rawsize = 2352;
 	my($from_sec,$to_sec,$range);
@@ -132,12 +141,24 @@ sub _rip {
 	return 1;
 }
 
+sub timeout {
+	my $current = mktime(localtime());
+
+	return 1 if $current > ($start + $timeout);
+	return undef;
+}
+
 # Must kill off old processes if they have fallen over
 sub _grim_reaper {
 	if($_ = `ps -efww | grep perl | grep ripper | awk {'print \$2'}`) {
 		foreach(split("\n",$_)) {
 			kill(9,$_) if $_ ne $$;
 		}
+	}
+
+	if(timeout()) {
+		die("Ripping timed out");
+		return 1;
 	}
 
 	alarm 5;

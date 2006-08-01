@@ -96,7 +96,8 @@ sub default {
 sub discid {
 	my $self = shift;
 	my $mc = $self->mysqlConnection;
-	my $discid = `cd-discid /dev/cdrom 2> /dev/null` or die("Can't obtain CD ID");
+	my $device = $self->{conf}->{ripper}->{device} || '/dev/cdrom';
+	my $discid = `cd-discid $device 2> /dev/null` or die("Can't obtain CD ID");
 	chomp($discid);
 
 	return $discid;
