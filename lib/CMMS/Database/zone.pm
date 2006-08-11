@@ -1,4 +1,4 @@
-#$Id: zone.pm,v 1.1 2006/07/03 11:50:33 byngmeister Exp $
+#$Id: zone.pm,v 1.2 2006/08/11 20:46:46 toby Exp $
 
 package CMMS::Database::zone;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -79,6 +79,35 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+#############################################################
+# assign_id - Assigns a new unique id
+#
+sub assign_id {
+    my $self = shift;
+
+    my $mc = $self->mysqlConnection();
+    my $idfield = $self->idfield();
+    my $table = $self->table();
+
+    my $sql = <<EndSQL
+SELECT MAX($idfield) FROM $table
+EndSQL
+    ;
+
+    my $q = $mc->query($sql);
+
+    my $rows = $q->rows;
+
+    my @r = $q->fetchrow_array();
+     
+    my $id = $r[0] + 1;
+
+    $q->finish;
+
+
+    return $id;
 }
 
 1;

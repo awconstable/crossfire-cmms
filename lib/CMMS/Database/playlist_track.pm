@@ -1,4 +1,4 @@
-#$Id: playlist_track.pm,v 1.12 2006/07/03 15:42:07 byngmeister Exp $
+#$Id: playlist_track.pm,v 1.13 2006/08/11 20:46:46 toby Exp $
 
 package CMMS::Database::playlist_track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -47,12 +47,12 @@ sub new {
   $self->definition({
     name => "playlist_track",
     tag => "playlist_track",
-    title => "playlist_track",
+    title => "Play List Track",
     display => [ "id", "playlist_id", "track_id", "track_order",  ],
     list_display => [ "id", "playlist_id", "track_id", "track_order",  ],
     tagorder => [ "id", "playlist_id", "track_id", "track_order",  ],
     tagrelationorder => [ ],
-    relationshiporder => [ "track_data" ],
+    relationshiporder => [ ],
     no_broadcast => 1,
     no_clone => 1,
     elements => {
@@ -62,7 +62,7 @@ sub new {
 		title => "Id",
 		primkey => 1,
 		displaytype => "hidden",
-
+		
             },
             'playlist_id' => {
 	        type => "int",
@@ -76,12 +76,21 @@ sub new {
 		    none => "NULL",
 		    read_only => 1,
 		},
-
+		displaytype => "readonly",
             },
             'track_id' => {
 	        type => "int",
 		tag  => "Track",
 		title => "Track",
+		displaytype => "doublelookup",
+		prelookup => {
+		    nonetext => "[please pick an album]",
+		    table => "album",
+		    keycol => "id",
+		    valcol => "name",
+		    lookup_restriction => "track.album_id=",
+		    reverse_method => "rlookup_album",
+		},
 		lookup => {
 		    table => "track",
 		    keycol => "id",
@@ -89,14 +98,12 @@ sub new {
 		    none => "NULL",
 		    read_only => 1,
 		},
-
             },
             'track_order' => {
 	        type => "int",
 		tag  => "Track_order",
-		title => "Track_order",
-		primkey => 1,
-
+		title => "Track order",
+		displaytype => "readonly",
             },
 
     },
@@ -184,6 +191,22 @@ EndWhere
     ;
 
     return $self->get_list( "track_data", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+}
+
+#------------------------------------------------------------------------------
+
+=head2 rlookup_album
+
+=cut
+
+
+sub rlookup_album {
+    my( $self, $track_id ) = @_;
+    my $mc = $self->mysqlConnection();
+
+    my $id = $mc->enum_lookup("track","id","album_id",$track_id);
+    
+    return $id;
 }
 
 1;

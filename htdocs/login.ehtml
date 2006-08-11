@@ -1,6 +1,6 @@
 [- 
 use CommunityNode;
-use CMMS::Database::MysqlConnection;
+use CommunityNode::MysqlConnection;
 use CMMS::Database::Theme::HTML;
 use CMMS::Database::MysqlConnection;
 use CGI;
@@ -10,8 +10,8 @@ use Data::Dumper;
 
 $cgi = new CGI;
 
-$cn_mc = new CMMS::Database::MysqlConnection;
-# get CMMS::Database database config from environment
+$cn_mc = new CommunityNode::MysqlConnection;
+# get CommunityNode database config from environment
 %cn_conf = qw/cnHost host cnUser user cnPassword password cnDatabase database/;
 while ( my($conf,$method) = each %cn_conf ) {
   $ENV{$conf} && $cn_mc->$method($ENV{$conf});
@@ -37,7 +37,11 @@ $laf->http_root($ENV{'DOCUMENT_ROOT'});
 
 # Setup session parameters
 #
-$server_name = $ENV{'CookieDomain'} || $ENV{'SERVER_NAME'};
+## CAVEAT
+## If $server_name doesn't match the domain you have configured to
+## access the service logins will fail silently because the cookies
+## will not be passed.
+$server_name = $ENV{'CookieDomain'} || $ENV{HTTP_HOST} || $ENV{'SERVER_NAME'};
 $session_id = $ENV{'UNIQUE_ID'};
 $cookiename = $ENV{'UID_COOKIE'};
 $cookie = $cgi->cookie($cookiename);

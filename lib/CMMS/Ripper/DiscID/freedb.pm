@@ -14,29 +14,31 @@ sub new {
 }
 
 sub metadata {
-	my $self = shift;
+    my ($self,$discid) = @_;
 
-	my $mc = $self->mysqlConnection;
+    $discid or $discid = $self->discid;
 
-	my($metadata) = $self->{FreeDB}->query($self->discid);
-	my $albumdata = {};
-
-	if($metadata->{ALBUM}) {
-		$albumdata = $self->{FreeDB}->read($metadata->{GENRE},$metadata->{DISCID});
-	} else {
-		($metadata,$albumdata) = $self->default;
-	}
-
-	$self->{GENRE}    = $metadata->{GENRE};
-	$self->{DISCID}   = $metadata->{DISCID};
-	$self->{ARTIST}   = $metadata->{ARTIST};
-	$self->{ALBUM}    = $metadata->{ALBUM};
-	$self->{COMMENT}  = $albumdata->extd;
-	$self->{YEAR}     = $albumdata->year;
-	my @tracks        = $albumdata->tracks;
-	$self->{TRACKS}   = \@tracks;
-
-	return $self;
+    my $mc = $self->mysqlConnection;
+    
+    my($metadata) = $self->{FreeDB}->query($discid);
+    my $albumdata = {};
+    
+    if($metadata->{ALBUM}) {
+	$albumdata = $self->{FreeDB}->read($metadata->{GENRE},$metadata->{DISCID});
+    } else {
+	($metadata,$albumdata) = $self->default;
+    }
+    
+    $self->{GENRE}    = $metadata->{GENRE};
+    $self->{DISCID}   = $metadata->{DISCID};
+    $self->{ARTIST}   = $metadata->{ARTIST};
+    $self->{ALBUM}    = $metadata->{ALBUM};
+    $self->{COMMENT}  = $albumdata->extd;
+    $self->{YEAR}     = $albumdata->year;
+    my @tracks        = $albumdata->tracks;
+    $self->{TRACKS}   = \@tracks;
+    
+    return $self;
 }
 
 1;

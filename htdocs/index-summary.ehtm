@@ -1,5 +1,43 @@
 [-
+use Filesys::Df;
+use CMMS::Ripper;
+use Net::IP;
+use Config::General;
+use Net::Interface qw(
+		      IFF_UP
+		      IFF_BROADCAST
+		      IFF_DEBUG
+		      IFF_LOOPBACK
+		      IFF_POINTOPOINT
+		      IFF_NOTRAILERS
+		      IFF_RUNNING
+		      IFF_NOARP
+		      IFF_PROMISC
+		      IFF_ALLMULTI
+		      IFF_MASTER
+		      IFF_SLAVE
+		      IFF_MULTICAST
+		      IFF_SOFTHEADERS
+		      IFHWADDRLEN
+		      IFNAMSIZ
+		      mac_bin2hex
+		      );
+
+# load config
+my %conf   = ParseConfig('/etc/cmms.conf');
+$serial = $conf{serial};
+
+
 ($session_id, $cgi, $mc) = @param;
+
+my $if = Net::Interface->new('eth0');
+$address = join(".",unpack("CCCC", $if->address()));
+$netmask = join(".",unpack("CCCC", $if->netmask()));
+$broadcast = join(".",unpack("CCCC", $if->broadcast()));
+$mac = mac_bin2hex(scalar $if->hwaddress());
+
+$ds = df("/");
+$percentage = $ds->{per};
 
 $albums = $mc->query_and_get('select count(id) as total from album') || [];
 $albums = $albums->[0]->{total};
@@ -14,12 +52,20 @@ $zones = $mc->query_and_get('select count(id) as total from zone') || [];
 $zones = $zones->[0]->{total};
 -]
 <div class="subtitle">CMMS Manager</div>
-<p>Total albums: [+ $albums +]</p>
-<p>Total tracks: [+ $tracks +]</p>
-<p>Total genres: [+ $genres +]</p>
-<p>Total zones: [+ $zones +]</p>
-<UL>
-<li><A HREF="select_album.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Albums</A></li>
-<li><A HREF="select_artist.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Artists</A></li>
-<li><A HREF="select_genre.ehtml?session_id=[+ $ENV{'UNIQUE_ID'} +]">Genres</A></li>
-</UL>
+<table width="100%" cellspacing="1" cellpadding="2" class="boxtable">
+<tr><td class="tableheaders" colspan="2">Server summary</td></tr>
+<tr><td class="boldtablecells" width="33%">CMMS Version:</td><td class="tablecells">[+ $CMMS::Ripper::VERSION +]</td></tr>
+<tr><td class="boldtablecells" width="33%">Serial number:</td><td class="tablecells">[+ $serial +]</td></tr>
+<tr><td class="tableheaders" colspan="2">Your music database</td></tr>
+<tr><td class="boldtablecells" width="33%">Total albums:</td><td class="tablecells">[+ $albums +]</td></tr>
+<tr><td class="boldtablecells" width="33%">Total tracks:</td><td class="tablecells">[+ $tracks +]</td></tr>
+<tr><td class="boldtablecells" width="33%">Total genres:</td><td class="tablecells">[+ $genres +]</td></tr>
+<tr><td class="boldtablecells" width="33%">Total zones:</td><td class="tablecells">[+ $zones +]</td></tr>
+<tr><td class="tableheaders" colspan="2">Disk</td></tr>
+<tr><td class="boldtablecells" width="33%">Space Used:</td><td class="tablecells">[+ $ds->{per} +]%</td></tr>
+<tr><td class="tableheaders" colspan="2">Network Settings</td></tr>
+<tr><td class="boldtablecells" width="33%">IP Address:</td><td class="tablecells">[+ $address +]</td></tr>
+<tr><td class="boldtablecells" width="33%">Netmask:</td><td class="tablecells">[+ $netmask +]</td></tr>
+<tr><td class="boldtablecells" width="33%">Broadcast:</td><td class="tablecells">[+ $broadcast +]</td></tr>
+<tr><td class="boldtablecells" width="33%">MAC Address:</td><td class="tablecells">[+ $mac +]</td></tr>
+</table>

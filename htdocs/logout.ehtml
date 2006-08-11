@@ -1,6 +1,6 @@
 [-
   use CommunityNode;
-  use CMMS::Database::MysqlConnection;
+  use CommunityNode::MysqlConnection;
   use CMMS::Database::Theme::HTML;
   use CMMS::Database::MysqlConnection;
   use CGI;
@@ -40,8 +40,8 @@
   $status_message = '';
 
   if ($cgi->param("logout") or $cgi->param("btn_logout.x")) { # logout command
-    $success   = '/index.ehtml' unless $success;
-    $success ||= '/index.ehtml';
+    $success   = '' unless $success;
+    $success ||= 'index.ehtml';
     my $cgi_id_cookie    = $cgi->cookie(-name   => 'COMMUNITY_MEMBER',
 					-value  => '',
 					-domain => $server_name);

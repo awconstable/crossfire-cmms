@@ -1,0 +1,138 @@
+[-
+($session_id, $cgi, $mc) = @param;
+
+$stab = $cgi->param("tab") || "1";
+$zones = $mc->query_and_get('select id,name from zone order by id') || [];
+
+my $ov = { id=>"overview", name=>"Overview" };
+#unshift @{$zones}, $ov;
+-]
+<div class="subtitle">Now Playing</div>
+<div class="tabberlive">
+<ul class="tabbernav">
+[$ foreach $t ( @{$zones} ) $]
+[$ if $stab eq $t->{id} $]
+<li class="tabberactive"><a href="index.ehtml?v=nowplaying;tab=[+ $t->{id} +]">[+ $t->{name} +]</a></li>
+[$ else $]
+<li><a href="index.ehtml?v=nowplaying;tab=[+ $t->{id} +]">[+ $t->{name} +]</a></li>
+[$ endif $]
+[$ endforeach $]
+</ul>
+
+[$ if $stab eq "overview" $]
+     <div class="tabbertab">
+Overview to go here
+     </div>
+[$ else $]
+     <div class="tabbertab">
+[-
+my $q_zone = $mc->quote($stab);
+
+my $sql = qq(
+SELECT playlist_current.*,
+       album.cover,
+       track.album_id,
+       track.artist_id,
+       track.title,
+       track.length_seconds,
+       album.name as album,
+       album.year,
+       artist.name as artist
+FROM playlist_current,
+     track,
+     album,
+     artist
+WHERE playlist_current.zone = $q_zone
+AND (playlist_current.track_played = 0 or playlist_current.track_played is null)
+AND playlist_current.track_id = track.id
+AND track.album_id = album.id
+AND track.artist_id = artist.id
+);
+
+$playlist = $mc->query_and_get($sql);
+-]
+
+<script src="/javascript/scriptaculous/lib/prototype.js" type="text/javascript"></script>
+<script src="/javascript/scriptaculous/src/scriptaculous.js" type="text/javascript"></script>
+<script src="/javascript/scriptaculous/src/unittest.js" type="text/javascript"></script>
+
+  <style>
+
+    div#divplaylist {
+      margin: 0px;
+      padding: 0px;
+    }
+
+    #divplaylist ul { 
+      margin: 0px;
+      padding: 0px;
+    }
+
+    #divplaylist li {
+      list-style: none;
+      cursor:move;
+      margin: 0;
+      padding: 0;
+    }
+
+    ul.playlist li.over {
+      background-color:#999;
+    }
+
+    div.dropmarker {
+      height:6px;
+      width:200px;
+      background: url(/javascript/scriptaculous/test/functional/dropmarker.png) left top;
+      margin-top:-3px;
+      margin-left:-5px;
+      z-index:1000;
+      overflow: hidden;
+    }
+
+</style>
+
+<div id="divplaylist">
+<table style="width: 98%">
+<tr>
+ <td class="boldtablecells" width="30%">Artist</td>
+ <td class="boldtablecells" width="30%">Album</td>
+ <td class="boldtablecells" width="30%">Title</td>
+ <td class="boldtablecells" style="text-align: right" width="5%">Len</td>
+ <td class="boldtablecells" width="5%">Opt</td>
+</tr>
+</table>
+[$ if $playlist and $#{$playlist} >= 0 $]
+<ul id="playlist" class="playlist">
+[$ foreach $t ( @{$playlist} ) $]
+<li id="item_[+ $l->{id} +]">
+<table style="width: 100%">
+<tr>
+ <td class="tablecells" width="30%"><a href="artist.ehtml?id=[+ $t->{artist_id} +];session_id=[+ $session_id +]">[+ $t->{artist} +]</a></td>
+ <td class="tablecells" width="30%"><a href="album.ehtml?id=[+ $t->{album_id} +];session_id=[+ $session_id +]">[+ $t->{album} +]</a></td>
+ <td class="tablecells" width="30%"><a href="track.ehtml?id=[+ $t->{track_id} +];session_id=[+ $session_id +]">[+ $t->{title} +]</a></td>
+ <td class="tablecells" style="text-align: right" width="5%">[+ sprintf("%i:%02i",int($t->{length_seconds} / 60), $t->{length_seconds} % 60) +]</td>
+ <td class="tablecells" width="5%">
+<a href="playlist_current.ehtml?id=[+ $r->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
+ </td>
+</tr>
+</table>
+</li>
+[$ endforeach $]
+</ul>
+
+<input type="hidden" value="(waiting for onChange)" id="playlistv" name="playlistv">
+
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+  Sortable.create('playlist',{ghosting:false,constraint:false,hoverclass:'over',
+    onUpdate:function(sortable){Sortable.serialize(sortable)},
+    onChange:function(element){document.getElementById('playlistv').value = Sortable.serialize(element.parentNode)}
+  });
+// ]]>
+</script>
+</div>
+[$ else $]
+<div style="text-align: center" class="bodytext">There are no tracks currently queued to be played in this zone</div>
+[$ endif $]
+</div>
+[$ endif $]

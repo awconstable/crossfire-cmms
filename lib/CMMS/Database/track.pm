@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.14 2006/07/03 15:42:07 byngmeister Exp $
+#$Id: track.pm,v 1.15 2006/08/11 20:46:46 toby Exp $
 
 package CMMS::Database::track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -47,14 +47,16 @@ sub new {
   $self->definition({
     name => "track",
     tag => "track",
-    title => "track",
-    display => [ "id", "album_id", "artist_id", "genre_id", "title", "track_num", "length_seconds", "ctime", "comment", "year", "composer",  ],
-    list_display => [ "id", "album_id", "artist_id", "genre_id", "title", "track_num", "length_seconds", "ctime", "comment", "year", "composer",  ],
+    title => "Track",
+    title_field => "title",
+    display => [ "id", "track_num", "artist_id", "album_id", "title", "genre_id", "length_seconds", "comment", "year", "composer", "ctime"  ],
+    list_display => [ "artist_id", "album_id", "title", "genre_id", ],
     tagorder => [ "id", "album_id", "artist_id", "genre_id", "title", "track_num", "length_seconds", "ctime", "comment", "year", "composer",  ],
     tagrelationorder => [ ],
     relationshiporder => [ "track_data" ],
     no_broadcast => 1,
     no_clone => 1,
+    no_create => 1,
     elements => {
             'id' => {
 	        type => "int",
@@ -62,7 +64,6 @@ sub new {
 		title => "Id",
 		primkey => 1,
 		displaytype => "hidden",
-
             },
             'album_id' => {
 	        type => "int",
@@ -74,8 +75,8 @@ sub new {
 		    valcol => "name",
 		    none => "NULL",
 		    read_only => 1,
-		},
-
+		},		
+		mandatory => 1,
             },
             'artist_id' => {
 	        type => "int",
@@ -88,7 +89,7 @@ sub new {
 		    none => "NULL",
 		    read_only => 1,
 		},
-
+		mandatory => 1,
             },
             'genre_id' => {
 	        type => "int",
@@ -107,43 +108,53 @@ sub new {
 	        type => "varchar",
 		tag  => "Title",
 		title => "Title",
-
+		size => 80,
+		maxsize => 255,
+		mandatory => 1,
             },
             'track_num' => {
 	        type => "int",
 		tag  => "Track_num",
-		title => "Track_num",
-
+		title => "Track number",
+		displaytype => "readonly",
+		no_search => 1,
             },
             'length_seconds' => {
 	        type => "int",
 		tag  => "Length_seconds",
 		title => "Track length",
-
+		displaytype => "readonly",
+		suffix => "seconds",
+		no_search => 1
             },
             'ctime' => {
 	        type => "datetime",
 		tag  => "Ctime",
 		title => "Created time",
-
+		displaytype => "hidden",
+		no_search => 1,
             },
             'comment' => {
 	        type => "text",
 		tag  => "Comment",
 		title => "Comment",
-
+		width => 80,
+		height => 4,
+		no_search => 1,
             },
             'year' => {
 	        type => "varchar",
 		tag  => "Year",
 		title => "Year",
-
+		size => 4,
+		maxsize => 4,
             },
             'composer' => {
 	        type => "varchar",
 		tag  => "Composer",
 		title => "Composer",
-
+		size => 40,
+		maxsize => 255,
             },
 
     },
@@ -178,7 +189,7 @@ sub get_self {
     my $size = shift;
     my $extras = shift;
 
-    $extras = "1=1" unless $extras;
+    $extras and $extras = "and $extras";
 
     my $selects = <<EndSelects
 track.*,
@@ -197,16 +208,16 @@ EndTables
     ;
 
     my $where = <<EndWhere
-$extras
-and album.id = track.album_id
+album.id = track.album_id
 and artist.id = track.artist_id
 and genre.id = track.genre_id
+$extras
 EndWhere
     ;
 
     $where .= ' order by track.album_id, track.track_num' unless $extras =~ /order by/i;
 
-    return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+    return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where, dump_sql=>1 } );
 }
 
 sub get_track_list {

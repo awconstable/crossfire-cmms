@@ -70,6 +70,8 @@ sub playtrack {
 
 	$filename =~ s/$path//;
 
+	$self->update_zone($track_id);
+
 	return 'play '.$path.$filename;
 }
 
@@ -143,6 +145,21 @@ sub unmark_all_tracks {
 #
 # support functions (queries, ...)
 #
+
+sub update_zone {
+    my( $self, $track_id) = @_;
+
+    my $mc = $self->mysqlConnection;
+    my $zone = $self->{zone}->{number};
+
+    # select flac files
+    my $sql = qq(UPDATE zone SET current_track_id=$track_id WHERE id=$zone);
+
+    my $q = $mc->query($sql);
+    $q->finish;
+
+    return 1;
+}
 
 sub trackid2filename {
 	my ($self, $trackid) = @_;

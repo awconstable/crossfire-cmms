@@ -1,4 +1,4 @@
-#$Id: playlist.pm,v 1.9 2006/07/03 15:11:13 byngmeister Exp $
+#$Id: playlist.pm,v 1.10 2006/08/11 20:46:46 toby Exp $
 
 package CMMS::Database::playlist;
 
@@ -19,8 +19,9 @@ CMMS::Database::playlist
 use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
+use CMMS::Database::playlist_track;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -47,14 +48,27 @@ sub new {
   $self->definition({
     name => "playlist",
     tag => "playlist",
-    title => "playlist",
+    title => "Play list",
+    title_field => "name",
     display => [ "id", "name",  ],
-    list_display => [ "id", "name",  ],
+    list_display => [ "name", ],
     tagorder => [ "id", "name",  ],
     tagrelationorder => [ ],
     relationshiporder => [ "playlist_track" ],
     no_broadcast => 1,
     no_clone => 1,
+    event_submit => "event_submit",
+    multiview => {
+        order => [ "TrackList" ],
+        views => {
+	    'TrackList' => {
+		display => [ "id", "name",  ],
+		include => "playlist-tracklist.ehtm",
+		title => "Play List",
+	    },
+	},
+    },
+    default_view => "TrackList",
     elements => {
             'id' => {
 	        type => "int",
@@ -68,7 +82,10 @@ sub new {
 	        type => "varchar",
 		tag  => "Name",
 		title => "Name",
-
+		size => 40,
+		maxsize => 64,
+		mandatory => 1,
+		description => "Please enter a name for the playlist so that you can identify at a later date.",
             },
 
     },
@@ -79,6 +96,9 @@ sub new {
 	    foreignkey => "playlist_id",
 	    title => "Track(s)",
 	    tag => "playlist_track",
+	    position_field => "track_order",
+	    position => 1,
+	    no_clone => 1,
 	    display => [
 	    		{ col => "track_id", title => "Track" },
 	    		{ col => "track_order", title => "Order" },
@@ -122,6 +142,78 @@ EndWhere
 
     return $self->get_list( "playlist_track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 }
+
+sub add_track {
+    my( $self, $track_id ) = @_;
+    my $mc = $self->mysqlConnection();
+    my $id = $self->get("id");
+
+    my $position = $mc->enum_lookup("playlist_track","playlist_id", "MAX(track_order)", $id ) || 1;
+
+    my $plt = new CMMS::Database::playlist_track($mc);
+    $plt->set("playlist_id",$id);
+    $plt->set("track_id", $track_id);
+    $plt->set("track_order", $position);
+    $plt->push();
+}
+
+sub add_album {
+    my( $self, $album_id ) = @_;
+    my $mc = $self->mysqlConnection();
+
+    my $tracks = $mc->query_and_get("SELECT id FROM track WHERE album_id=".$mc->quote($album_id)." ORDER BY track_num");
+
+    foreach my $t ( @{$tracks} ) {
+	$self->add_track($t->{id});
+    }
+}
+
+sub event_submit {
+    my( $self, $view, $cgi, $ui ) = @_;
+    my $mc = $self->mysqlConnection();
+
+    if( $view eq "TrackList" ) {
+	my $playlist = $cgi->param("playlistv");
+
+	if( $cgi->param("button_addalbum.x") ) {
+            my $album_id = $cgi->param("plt_album_id");
+	    $album_id and $self->add_album($album_id);
+
+	    print STDERR "Adding album $album_id\n";
+
+	}
+	elsif( $cgi->param("button_addtrack.x") ) {
+            my $track_id = $cgi->param("plt_track_id");	    
+	    $track_id and $self->add_track($track_id);
+
+	    print STDERR "Adding track $track_id\n";
+	}
+
+	
+	if( $playlist ) {
+	    my @elements = split('&',$playlist);
+	    
+	    my $p = 1;
+
+	    foreach my $e ( @elements ) {
+		my($dummy,$id) = split("=",$e);
+
+		my $q_id = $mc->quote($id);
+		my $q_p = $mc->quote($p);
+
+		my $q = $mc->query("UPDATE playlist_track SET track_order=$q_p WHERE id=$q_id");
+
+		print STDERR "UPDATE playlist_track SET track_order=$q_p WHERE id=$q_id\n";
+
+		$q->finish;
+
+		$p++;
+	    }
+	}
+
+    }
+}
+
 
 1;
 

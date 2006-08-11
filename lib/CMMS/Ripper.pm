@@ -7,13 +7,15 @@ use URI::Escape;
 use LWP;
 use CMMS::File;
 use CMMS::Database::MysqlConnection;
+use FileHandle;
 
 our $permitted = {
 	mysqlConnection => 1,
 	verbose         => 1,
-	logfile         => 1
+	logfile         => 1,
+        loghandle       => 1,
 };
-our $VERSION = '1.00';
+our $VERSION = '1.1.0';
 our($AUTOLOAD);
 
 #############################################################
@@ -45,17 +47,29 @@ sub new {
 	$mc and $db->{password} and $mc->password( $db->{password} );
 	$mc and $mc->connect || die("Can't connect to database '".$mc->database."' on '".$mc->host."' with user '".$mc->user."'");
 
+	$self->{logfile} = $conf{ripper}->{log};
+
+	if( $self->{logfile} ) {
+	    my $fh = new FileHandle( ">>".$self->{logfile} );
+	    if( $fh ) {
+		$self->{loghandle} = $fh;
+	    }
+	    else {
+		warn "Could not open ripper log file";
+	    }
+	}
+
 	my $metadata = $self->{conf}->{ripper}->{metadata};
-	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf})";
+	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf}, loghandle=>\$self->{loghandle})";
 	die("Problem loading metadata $metadata: $@") if $@;
 
 	my $ripper = $self->{conf}->{ripper}->{ripper};
-	eval "use CMMS::Ripper::Extractor::$ripper;\n\$self->{ripper} = new CMMS::Ripper::Extractor::$ripper(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf})";
+	eval "use CMMS::Ripper::Extractor::$ripper;\n\$self->{ripper} = new CMMS::Ripper::Extractor::$ripper(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf}, loghandle=>\$self->{loghandle})";
 	die("Problem loading ripper $ripper: $@") if $@;
 
 	$self->{encoder} = [];
 	foreach my $encoder (@{$self->{conf}->{ripper}->{encoder}}) {
-		eval "use CMMS::Ripper::Encoder::$encoder;\n push(\@{\$self->{encoder}},new CMMS::Ripper::Encoder::$encoder(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf}))";
+		eval "use CMMS::Ripper::Encoder::$encoder;\n push(\@{\$self->{encoder}},new CMMS::Ripper::Encoder::$encoder(mc => \$mc, metadata => \$self->{metadata}, conf => \$self->{conf}, loghandle => \$self->{loghandle}))";
 		die("Problem loading encoder $encoder: $@") if $@;
 	}
 
@@ -111,6 +125,18 @@ sub DESTROY {
 	$mc->{dbh} and $mc->{dbh}->disconnect;
 }
 
+sub add_to_log {
+    my( $self, $level, $module, $message ) = @_;
+
+    my $lh = $self->{loghandle};
+    $lh or return undef;
+    $module = "[$module]";
+    $level = "[$level]";
+    chomp($message);
+
+    print $lh sprintf("%-16s %-24s %-80s\n", $level, $module, $message);
+}
+
 sub amazon_cover {
 	my($self,$meta) = @_;
 	my $url_cover = '';
@@ -125,6 +151,8 @@ sub amazon_cover {
 	};
 
 	my $url = $self->{conf}->{ripper}->{amazonurl}.join('&',map{"$_=".uri_escape($params->{$_})}keys %{$params});
+
+	$self->add_to_log( "INFO", "amazon_cover", "Retrieving cover art" );
 
 	my $ua = new LWP::UserAgent;
 	my $res = $ua->get($url);
@@ -169,10 +197,58 @@ sub amazon_cover {
 	return 1;
 }
 
+##############################################################################
+# Finds an genre_id from name or creates a new entry if it doesn't exist
+
+sub genre_find_or_create {
+    my( $self, $genre ) = @_;
+    my $mc = $self->mysqlConnection;
+    my $genre_id = 0;
+
+    my $q_genre = $mc->quote($genre);
+    ($_) = @{$mc->query_and_get('SELECT id FROM genre WHERE name = '.$q_genre)||[]};
+	
+    # Artist not in database, add an entry
+    unless($genre_id = $_->{id}) {
+	my $q = $mc->query('INSERT INTO genre (name) VALUES('.$q_genre.')');
+	$genre_id = $mc->last_id;
+	$q->finish();
+    }
+	
+    return $genre_id
+}
+
+##############################################################################
+# Finds an artist_id from name or creates a new entry if it doesn't exist
+
+sub artist_find_or_create {
+    my( $self, $artist ) = @_;
+    my $mc = $self->mysqlConnection;
+    my $artist_id = 0;
+
+    my $q_artist = $mc->quote($artist);
+    ($_) = @{$mc->query_and_get('SELECT id FROM artist WHERE name = '.$q_artist)||[]};
+	
+    # Artist not in database, add an entry
+    unless($artist_id = $_->{id}) {
+	my $q = $mc->query('INSERT INTO artist (name) VALUES('.$q_artist.')');
+	$artist_id = $mc->last_id;
+	$q->finish();
+    }       
+
+    return $artist_id;
+}
+
+##############################################################################
+# Store the album and track information into the database
+
 sub store {
 	my($self,$meta) = @_;
 
+	$self->add_to_log( "INFO", "store", "Storing album to database" );
+
 	my $aartist = safe_chars($meta->{ARTIST});
+	my $agenre = safe_chars($meta->{GENRE});
 	my $album = safe_chars($meta->{ALBUM});
 	my $comment = substr(safe_chars($meta->{COMMENT}),0,32);
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
@@ -180,8 +256,11 @@ sub store {
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
-	print STDERR "$folder\n";
+	# Find the albums artist/genre IDs or create if it is not in database
+	my $aartist_id = $self->artist_find_or_create($aartist);
+	my $agenre_id  = $self->genre_find_or_create($agenre);
 
+	# If no tracks exist, bug out
 	die("No tracks for this album") unless scalar @files; # Don't store album if no tracks
 
 	my $mc = $self->mysqlConnection;
@@ -191,14 +270,20 @@ sub store {
 	my $cover = 'NULL';
 	my @imgs = <${folder}/cover.*>;
 	my $img = join('',@imgs) || '';
-	$cover = "'$img'" if $img;
+	
+	# Hack to remove the /usr/local/cmms/htdocs/ element from the page
+	$img =~ s^/usr/local/cmms/htdocs/^^sig;
+
+	$cover = $mc->quote($img) if $img;
 
 	my $acomment = $meta->{COMMENT};
 	$acomment =~ s/[\r\n]+$//g;
 
-	$mc->query('INSERT INTO album (name,discid,year,comment,cover) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover)");
+	$mc->query('INSERT INTO album (name,discid,year,comment,cover,artist_id,genre_id) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover,$aartist_id,$agenre_id)");
 	$album_id = $mc->last_id;
 
+
+	$self->add_to_log( "INFO", "store", "Adding genre of ".$meta->{GENTRE} );
 	$sql = 'SELECT id FROM genre WHERE name = '.$mc->quote($meta->{GENRE});
 	($_) = @{$mc->query_and_get($sql)||[]};
 	$genre_id = $_->{id} || -1;
@@ -212,6 +297,8 @@ sub store {
 		$title = safe_chars("$track_num $artist $title");
 		@files = <$folder/$title.*>;
 		next unless scalar @files;
+
+		$self->add_to_log( "INFO", "store", "Adding track '$title' to database" );
 
 		my $ttitle = $track->title;
 		$ttitle =~ s/[\r\n]+//g;
@@ -251,6 +338,7 @@ sub store_xml {
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
+	$self->add_to_log( "INFO", "store", "Storing album to XML" );
 	print STDERR "$folder\n";
 
 	die("No tracks for this album") unless scalar @files; # Don't store album if no tracks
@@ -339,9 +427,13 @@ sub check {
 
 	my $mc = $self->mysqlConnection;
 
+	$self->add_to_log( "INFO", "check", "Checking if album is in the database (".$meta->{discid}.")" );
+
+
 	($_) = @{$mc->query_and_get('SELECT id FROM album WHERE discid = '.$mc->quote($meta->{discid}))||[]};
 	if($_->{id}) {
 		warn('Album already ripped');
+		$self->add_to_log( "INFO", "check", "Album is in database, skipping" );
 		return 0;
 	}
 

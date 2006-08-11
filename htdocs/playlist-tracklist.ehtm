@@ -1,0 +1,180 @@
+[-
+use CMMS::Database::playlist;
+use CMMS::Database::playlist_track;
+
+($ui) = @param;
+$mc = $ui->db();
+$id = $ui->cgi()->param("id");
+$q_id = $mc->quote($id);
+$obj = $ui->object();
+$laf = $ui->theme_object();
+
+$green = "background-color: #33cc33; text-align: center";
+$yellow = "background-color: #cccc33; text-align: center";
+$red = "background-color: #cc3333; text-align: center";
+
+@alerts = ( $green, $yellow, $red );
+
+$pltobj = new CMMS::Database::playlist_track($mc);
+
+my $sql = qq(
+SELECT playlist_track.*,
+       album.cover,
+       track.album_id,
+       track.artist_id,
+       track.title,
+       track.length_seconds,
+       album.name as album,
+       album.year,
+       artist.name as artist
+FROM playlist_track,
+     track,
+     album,
+     artist
+WHERE playlist_track.playlist_id = $q_id
+AND playlist_track.track_id = track.id
+AND track.album_id = album.id
+AND track.artist_id = artist.id
+ORDER BY track_order
+);
+
+$playlist = $mc->query_and_get($sql);
+
+-]
+<br />
+
+<div class="subtitle">Tracklist</div>
+
+<script src="/javascript/scriptaculous/lib/prototype.js" type="text/javascript"></script>
+<script src="/javascript/scriptaculous/src/scriptaculous.js" type="text/javascript"></script>
+<script src="/javascript/scriptaculous/src/unittest.js" type="text/javascript"></script>
+
+  <style>
+
+    div#divplaylist {
+      margin: 0px;
+      padding: 0px;
+    }
+
+    #divplaylist ul { 
+      margin: 0px;
+      padding: 0px;
+    }
+
+    #divplaylist li {
+      list-style: none;
+      cursor:move;
+      margin: 0;
+      padding: 0;
+    }
+
+    ul.playlist li.over {
+      background-color:#999;
+    }
+
+    div.dropmarker {
+      height:6px;
+      width:200px;
+      background: url(/javascript/scriptaculous/test/functional/dropmarker.png) left top;
+      margin-top:-3px;
+      margin-left:-5px;
+      z-index:1000;
+      overflow: hidden;
+    }
+
+</style>
+
+<div id="divplaylist">
+<table style="width: 100%">
+<tr>
+ <td class="boldtablecells" width="30%">Artist</td>
+ <td class="boldtablecells" width="30%">Album</td>
+ <td class="boldtablecells" width="30%">Title</td>
+ <td class="boldtablecells" style="text-align: right" width="5%">Len</td>
+ <td class="boldtablecells" width="5%">Opt</td>
+</tr>
+</table>
+[$ if $playlist and $#{$playlist} >= 0 $]
+<ul id="playlist" class="playlist">
+[$ foreach $t ( @{$playlist} ) $]
+<li id="item_[+ $t->{id} +]">
+<table style="width: 100%">
+<tr>
+ <td class="tablecells" width="30%"><a href="artist.ehtml?id=[+ $t->{artist_id} +];session_id=[+ $session_id +]">[+ $t->{artist} +]</a></td>
+ <td class="tablecells" width="30%"><a href="album.ehtml?id=[+ $t->{album_id} +];session_id=[+ $session_id +]">[+ $t->{album} +]</a></td>
+ <td class="tablecells" width="30%"><a href="track.ehtml?id=[+ $t->{track_id} +];session_id=[+ $session_id +]">[+ $t->{title} +]</a></td>
+ <td class="tablecells" style="text-align: right" width="5%">[+ sprintf("%i:%02i",int($t->{length_seconds} / 60), $t->{length_seconds} % 60) +]</td>
+ <td class="tablecells" width="5%">
+<a href="playlist_current.ehtml?id=[+ $r->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
+ </td>
+</tr>
+</table>
+</li>
+[$ endforeach $]
+</ul>
+[$ else $]
+<div style="text-align: center" class="bodytext">There are no tracks in this play list</div>
+[$ endif $]
+</div>
+
+<input type="hidden" value="(waiting for onChange)" id="playlistv" name="playlistv">
+
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+  Sortable.create('playlist',{ghosting:false,constraint:false,hoverclass:'over',
+    onUpdate:function(sortable){Sortable.serialize(sortable)},
+    onChange:function(element){document.getElementById('playlistv').value = Sortable.serialize(element.parentNode)}
+  });
+// ]]>
+</script>
+
+
+<!-- FIELD: track_id (doublelookup) -->
+[- 
+$field_value = $ui->cgi->param("track_id");
+$prevalue = $pltobj->rlookup_album($field_value);
+$prelookup = $pltobj->get_pre_lookup( "track_id", "");
+$prelookup->{none} = "NULL";
+$prelookup->{nonetext} = "[please pick]";
+
+$lookup = undef;
+
+if( $prevalue ) {
+$extras = "WHERE track.album_id=$prevalue";
+$lookup = $pltobj->get_lookup( "track_id", "$extras");
+  $lookup->{none} = "NULL";
+  $lookup->{nonetext} = "[please pick]";
+}
+
+-]
+<br />
+<div class="subsubtitle">Add track/album to playlist</div>
+<table width="100%" cellspacing="1" cellpadding="2" border="0" class="boxtable">
+<tr>
+<td class="boldtablecells" width="25%">Album:</td>
+<td class="tablecells">
+<select class="input" id="psel_track_id" name="plt_album_id" onchange="javascript:fwAjaxLookupSelect('sel_track_id','CMMS::Database','playlist_track','track_id','psel_track_id');">
+<option value="" [+ $prevalue ? "": "SELECTED" +]>[please pick]</option>
+[$ foreach $e ( @{$prelookup->{elements}} ) $]<option value="[+ $e->{name} +]" [+ $prevalue eq $e->{name} ? "SELECTED" : "" +]>[+ $e->{text} +]</option>[$ endforeach $]
+</select>
+</td>
+</tr>
+<tr>
+<td class="boldtablecells width="25%">Track:</td>
+<td class="tablecells">
+<select id="sel_track_id" class="input" name="plt_track_id"><option value="">[please pick]</option>
+[$ foreach $e ( @{$lookup->{elements}} ) $]<option value="[+ $e->{name} +]" [+ $field_value eq $e->{name} ? "SELECTED" : "" +]>[+ $e->{text} +]</option>[$ endforeach $]
+</select>
+</td>
+</tr>
+</table>
+
+<div align="center">
+<table class="iconbar" cellspacing="0" cellpadding="0" border="0">
+<tr>
+ <td>[+ $ui->theme_object->form_button( name=>"addalbum", link=>$ui->success_url, type=>"add album", icon=>"/icons/32x32/shadow/cd_music.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
+ <td>[+ $ui->theme_object->form_button( name=>"addtrack", link=>$ui->success_url, type=>"add track", icon=>"/icons/32x32/shadow/cd_add.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
+ <td>[+ $ui->theme_object->form_button( name=>"save", link=>$ui->success_url, type=>"done", icon=>"/icons/32x32/shadow/check2.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
+</tr>
+</table>
+</div>

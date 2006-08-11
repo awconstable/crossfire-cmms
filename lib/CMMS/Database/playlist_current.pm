@@ -1,4 +1,4 @@
-#$Id: playlist_current.pm,v 1.13 2006/07/03 15:42:07 byngmeister Exp $
+#$Id: playlist_current.pm,v 1.14 2006/08/11 20:46:46 toby Exp $
 
 package CMMS::Database::playlist_current;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -47,12 +47,12 @@ sub new {
   $self->definition({
     name => "playlist_current",
     tag => "playlist_current",
-    title => "playlist_current",
+    title => "Currently Playing",
     display => [ "id", "zone", "track_id", "track_order", "track_played",  ],
     list_display => [ "id", "zone", "track_id", "track_order", "track_played",  ],
     tagorder => [ "id", "zone", "track_id", "track_order", "track_played",  ],
     tagrelationorder => [ ],
-    relationshiporder => [ "track_data" ],
+    relationshiporder => [ ],
     no_broadcast => 1,
     no_clone => 1,
     elements => {
@@ -62,7 +62,6 @@ sub new {
 		title => "Id",
 		primkey => 1,
 		displaytype => "hidden",
-
             },
             'zone' => {
 	        type => "int",
@@ -73,14 +72,24 @@ sub new {
 		    keycol => "id",
 		    valcol => "name",
 		    none => "NULL",
+		    none_text => "[please select a zone]",
 		    read_only => 1,
 		},
-
+		mandatory => 1,
             },
             'track_id' => {
 	        type => "int",
 		tag  => "Track",
 		title => "Track",
+		displaytype => "doublelookup",
+		prelookup => {
+		    nonetext => "[please pick an album]",
+		    table => "album",
+		    keycol => "id",
+		    valcol => "name",
+		    lookup_restriction => "track.album_id=",
+		    reverse_method => "rlookup_album",
+		},
 		lookup => {
 		    table => "track",
 		    keycol => "id",
@@ -93,15 +102,15 @@ sub new {
             'track_order' => {
 	        type => "int",
 		tag  => "Track_order",
-		title => "Track_order",
+		title => "Track order",
 		primkey => 1,
-
+		displaytype => "readonly",
             },
             'track_played' => {
 	        type => "int",
 		tag  => "Track_played",
-		title => "Track_played",
-
+		title => "Track played?",
+		displaytype => "checkbox",
             },
 
     },
@@ -136,7 +145,7 @@ sub get_self {
     my $size = shift;
     my $extras = shift;
 
-    $extras = "1=1" unless $extras;
+    $extras and $extras = "AND ".$extras;
 
     my $selects = <<EndSelects
 playlist_current.*,
@@ -153,9 +162,9 @@ EndTables
     ;
 
     my $where = <<EndWhere
-$extras
-and zone.id = playlist_current.zone
+zone.id = playlist_current.zone
 and track.id = playlist_current.track_id
+$extras
 EndWhere
     ;
 
@@ -189,6 +198,22 @@ EndWhere
     ;
 
     return $self->get_list( "track_data", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+}
+
+#------------------------------------------------------------------------------
+
+=head2 rlookup_manufacturer
+
+=cut
+
+
+sub rlookup_album {
+    my( $self, $track_id ) = @_;
+    my $mc = $self->mysqlConnection();
+
+    my $id = $mc->enum_lookup("track","id","album_id",$track_id);
+    
+    return $id;
 }
 
 1;

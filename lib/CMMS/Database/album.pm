@@ -1,4 +1,4 @@
-#$Id: album.pm,v 1.11 2006/07/04 14:19:14 byngmeister Exp $
+#$Id: album.pm,v 1.12 2006/08/11 20:46:46 toby Exp $
 
 package CMMS::Database::album;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -47,14 +47,16 @@ sub new {
   $self->definition({
     name => "album",
     tag => "album",
-    title => "album",
-    display => [ "id", "discid", "name", "year", "comment", "cover",  ],
-    list_display => [ "id", "discid", "name", "year", "comment", "cover",  ],
+    title => "Album",
+    title_field => "name",
+    display => [ "id", "name", "discid", "year", "comment", "cover", "artist_id", "genre_id"  ],
+    list_display => [ "name", "cover",  ],
     tagorder => [ "id", "discid", "name", "year", "comment", "cover",  ],
     tagrelationorder => [ ],
     relationshiporder => [ "track" ],
     no_broadcast => 1,
     no_clone => 1,
+    no_create => 1,
     elements => {
             'id' => {
 	        type => "int",
@@ -62,31 +64,60 @@ sub new {
 		title => "Id",
 		primkey => 1,
 		displaytype => "hidden",
+            },
+            'artist_id' => {
+	        type => "int",
+		tag  => "Artist",
+		title => "Artist",
+		lookup => {
+		    table => "artist",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		},
+		mandatory => 1,
+            },
+            'genre_id' => {
+	        type => "int",
+		tag  => "Genre",
+		title => "Genre",
+		lookup => {
+		    table => "genre",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		},
 
             },
             'discid' => {
 	        type => "varchar",
 		tag  => "Discid",
-		title => "Discid",
-
+		title => "Disc-ID",
+		displaytype => "readonly",
+		no_search => 1,
             },
             'name' => {
 	        type => "varchar",
 		tag  => "Name",
 		title => "Name",
-
+		size => 80,
+		maxsize => 255,
+		mandatory => 1,
             },
             'year' => {
 	        type => "varchar",
 		tag  => "Year",
 		title => "Year",
-
             },
             'comment' => {
 	        type => "text",
 		tag  => "Comment",
 		title => "Comment",
-
+		width => 80,
+		height => 16,
+		no_search => 1,
             },
             'cover' => {
 	        type => "varchar",
@@ -94,9 +125,18 @@ sub new {
 	        maxsize => 255,
 		tag  => "Cover",
 		title => "Cover image",
+		upload => 1,
+		upload_fn => "upload_resizer", 
+		upload_parameters => {
+		    sizes => [
+			{ field=>"cover", widest=>"160", suffix=>"fs_" },
+#			{ field=>"minisize_url", wfield=>"minisize_x", hfield=>"minisize_y", suffix => "tn_", widest=>"220", },
+#			{ field=>"microsize_url", wfield=>"microsize_x", hfield=>"microsize_y", suffix=>"ms_", widest=>"100" },     
+		    ]
+		},
+		help => "Click on the browse button to pick a picture from your local disk or enter an image URL into the space provided.",
 		displaytype => "image",
 		no_search => 1,
-
             },
 
     },
