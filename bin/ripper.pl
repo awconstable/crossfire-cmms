@@ -9,7 +9,10 @@ GetOptions(mode => \$mode);
 
 my $ripper = new CMMS::Ripper(conf => ($mode?'/etc/cmms2.conf':'/etc/cmms.conf'));
 
-$SIG{__DIE__} = \&grim_reaper;
+#Commented out for now as evals and externally spawned processes are 
+#currently calling the grim reaper. Need to find a check to make sure
+#only main process dies call the reaper.
+#$SIG{__DIE__} = \&grim_reaper;
 
 # Lock CD
 #`cdctl -o1`;
