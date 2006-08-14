@@ -2,6 +2,7 @@
 use CommunityNode;
 use CMMS::Database::MysqlConnection;
 use CMMS::Database::Theme::HTML;
+use CMMS::Database::UI::Edit;
 use TAER::Session::Session;
 use CommunityNode::Client;
 use Data::Dumper;
@@ -15,6 +16,17 @@ $ENV{'dbUser'} and $mc->user($ENV{'dbUser'});
 $ENV{'dbPassword'} and $mc->password($ENV{'dbPassword'});
 $ENV{'dbDatabase'} and $mc->database($ENV{'dbDatabase'});
 $mc->connect;
+
+# Attempt to connect to the community database
+#
+$cmc = new CommunityNode::MysqlConnection;
+
+$ENV{'cnHost'} and $cmc->host($ENV{'cnHost'});
+$ENV{'cnUser'} and $cmc->user($ENV{'cnUser'});
+$ENV{'cnPassword'} and $cmc->password($ENV{'cnPassword'});
+$ENV{'cnDatabase'} and $cmc->database($ENV{'cnDatabase'});
+
+$cmc and $cmc->connect;
 
 $cgi = new CGI;
 $view = $cgi->param("v") || "summary";
@@ -78,6 +90,13 @@ unless( $cn_result and $logincookie and $cn->check_against_user_cookie( $cookie 
     $cgi->redirect( "login.ehtml?session_id=$session_id" );
 }
 
+$member_id = $cn->id();
+
+$ui = new CMMS::Database::UI::Edit( db=>$mc, object =>$object, theme=>$laf, cdb=>$cmc );
+$ui->member_id($member_id);
+$ui->member_groups( $ui->get_group_memberships() );
+
+
 # Act on any commands/redirects
 #
 my $redirect = $laf->form_button_redirect( $cgi );
@@ -119,7 +138,7 @@ $self_url = $cgi->self_url;
         { title => "Playlists", view => "playlist", icon=>"/icons/32x32/shadow/note_edit.png" },
         { title => "My Albums", view => "albums", icon=>"/icons/32x32/shadow/cd_gold.png" },
         { title => "Track Search", view => "tracks", icon=>"/icons/32x32/shadow/chrystal_ball.png" },
-        { title => "Configuration", view => "configuration", icon=>"/icons/32x32/shadow/wrench.png" }
+        { title => "Configuration", view => "configuration", icon=>"/icons/32x32/shadow/wrench.png", required_group=>"cmmsadmin" }
 );
 
 # Setup alert styles
@@ -141,6 +160,11 @@ $this_dir = dirname($ENV{'SCRIPT_FILENAME'});
     <td width="100" valign="top"> 
       <table height="100%" width="100%" border="0" cellspacing="0" cellpadding="0">
 [$ foreach $t ( @tabs ) $]
+[-
+  $required_group = $t->{required_group};  
+  $allow_access = $required_group ? $ui->check_group_membership($required_group) : 1;
+-]
+[$ if $allow_access $]
 [$ if $view eq $t->{view} $]
         <tr> 
           <td height="70" align="center" valign="middle" class="tabselect" [+ $t->{style} ? 'style="'.$t->{style}.'"' : "" +]> 
@@ -155,6 +179,7 @@ $this_dir = dirname($ENV{'SCRIPT_FILENAME'});
             <a href="index.ehtml?v=[+ $t->{view} +]">[+ $t->{title} || "[Unknown]" +]</a>
           </td>
         </tr>
+[$ endif $]
 [$ endif $]
 [$ endforeach $]
         <tr> 

@@ -24,7 +24,7 @@
   $laf->http_root($ENV{DOCUMENT_ROOT});
 
   # setup session parameters
-  $server_name = $ENV{CookieDomain} || $ENV{SERVER_NAME};
+  $server_name = $ENV{'CookieDomain'} || $ENV{HTTP_HOST} || $ENV{'SERVER_NAME'};
   $session_id  = $ENV{UNIQUE_ID};
   $cookiename  = $ENV{UID_COOKIE};
   $cookie = $cgi->cookie($cookiename);

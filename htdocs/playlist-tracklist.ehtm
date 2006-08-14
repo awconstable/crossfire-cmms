@@ -8,6 +8,7 @@ $id = $ui->cgi()->param("id");
 $q_id = $mc->quote($id);
 $obj = $ui->object();
 $laf = $ui->theme_object();
+$session_id = $ui->session_id();
 
 $green = "background-color: #33cc33; text-align: center";
 $yellow = "background-color: #cccc33; text-align: center";
@@ -172,8 +173,8 @@ $lookup = $pltobj->get_lookup( "track_id", "$extras");
 <div align="center">
 <table class="iconbar" cellspacing="0" cellpadding="0" border="0">
 <tr>
- <td>[+ $ui->theme_object->form_button( name=>"addalbum", link=>$ui->success_url, type=>"add album", icon=>"/icons/32x32/shadow/cd_music.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
- <td>[+ $ui->theme_object->form_button( name=>"addtrack", link=>$ui->success_url, type=>"add track", icon=>"/icons/32x32/shadow/cd_add.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
+ <td>[+ $ui->theme_object->form_button( name=>"addalbum", link=>"playlist.ehtml?id=$id;view=".$ui->view().";session_id=".$ui->p_session_id(), type=>"add album", icon=>"/icons/32x32/shadow/cd_music.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
+ <td>[+ $ui->theme_object->form_button( name=>"addtrack", link=>"playlist.ehtml?id=$id;view=".$ui->view().";session_id=".$ui->p_session_id(), type=>"add track", icon=>"/icons/32x32/shadow/cd_add.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
  <td>[+ $ui->theme_object->form_button( name=>"save", link=>$ui->success_url, type=>"done", icon=>"/icons/32x32/shadow/check2.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
 </tr>
 </table>

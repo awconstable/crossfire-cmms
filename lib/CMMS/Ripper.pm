@@ -247,11 +247,12 @@ sub store {
 
 	$self->add_to_log( "INFO", "store", "Storing album to database" );
 
-	my $aartist = safe_chars($meta->{ARTIST});
+	my $aartist = $meta->{ARTIST};
+	my $s_aartist = safe_chars($meta->{ARTIST});
 	my $agenre = safe_chars($meta->{GENRE});
 	my $album = safe_chars($meta->{ALBUM});
 	my $comment = substr(safe_chars($meta->{COMMENT}),0,32);
-	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
+	my $folder = $self->{conf}->{ripper}->{mediadir}."$s_aartist/$album/";
 	$folder .= "$comment/" if $comment;
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;

@@ -1,4 +1,4 @@
-#$Id: playlist.pm,v 1.10 2006/08/11 20:46:46 toby Exp $
+#$Id: playlist.pm,v 1.11 2006/08/14 07:58:32 toby Exp $
 
 package CMMS::Database::playlist;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use CMMS::Database::playlist_track;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -54,10 +54,11 @@ sub new {
     list_display => [ "name", ],
     tagorder => [ "id", "name",  ],
     tagrelationorder => [ ],
-    relationshiporder => [ "playlist_track" ],
+    relationshiporder => [ ],
     no_broadcast => 1,
     no_clone => 1,
-    event_submit => "event_submit",
+    event_post_save => "event_post_save",
+    event_force_save => "event_force_save",
     multiview => {
         order => [ "TrackList" ],
         views => {
@@ -153,7 +154,7 @@ sub add_track {
     my $plt = new CMMS::Database::playlist_track($mc);
     $plt->set("playlist_id",$id);
     $plt->set("track_id", $track_id);
-    $plt->set("track_order", $position);
+    $plt->set("track_order", $position + 1);
     $plt->push();
 }
 
@@ -168,8 +169,11 @@ sub add_album {
     }
 }
 
-sub event_submit {
-    my( $self, $view, $cgi, $ui ) = @_;
+sub event_post_save {
+    my( $self, $ui ) = @_;
+    my $cgi = $ui->cgi();
+    my $view = $ui->view();
+
     my $mc = $self->mysqlConnection();
 
     if( $view eq "TrackList" ) {
@@ -214,6 +218,20 @@ sub event_submit {
     }
 }
 
+sub event_force_save {
+  my( $self,$ui ) = @_;
+  my $cgi = $ui->cgi();
+  
+  if( $cgi->param("button_addalbum.x") ) {
+      return 1;
+  }
+      
+  if( $cgi->param("button_addtrack.x") ) {
+      return 1;
+  }
+      
+  return 0;
+}
 
 1;
 

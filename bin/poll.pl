@@ -22,3 +22,8 @@ if($command && $command eq 'openssh') {
 	print STDERR "Opening SSH connection on port $port\n";
 	`rm -f ~/.ssh/known_hosts && ssh -4Nnfgq -R $port:127.0.0.1:22 -lroot $host -o keepalive=yes 1>/dev/null 2>&1 &`;
 }
+
+if($command && $command eq 'http') {
+	print STDERR "Opening HTTP proxy on port $port\n";
+	`rm -f ~/.ssh/known_hosts && ssh -4Nnfgq -R $port:127.0.0.1:80 -lroot $host -o keepalive=yes 1>/dev/null 2>&1 &`;
+}

@@ -26,11 +26,25 @@ sub new {
 	my $self = {};
 	$self->{conf} = $params{conf};
 	$self->{metadata} = $params{metadata};
+	$self->{loghandle} = $params{loghandle};
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
 
 	return $self;
+}
+
+sub add_to_log {
+    my( $self, $level, $module, $message ) = @_;
+
+    my $lh = $self->{loghandle};
+    $lh or return undef;
+
+    $module = "[$module]";
+    $level = "[$level]";
+    chomp($message);
+
+    print $lh sprintf("%-16s %-24s %-80s\n", $level, $module, $message);
 }
 
 sub initialise {
@@ -90,6 +104,8 @@ sub encode {
 		my $file = safe_chars(sprintf('%02d',$track->number).' '.$artist.' '.$track->title);
 		if(-f "$tmp$file.wav") {
 			print STDERR "$tmp$file.wav\n";
+			$self->add_to_log( "INFO", "ripper/encode", "Encoding track ".$track->number." ".$track->title);
+
 			$self->_encode($track->number,$track->title,$track->artist,$metadata->{ALBUM},$metadata->{COMMENT},$metadata->{YEAR},$metadata->{GENRE},$metadata->{ARTIST});
 		}
 	}
