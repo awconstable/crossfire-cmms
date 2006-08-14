@@ -1,9 +1,23 @@
-$Id: README,v 1.1 2006/08/11 20:46:45 toby Exp $
+$Id: README,v 1.2 2006/08/14 09:02:15 toby Exp $
 
 This is the Crossfire CMMS Server
 
 History
 =======
+
+11-August-2006 Tobias Russell                        <toby@russellsharpe.com>
+-------------------------------------------------------------------------------
+1.1.1
+
+Further refinement to UI
+
+Added more logging to Ripper
+
+Sorted out samba so that it is universally visible (ie no username/password)
+
+Created an apache httpd.conf file which is used in place of standard coreware
+file
+
 
 11-August-2006 Tobias Russell                        <toby@russellsharpe.com>
 -------------------------------------------------------------------------------

@@ -9,6 +9,8 @@ GetOptions(mode => \$mode);
 
 my $ripper = new CMMS::Ripper(conf => ($mode?'/etc/cmms2.conf':'/etc/cmms.conf'));
 
+$SIG{__DIE__} = \&grim_reaper;
+
 # Lock CD
 #`cdctl -o1`;
 
@@ -31,4 +33,12 @@ $ripper->purge;
 sub error {
 	#`cdctl -o0`;
 	die('Album already ripped');
+}
+
+sub grim_reaper {
+    my $message = shift;
+
+    `eject`;
+
+    return CORE::die($message);
 }
