@@ -237,8 +237,8 @@ sub sql_prepare_where {
 
 	my @where;
 	my $i = 0;
-	push(@where, sprintf("genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id});
-	push(@where, sprintf("artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
+	push(@where, sprintf("t.genre_id=%d",  $mem{genre_id} )) if ($mem{genre_id});
+	push(@where, sprintf("t.artist_id=%d", $mem{artist_id})) if ($mem{artist_id});
 	push(@where, sprintf("album_id=%d",  $mem{album_id} )) if ($mem{album_id});
 	push(@where, sprintf("playlist_id=%d",  $mem{playlist_id} )) if ($mem{playlist_id});
 
