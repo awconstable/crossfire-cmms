@@ -5,6 +5,7 @@ use CMMS::Zone::NowPlaying;
 use CMMS::Zone::Library;
 use CMMS::Zone::Player;
 use CMMS::Zone::Command;
+use Quantor::Log;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -70,6 +71,7 @@ sub loop {
 		chomp $line;
 		last if $line eq 'quit';
 		next if $line eq ''; # empty line - there won't be command
+		qlog INFO, "Received command: $line\n";
 		%cmd = cmd2hash $line;
 		next unless %cmd;  # empty hash - there won't be command either
 		next unless &check_cmd(\%cmd, $self->{zone}->{number}); # do further checking (eg. zone)
@@ -82,10 +84,10 @@ sub process {
 	my($self,$c) = @_;
 
 	if ($self->{lc $c->{screen}}) {  # Call function
-		my $screen = lc $c->{screen};
-		return eval "\$self->{$screen}->process(\$c)";
+	    my $screen = lc $c->{screen};
+	    return eval "\$self->{$screen}->process(\$c)";
 	} else {
-		print STDERR "Unknown screen: $c->{screen}\n"
+	    qlog WARNING, "Unknown screen: $c->{screen}";
 	}
 
 	return 0;

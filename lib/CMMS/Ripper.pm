@@ -15,7 +15,7 @@ our $permitted = {
 	logfile         => 1,
         loghandle       => 1,
 };
-our $VERSION = '1.1.0';
+our $VERSION = '1.1.2';
 our($AUTOLOAD);
 
 #############################################################
@@ -134,7 +134,8 @@ sub add_to_log {
     $level = "[$level]";
     chomp($message);
 
-    print $lh sprintf("%-16s %-24s %-80s\n", $level, $module, $message);
+    my $ctime = ctime(time);
+    print $lh sprintf("%-23s, %-16s %-12s %-80s\n", $ctime, $level, $module, $message);
 }
 
 sub amazon_cover {

@@ -1,9 +1,15 @@
-$Id: README,v 1.2 2006/08/14 09:02:15 toby Exp $
+$Id: README,v 1.3 2006/08/16 13:51:02 toby Exp $
 
 This is the Crossfire CMMS Server
 
 History
 =======
+
+16-August-2006 Tobias Russell                        <toby@russellsharpe.com>
+-------------------------------------------------------------------------------
+1.1.2
+
+Started to switch over to using quantor::log for all logging output.
 
 11-August-2006 Tobias Russell                        <toby@russellsharpe.com>
 -------------------------------------------------------------------------------

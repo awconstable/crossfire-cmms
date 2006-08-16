@@ -1,5 +1,7 @@
 package CMMS::Zone::Command;
 
+use Quantor::Log;
+
 use strict;
 use Exporter;
 use vars qw(@ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $VERSION);
@@ -68,6 +70,7 @@ sub check_cmd {
 
 sub send2player {
   my ($handle, $command) = @_;
+  qlog INFO, "Sending to player '$command'\n";
   print $handle $command, "\n";
 }
 

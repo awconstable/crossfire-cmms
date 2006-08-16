@@ -1,5 +1,7 @@
 package CMMS::Zone::Player;
 
+use Quantor::Log;
+
 use strict;
 use vars qw($VERSION);
 
@@ -80,7 +82,7 @@ sub get_prev_track {
 
 	my $mc = $self->mysqlConnection;
 
-	print STDERR "prev track request\n"; # LEVEL 1
+	qlog INFO, "Previous track request"; # LEVEL 1
 
 	my $sql = qq{
 		SELECT track_id, track_order 
@@ -93,7 +95,7 @@ sub get_prev_track {
 	my $row = $mc->query_and_get($sql)||[];
 	$row = $row->[0];
 	if($row) {
-		print STDERR "prev track is ($row->{track_id}:$row->{track_order})\n"; # LEVEL 2
+		qlog INFO,"Previous track is ($row->{track_id}:$row->{track_order})\n"; # LEVEL 2
 		return ($row->{track_id}, $row->{track_order});
 	}
 	return (undef, undef);      
@@ -116,7 +118,7 @@ sub set_track_mark {
 
 	my $mc = $self->mysqlConnection;
 
-	print STDERR "marking track ($track_id:$track_order) as ".($mark eq 'NULL' ? 'unplayed' : 'played')."\n"; # LEVEL 1
+	qlog INFO, "Marking track ($track_id:$track_order) as ".($mark eq 'NULL' ? 'unplayed' : 'played');
 
 	my $sql = qq{
 		UPDATE playlist_current 
@@ -136,7 +138,7 @@ sub unmark_all_tracks {
 
 	my $mc = $self->mysqlConnection;
 
-	print STDERR "unmarking all tracks\n"; # LEVEL 1
+	qlog INFO, "Unmarking all tracks\n"; # LEVEL 1
 
 	my $sql = sprintf('UPDATE playlist_current SET track_played = NULL WHERE zone = %d', $self->{zone}->{number});
 	return $mc->query($sql);
@@ -290,7 +292,7 @@ sub get_next_track {
 		}
 	}
 
-	print STDERR "LAST TRACK\n"; # LEVEL 1
+	qlog INFO,"LAST TRACK"; # LEVEL 1
 	return (undef, undef);      
 }
 
@@ -299,7 +301,7 @@ sub get_next_track_in_order {
 
 	my $mc = $self->mysqlConnection;
 
-	print STDERR "getting next track in order\n"; # level 1
+	qlog INFO, "Getting next track in order\n"; # level 1
 
 	my $sql = qq{
 		SELECT track_id, track_order 
@@ -314,7 +316,7 @@ sub get_next_track_in_order {
 	$row = $row->[0];
 
 	if($row) {
-		print STDERR "next track is ($row->{track_id}:$row->{track_order})\n"; # level 2
+		qlog INFO, "Next track is ($row->{track_id}:$row->{track_order})\n"; # level 2
 		return ($row->{track_id}, $row->{track_order});
 	} else {
 		return (undef, undef);
@@ -326,7 +328,7 @@ sub get_next_track_randomly {
 
 	my $mc = $self->mysqlConnection;
 
-	print STDERR "getting next track randomly\n"; # level 1
+	qlog INFO, "Getting next track randomly\n"; # level 1
 
 	# list all unplayed track, and make select somewhere in it
 	# this generates next random track
@@ -348,7 +350,7 @@ sub get_next_track_randomly {
 	$row = $row->[0];
 
 	if($row) {
-		print STDERR "next track is ($row->{track_id}:$row->{track_order})\n"; # level 2
+		qlog INFO, "Next track is ($row->{track_id}:$row->{track_order})\n"; # level 2
 		return ($row->{track_id}, $row->{track_order});
 	} else {
 		return (undef, undef);

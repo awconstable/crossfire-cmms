@@ -6,6 +6,7 @@ use CMMS::Zone::Player;
 use CMMS::Zone::NowPlaying;
 use CMMS::Zone::Command;
 use POSIX qw(ceil);
+use Quantor::Log;
 
 our $permitted = {
 	mysqlConnection => 1,
@@ -131,13 +132,13 @@ sub mem_reset {
 #
 
 sub history_empty {
-	print STDERR "HISTORY: Empty\n";
+	qlog INFO, "HISTORY: Empty";
 	@history = ();
 }
 
 sub history_back {
 	if (@history > 1) {
-		print STDERR "HISTORY: back\n";
+		qlog INFO, "HISTORY: back";
 		my $hsize = @history;
 		pop @history;
 		my $serialized = $history[@history-1]; #last record
@@ -149,14 +150,14 @@ sub history_back {
 }
 
 sub history_add {
-	print STDERR "HISTORY: add\n";
+	qlog INFO, "HISTORY: add";
 	return push @history, &freeze(\%mem);
 }
 
 sub history_update {
 	my $self = shift;
 
-	print STDERR "HISTORY: update\n";
+	qlog INFO, "HISTORY: update";
 	pop @history; # if (@history > 1); # we can add another step to go at beginning of list
 	$self->history_add;
 }
@@ -934,7 +935,7 @@ sub process {
 			print &hash2cmd(%data_out);  # print response
 		}
 	} else {
-		print STDERR "Unknown library command: $data->{cmd}\n";
+		qlog WARNING, "Unknown library command: $data->{cmd}";
 	}
 
 	return ();

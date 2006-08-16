@@ -3,6 +3,7 @@ package CMMS::Zone::Status;
 use strict;
 use CMMS::Zone::Player;
 use CMMS::Zone::Command;
+use Quantor::Log;
 
 our $time = -1; # used for keeping old time, so we'll send only time changes
 
@@ -227,7 +228,7 @@ sub loop {
 				print hash2cmd(%ret);
 			}
 		} else {
-			print STDERR "irmp3d: ".$line."\n";
+			qlog INFO, "cmms_player: ".$line."\n";
 		}
 	}
 }

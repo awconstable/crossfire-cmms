@@ -7,8 +7,12 @@ use Config::General;
 use CMMS::Zone::Sender;
 use CMMS::Zone::Status;
 use CMMS::Database::MysqlConnectionEscape;
+use Quantor::Log;
+
+$Quantor::Log::log_level = INFO; 
 
 # load config & configure multiplexer
+qlog INFO, "Reading CMMS Configuration";
 my %conf = ParseConfig('/etc/cmms.conf');
 
 my $zone;
@@ -28,24 +32,35 @@ $mc and $db->{host} and $mc->host( $db->{host} );
 $mc and $db->{database} and $mc->database( $db->{database} );
 $mc and $db->{user} and $mc->user( $db->{user} );
 $mc and $db->{password} and $mc->password( $db->{password} );
-$mc and $mc->connect || die("Can't connect to database '".$mc->database."' on '".$mc->host."' with user '".$mc->user."'");
+
+unless( $mc and $mc->connect ) {
+    qlog CRITICAL, "Can't connect to database '".$mc->database."' on '".$mc->host."' with user '".$mc->user."'";
+    die;
+};
 
 my $parentpid = $$;
 my ($kidpid, $handle, $line);
 
-print STDERR "[$$] Connecting to irmp3d $zone->{host}:$zone->{port} \n";
+qlog INFO,"[$$] Connecting to cmms_player $zone->{host}:$zone->{port}";
 
 # create a tcp connection to the specified host and port
-$handle = IO::Socket::INET->new(Proto     => "tcp",
-                                PeerAddr  => $zone->{host},
-                                PeerPort  => $zone->{port})
-     or die "can't connect to port $zone->{port} on $zone->{host}: $!";
+unless( $handle = IO::Socket::INET->new(Proto     => "tcp",
+					PeerAddr  => $zone->{host},
+					PeerPort  => $zone->{port})
+	) {
+    qlog "Can't connect to port $zone->{port} on $zone->{host}: $!";
+    die;
+}
      
-print STDERR "[$$] Connected to irmp3d.\n";
-
+qlog INFO,"[$$] Connected to irmp3d.";
 
 # split the program into two processes, identical twins
-die "can't fork: $!" unless defined($kidpid = fork());
+unless ( defined($kidpid = fork()) ) {
+    qlog CRITICAL, "Can't fork: $!";
+    die;
+}
+
+
 
 if ($kidpid) {
 
@@ -55,12 +70,12 @@ if ($kidpid) {
 
     STDOUT->autoflush(1); # important, otherwise output will be buffered!!!
     
-    print STDERR "[$$] Status process.\n";
+    qlog INFO, "[$$] Status process.";
 
     my $obj = new CMMS::Zone::Status(mc => $mc, handle => $handle, zone => $zone, conf => \%conf);
     $obj->loop;
 
-    die("[$$] Connection closed by irmp3d...");
+    qlog INFO, "[$$] Connection closed by cmms_player...";
     
 } else {
     $SIG{__DIE__} = \&terminate_all;
@@ -69,12 +84,12 @@ if ($kidpid) {
     STDOUT->autoflush(1); # important, otherwise output will be buffered!!!
     # child copies standard input to the socket
 
-    print STDERR "[$$] Sender/Command process.\n";
+    qlog INFO,"[$$] Sender/Command process.";
 
     my $obj = new CMMS::Zone::Sender(mc => $mc, handle => $handle, zone => $zone, conf => \%conf);
     $obj->loop;
 
-    die("[$$] Program ended by cmmsd/STDIN...");    
+    qlog INFO, "[$$] Program ended by cmmsd/STDIN...";    
     
 }
 
