@@ -10,7 +10,7 @@
 . /etc/rc.d/init.d/functions
 
 # Path to binary
-daemon=/usr/local/cmms/bin/cmmsd.pl
+daemon=/usr/bin/cmmsd.pl
 prog=cmms
 RETVAL=0
 
