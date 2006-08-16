@@ -337,7 +337,7 @@ sub sql_track_where_by_id {
 
   return qq{
          SELECT id, track_num || '. ' || title as text 
-         FROM track 
+         FROM track t
          $where
          ORDER BY track_num
          LIMIT ? OFFSET ?
@@ -349,7 +349,7 @@ sub sql_track_where_num {
 
   return qq{
          SELECT track.id, track.title as text
-         FROM track 
+         FROM track t
          $where
          ORDER BY track_num
          LIMIT ? OFFSET ? 
@@ -361,7 +361,7 @@ sub sql_track_where_order {
 
   return qq{
          SELECT track.id, track.title as text
-         FROM track
+         FROM track t
          $where
          ORDER BY track_order
          LIMIT ? OFFSET ?
@@ -373,7 +373,7 @@ sub sql_track_where {
 
   return qq{
          SELECT id, title as text
-         FROM track 
+         FROM track t
          $where
          ORDER BY title
          LIMIT ? OFFSET ? 
