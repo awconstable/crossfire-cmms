@@ -348,10 +348,10 @@ sub sql_track_where_num {
 	my ($self, $where) = @_;
 
   return qq{
-         SELECT track.id, track.title as text
+         SELECT t.id, t.title as text
          FROM track t
          $where
-         ORDER BY track_num
+         ORDER BY t.track_num
          LIMIT ? OFFSET ? 
   };
 }
@@ -360,7 +360,7 @@ sub sql_track_where_order {
         my ($self, $where) = @_;
 
   return qq{
-         SELECT track.id, track.title as text
+         SELECT t.id, t.title as text
          FROM track t
          $where
          ORDER BY track_order
@@ -458,8 +458,8 @@ sub select_tracks {
 sub select_playlist_tracks {
 	my $self = shift;
 
-	my $sql = $self->sql_track_where_order(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}");
-	$sql = $self->sql_track_where_order(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'") if $mem{playlist_id} == -1;
+	my $sql = $self->sql_track_where_order(", playlist_track where playlist_track.track_id = t.id and playlist_track.playlist_id = $mem{playlist_id}");
+	$sql = $self->sql_track_where_order(", playlist_current where playlist_current.track_id = t.id and playlist_current.zone = '$self->{zone}->{number}'") if $mem{playlist_id} == -1;
 
   my $rows = $self->make_select($sql);
   if($rows > 0) {
@@ -624,9 +624,9 @@ sub sql_track2playlist {
 
 	return qq {
 		REPLACE INTO playlist_current 
-		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, ($pos+track_num) from track 
+		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, ($pos+track_num) from track t
 		$where 
-		ORDER BY track_order
+		ORDER BY album_id, track_num
 	};
 }
 
@@ -710,8 +710,8 @@ sub page_next {
 	} elsif($c eq 'albums') {
 		$total = $self->make_select_no_limit($self->sql_album_where($self->sql_prepare_where||''));
         } elsif($c eq 'tracks' && $mem{playlist_id}) {
-                $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_track where playlist_track.track_id = track.id and playlist_track.playlist_id = $mem{playlist_id}"));
-                $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_current where playlist_current.track_id = track.id and playlist_current.zone = '$self->{zone}->{number}'")) if $mem{playlist_id} == -1;
+                $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_track where playlist_track.track_id = t.id and playlist_track.playlist_id = $mem{playlist_id}"));
+                $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_current where playlist_current.track_id = t.id and playlist_current.zone = '$self->{zone}->{number}'")) if $mem{playlist_id} == -1;
 	} elsif($c eq 'tracks') {
 		$total = $self->make_select_no_limit($self->sql_track_where($self->sql_prepare_where||''));
 	} elsif($c eq 'playlists') {
