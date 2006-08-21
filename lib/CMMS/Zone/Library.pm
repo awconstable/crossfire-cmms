@@ -620,11 +620,11 @@ sub search_clear {
 }
 
 sub sql_track2playlist {
-	my ($self, $pos, $where) = @_;
+	my ($self, $where) = @_;
 
 	return qq {
 		REPLACE INTO playlist_current 
-		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, ($pos+track_num) from track t
+		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, \@id:=1+\@id from track t
 		$where 
 		ORDER BY album_id, track_num
 	};
@@ -646,26 +646,24 @@ sub queueall {
 
 	my $mc = $self->mysqlConnection;
 
-	my $pos = 0;
-	my $rows = $mc->query_and_get("select count(track_id) as total from playlist_current where zone = '$self->{zone}->{number}'")||[];
-	my $row = $rows->[0];
-	$pos = $row->{total} if $row;
-
 	my $sql = '';
 	if(my $tmp = $self->sql_prepare_where) {
-		$sql = $self->sql_track2playlist($pos,$tmp);
+		$sql = $self->sql_track2playlist($tmp);
 	} else {
-		$sql = $self->sql_track2playlist($pos);
+		$sql = $self->sql_track2playlist;
 	}
 
-	my $ret = $mc->query($sql);
+	my $id = $mc->query_and_get('select @id')||[];
+	$id = $id->[0]->{'@id'};
+	my $ret = $mc->query('SET @id:='.($id?$id:0));
+	$ret = $mc->query($sql);
 
 	# we are playing current playlist
 	$mc->query("DELETE FROM zone_mem WHERE zone='$self->{zone}->{number}' AND param='playlist'");
 
-	$pos = 1;
-	$rows = $mc->query_and_get("select track_order as pos from playlist_current where zone = '$self->{zone}->{number}' and track_played is not null order by track_order desc limit 1")||[];
-	$row = $rows->[0];
+	my $pos = 1;
+	my $rows = $mc->query_and_get("select track_order as pos from playlist_current where zone = '$self->{zone}->{number}' and track_played is not null order by track_order desc limit 1")||[];
+	my $row = $rows->[0];
 	$pos = $row->{pos} if $row;
 	my $total = 1;
 	$rows = $mc->query_and_get("select count(track_id) as total from playlist_current where zone = '$self->{zone}->{number}'")||[];
@@ -777,7 +775,8 @@ sub menu_play {
 	# Delete current playlist
 	$self->empty_queue;
 	# Add all tracks for this album
-	my $sql = $self->sql_track2playlist(0,"WHERE album_id in (select album_id from track where id = $track)");
+	$mc->query('SET @id:=0');
+	my $sql = $self->sql_track2playlist("WHERE album_id in (select album_id from track where id = $track)");
 	$mc->query($sql);
 	# Set track position in playlist
 	$self->{player}->track_mark_played($track,$trk{number});
