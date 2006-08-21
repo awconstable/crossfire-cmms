@@ -29,6 +29,18 @@ Overview to go here
 my $q_zone = $mc->quote($stab);
 
 my $sql = qq(
+SELECT track_id
+FROM playlist_current
+WHERE track_played = 1 AND
+zone = $q_zone
+ORDER BY track_order DESC
+LIMIT 1
+);
+
+$current = $mc->query_and_get($sql)||[];
+$current = $current->[0]->{track_id};
+
+$sql = qq(
 SELECT playlist_current.*,
        album.cover,
        track.album_id,
@@ -43,10 +55,10 @@ FROM playlist_current,
      album,
      artist
 WHERE playlist_current.zone = $q_zone
-AND (playlist_current.track_played = 0 or playlist_current.track_played is null)
 AND playlist_current.track_id = track.id
 AND track.album_id = album.id
 AND track.artist_id = artist.id
+ORDER BY playlist_current.track_order
 );
 
 $playlist = $mc->query_and_get($sql);
@@ -104,14 +116,15 @@ $playlist = $mc->query_and_get($sql);
 [$ if $playlist and $#{$playlist} >= 0 $]
 <ul id="playlist" class="playlist">
 [$ foreach $t ( @{$playlist} ) $]
+[- $class = ($current==$t->{track_id}?'boldtablecells':'tablecells'); -]
 <li id="item_[+ $l->{id} +]">
 <table style="width: 100%">
 <tr>
- <td class="tablecells" width="30%"><a href="artist.ehtml?id=[+ $t->{artist_id} +];session_id=[+ $session_id +]">[+ $t->{artist} +]</a></td>
- <td class="tablecells" width="30%"><a href="album.ehtml?id=[+ $t->{album_id} +];session_id=[+ $session_id +]">[+ $t->{album} +]</a></td>
- <td class="tablecells" width="30%"><a href="track.ehtml?id=[+ $t->{track_id} +];session_id=[+ $session_id +]">[+ $t->{title} +]</a></td>
- <td class="tablecells" style="text-align: right" width="5%">[+ sprintf("%i:%02i",int($t->{length_seconds} / 60), $t->{length_seconds} % 60) +]</td>
- <td class="tablecells" width="5%">
+ <td class="[+ $class +]" width="30%"><a href="artist.ehtml?id=[+ $t->{artist_id} +];session_id=[+ $session_id +]">[+ $t->{artist} +]</a></td>
+ <td class="[+ $class +]" width="30%"><a href="album.ehtml?id=[+ $t->{album_id} +];session_id=[+ $session_id +]">[+ $t->{album} +]</a></td>
+ <td class="[+ $class +]" width="30%"><a href="track.ehtml?id=[+ $t->{track_id} +];session_id=[+ $session_id +]">[+ $t->{title} +]</a></td>
+ <td class="[+ $class +]" style="text-align: right" width="5%">[+ sprintf("%i:%02i",int($t->{length_seconds} / 60), $t->{length_seconds} % 60) +]</td>
+ <td class="[+ $class +]" width="5%">
 <a href="playlist_current.ehtml?id=[+ $r->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
  </td>
 </tr>
