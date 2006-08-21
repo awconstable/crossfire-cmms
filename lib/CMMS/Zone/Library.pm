@@ -626,7 +626,7 @@ sub sql_track2playlist {
 		REPLACE INTO playlist_current 
 		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, ($pos+track_num) from track 
 		$where 
-		ORDER BY album_id, track_num
+		ORDER BY track_order
 	};
 }
 
