@@ -29,7 +29,7 @@ Overview to go here
 my $q_zone = $mc->quote($stab);
 
 my $sql = qq(
-SELECT track_id
+SELECT track_order
 FROM playlist_current
 WHERE track_played = 1 AND
 zone = $q_zone
@@ -38,7 +38,7 @@ LIMIT 1
 );
 
 $current = $mc->query_and_get($sql)||[];
-$current = $current->[0]->{track_id};
+$current = $current->[0]->{track_order};
 
 $sql = qq(
 SELECT playlist_current.*,
@@ -115,8 +115,12 @@ $playlist = $mc->query_and_get($sql);
 </table>
 [$ if $playlist and $#{$playlist} >= 0 $]
 <ul id="playlist" class="playlist">
+[- $total_time = 0; -]
 [$ foreach $t ( @{$playlist} ) $]
-[- $class = ($current==$t->{track_id}?'boldtablecells':'tablecells'); -]
+[-
+$total_time += $t->{length_seconds};
+$class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
+-]
 <li id="item_[+ $l->{id} +]">
 <table style="width: 100%">
 <tr>
@@ -132,6 +136,15 @@ $playlist = $mc->query_and_get($sql);
 </li>
 [$ endforeach $]
 </ul>
+
+<div align="right">
+<table>
+  <tr>
+    <td class="boldtablecells">Total tracks: [+ scalar @{$playlist} +]</td>
+    <td class="boldtablecells">Total play time: [+ sprintf("%i:%02i",int($total_time / 60), $total_time % 60) +]</td>
+  </tr>
+</table>
+</div>
 
 <input type="hidden" value="(waiting for onChange)" id="playlistv" name="playlistv">
 
