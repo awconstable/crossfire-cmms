@@ -133,13 +133,13 @@ $self_url = $cgi->self_url;
 # Setup tabs
 #
 @tabs = ( 
-        { title => "Summary", view => "summary", icon=>"/icons/32x32/shadow/target.png" },
+        { title => "Summary", view => "summary", icon=>"/icons/32x32/shadow/about.png" },
         { title => "Now Playing", view => "nowplaying", icon=>"/icons/32x32/shadow/loudspeaker2.png" },
         { title => "Playlists", view => "playlist", icon=>"/icons/32x32/shadow/note_edit.png" },
         { title => "Albums", view => "albums", icon=>"/icons/32x32/shadow/cd_gold.png" },
-        { title => "Artists", view => "artists", icon=>"/icons/32x32/shadow/cd_gold.png" },
-        { title => "Genres", view => "genres", icon=>"/icons/32x32/shadow/cd_gold.png" },
-        { title => "Tracks", view => "tracks", icon=>"/icons/32x32/shadow/chrystal_ball.png" },
+        { title => "Artists", view => "artists", icon=>"/icons/32x32/shadow/microphone2.png" },
+        { title => "Genres", view => "genres", icon=>"/icons/32x32/shadow/music.png" },
+        { title => "Tracks", view => "tracks", icon=>"/icons/32x32/shadow/folder_music.png" },
         { title => "Configuration", view => "configuration", icon=>"/icons/32x32/shadow/wrench.png", required_group=>"cmmsadmin" }
 );
 
