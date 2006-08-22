@@ -1,7 +1,7 @@
 [-
 ($session_id, $cgi, $mc) = @param;
 -]
-<div class="subtitle">My Albums</div>
+<div class="subtitle">Albums</div>
 <form name="fw" method="post" action="index.ehtml" enctype="multipart/form-data">
 <input type="hidden" name="v" value="albums">
 <script type="text/javascript">
