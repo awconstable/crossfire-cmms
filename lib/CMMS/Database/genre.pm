@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.8 2006/07/03 15:11:13 byngmeister Exp $
+#$Id: genre.pm,v 1.9 2006/08/22 10:12:08 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -49,7 +49,7 @@ sub new {
     tag => "genre",
     title => "genre",
     display => [ "id", "name",  ],
-    list_display => [ "id", "name",  ],
+    list_display => [ "name"  ],
     tagorder => [ "id", "name",  ],
     tagrelationorder => [ ],
     relationshiporder => [ "track" ],
