@@ -573,6 +573,8 @@ sub empty_queue {
 		WHERE zone = $self->{zone}->{number};
 	};
 
+	$mc->query('SET @id:=0');
+
 	return $mc->query($sql);
 }
 
