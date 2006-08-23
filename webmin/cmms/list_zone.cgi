@@ -70,7 +70,7 @@ foreach my $zone (@{$zones}) {
 print qq(
 
 <tr>
-<th colspan="2" align="centre"><br><h2>Zone $zone->{number}</h2></th>
+<th colspan="2" align="centre"><br><h2>).($zone->{number}==scalar @{$zones}?'New zone':"Zone $zone->{number}").qq(</h2></th>
 </tr>
 <tr>
 <td>Host:</td>
