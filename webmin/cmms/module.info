@@ -1,0 +1,4 @@
+name=CMS
+desc=CMS Server Configuration
+os_support=*-linux
+category=servers
