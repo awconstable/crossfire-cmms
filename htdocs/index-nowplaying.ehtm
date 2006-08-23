@@ -6,6 +6,15 @@ $zones = $mc->query_and_get('select id,name from zone order by id') || [];
 
 my $ov = { id=>"overview", name=>"Overview" };
 #unshift @{$zones}, $ov;
+
+if(@ids = split('&', $cgi->param('playlistv'))) {
+	$cnt = 1;
+	foreach(@ids) {
+		s/playlist\[\]=//ig;
+		$mc->query('update playlist_current set track_order = '.($cnt++)." where id = $_");
+	}
+}
+
 -]
 <div class="subtitle">Now Playing</div>
 <div class="tabberlive">
@@ -121,7 +130,7 @@ $playlist = $mc->query_and_get($sql);
 $total_time += $t->{length_seconds};
 $class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
 -]
-<li id="item_[+ $l->{id} +]">
+<li id="item_[+ $t->{id} +]">
 <table style="width: 100%">
 <tr>
  <td class="[+ $class +]" width="30%"><a href="artist.ehtml?id=[+ $t->{artist_id} +];session_id=[+ $session_id +]">[+ $t->{artist} +]</a></td>
@@ -129,7 +138,7 @@ $class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
  <td class="[+ $class +]" width="30%"><a href="track.ehtml?id=[+ $t->{track_id} +];session_id=[+ $session_id +]">[+ $t->{title} +]</a></td>
  <td class="[+ $class +]" style="text-align: right" width="5%">[+ sprintf("%i:%02i",int($t->{length_seconds} / 60), $t->{length_seconds} % 60) +]</td>
  <td class="[+ $class +]" width="5%">
-<a href="playlist_current.ehtml?id=[+ $r->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
+<a href="playlist_current.ehtml?id=[+ $t->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
  </td>
 </tr>
 </table>
@@ -146,13 +155,18 @@ $class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
 </table>
 </div>
 
+<form name="sorter">
+<input type="hidden" name="session_id" value="[+ $session_id +]">
+<input type="hidden" name="v" value="nowplaying">
+<input type="hidden" name="tab" value="[+ $stab +]">
 <input type="hidden" value="(waiting for onChange)" id="playlistv" name="playlistv">
+</form>
 
 <script type="text/javascript" language="javascript" charset="utf-8">
 // <![CDATA[
   Sortable.create('playlist',{ghosting:false,constraint:false,hoverclass:'over',
     onUpdate:function(sortable){Sortable.serialize(sortable)},
-    onChange:function(element){document.getElementById('playlistv').value = Sortable.serialize(element.parentNode)}
+    onChange:function(element){document.getElementById('playlistv').value = Sortable.serialize(element.parentNode); document.sorter.submit();}
   });
 // ]]>
 </script>

@@ -106,7 +106,7 @@ $playlist = $mc->query_and_get($sql);
  <td class="tablecells" width="30%"><a href="track.ehtml?id=[+ $t->{track_id} +];session_id=[+ $session_id +]">[+ $t->{title} +]</a></td>
  <td class="tablecells" style="text-align: right" width="5%">[+ sprintf("%i:%02i",int($t->{length_seconds} / 60), $t->{length_seconds} % 60) +]</td>
  <td class="tablecells" width="5%">
-<a href="playlist_current.ehtml?id=[+ $r->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
+<a href="playlist_current.ehtml?id=[+ $t->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
  </td>
 </tr>
 </table>
