@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# index.cgi
+
 # Display a menu of cms
 
 require './cmms-lib.pl';

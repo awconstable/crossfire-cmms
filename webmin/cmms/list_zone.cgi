@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# list_zone.cgi
+
 # List Zones from /etc/cmms.conf
 
 use Config::General;

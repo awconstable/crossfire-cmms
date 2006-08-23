@@ -1,10 +1,24 @@
 #!/usr/bin/perl
-# list_general.cgi
+
 # List General config from /etc/cmms.conf
 
 use Config::General;
 use CGI;
-require './cmms-lib.pl';
+
+#==== INIT =====
+do '../web-lib.pl';
+&init_config();
+do '../ui-lib.pl';
+%access = &get_module_acl();
+
+if (-r "$module_root_directory/$gconfig{'os_type'}-$gconfig{'os_version'}-lib.pl") {
+	do "$gconfig{'os_type'}-$gconfig{'os_version'}-lib.pl";
+	}
+else {
+	do "$gconfig{'os_type'}-lib.pl";
+	}
+#==== /INIT =====
+
 &ui_print_header(undef, $text{'general_title'}, "");
 
 my $cgi = new CGI;
