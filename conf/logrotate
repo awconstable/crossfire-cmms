@@ -1,0 +1,9 @@
+/usr/local/cmms/logs/* {
+    rotate 7
+    copytruncate
+    compress
+    size 100k
+    notifempty
+    missingok
+    olddir /usr/local/cmms/logs/archive
+}
