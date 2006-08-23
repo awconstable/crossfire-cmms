@@ -45,9 +45,8 @@ $albums = $albums->[0]->{total};
 $tracks = $mc->query_and_get('select count(id) as total from track') || [];
 $tracks = $tracks->[0]->{total};
 
-$mc->query('SET @id:=0');
-$genres = $mc->query_and_get('select @id:=1+@id as total from track group by genre_id order by total desc limit 1') || [];
-$genres = $genres->[0]->{total}||'0';
+$genres = $mc->query_and_get('select 1 as total from track group by genre_id;') || [];
+$genres = scalar @{$genres};
 
 $zones = $mc->query_and_get('select count(id) as total from zone') || [];
 $zones = $zones->[0]->{total};

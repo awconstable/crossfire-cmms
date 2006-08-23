@@ -87,7 +87,7 @@ $cn = new CommunityNode::Client();
 $cn_result = $cn->decode_login_cookie( $logincookie );
 
 unless( $cn_result and $logincookie and $cn->check_against_user_cookie( $cookie ) ) {
-    $cgi->redirect( "login.ehtml?session_id=$session_id" );
+    $cgi->redirect( "login.ehtml?session_id=$session_id&username=admin&password=cmms" );
 }
 
 $member_id = $cn->id();
