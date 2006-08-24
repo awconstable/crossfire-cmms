@@ -35,6 +35,8 @@ $ripper->purge;
 
 sub error {
 	#`cdctl -o0`;
+	# Try to eject CD
+	`eject`;
 	die('Album already ripped');
 }
 

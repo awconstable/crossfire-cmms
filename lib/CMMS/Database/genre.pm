@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.9 2006/08/22 10:12:08 byngmeister Exp $
+#$Id: genre.pm,v 1.10 2006/08/24 16:28:39 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -94,6 +94,34 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+sub get_self {
+    my $self = shift;
+    my $page = shift;
+    my $size = shift;
+    my $extras = shift;
+
+    $extras and $extras = "and $extras";
+
+    my $selects = <<EndSelects
+genre.*
+EndSelects
+    ;
+
+    my $tables = <<EndTables
+genre,
+track
+EndTables
+    ;
+
+    my $where = <<EndWhere
+track.genre_id = genre.id
+$extras
+EndWhere
+    ;
+
+    return $self->get_list( "genre", $page, $size, { tables=>$tables, select => $selects, where => $where, dump_sql=>1 } );
 }
 
 sub get_track_list {

@@ -97,7 +97,12 @@ $playlist = $mc->query_and_get($sql);
 </table>
 [$ if $playlist and $#{$playlist} >= 0 $]
 <ul id="playlist" class="playlist">
+[- $total_time = 0; -]
 [$ foreach $t ( @{$playlist} ) $]
+[-
+$total_time += $t->{length_seconds};
+$class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
+-]
 <li id="item_[+ $t->{id} +]">
 <table style="width: 100%">
 <tr>
@@ -113,6 +118,16 @@ $playlist = $mc->query_and_get($sql);
 </li>
 [$ endforeach $]
 </ul>
+
+<div align="right">
+<table>
+  <tr>
+    <td class="boldtablecells">Total tracks: [+ scalar @{$playlist} +]</td>
+    <td class="boldtablecells">Total play time: [+ sprintf("%i:%02i",int($total_time / 60), $total_time % 60) +]</td>
+  </tr>
+</table>
+</div>
+
 [$ else $]
 <div style="text-align: center" class="bodytext">There are no tracks in this play list</div>
 [$ endif $]
