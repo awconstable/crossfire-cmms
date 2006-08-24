@@ -13,3 +13,5 @@ if [ "$ACCESS" = "0" ]; then
   echo "Adding setup user to /etc/webmin/webmin.acl"
   echo "setup: cmms net" >> /etc/webmin/webmin.acl
 fi
+
+/usr/bin/perl /usr/libexec/webmin/changepass.pl /etc/webmin setup setup
