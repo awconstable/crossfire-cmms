@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.10 2006/08/24 16:28:39 byngmeister Exp $
+#$Id: genre.pm,v 1.11 2006/08/25 09:52:36 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -118,6 +118,7 @@ EndTables
     my $where = <<EndWhere
 track.genre_id = genre.id
 $extras
+group by genre.id
 EndWhere
     ;
 
