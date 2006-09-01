@@ -4,7 +4,7 @@
 
 use Config::General;
 use CGI;
-use CMMS::Database::MysqlConnection;
+use TAER::MysqlConnection;
 
 #==== INIT =====
 do '../web-lib.pl';
@@ -22,7 +22,7 @@ else {
 
 &ui_print_header(undef, $text{'zone_title'}, "");
 
-my $mc = new CMMS::Database::MysqlConnection;
+my $mc = new TAER::MysqlConnection;
 $mc->user('cmms');
 $mc->password('cmms');
 $mc->connect;
