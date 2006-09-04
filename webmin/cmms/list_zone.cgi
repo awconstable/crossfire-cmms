@@ -42,7 +42,7 @@ if($cgi->param('save')) {
 	foreach my $num (1..scalar @{$zones}) {
 		if($cgi->param($num.'_host') ne '' && $cgi->param($num.'_port') ne '') {
 		$title = $cgi->param($num.'_location');
-		$title =~ s/zone([\s-_]+)?[0-9]+([\s-_]+)?//i;
+		#$title =~ s/zone([\s-_]+)?[0-9]+([\s-_]+)?//i;
 		push @{$save_zones}, {
 			number => $num,
 			host => $cgi->param($num.'_host'),
