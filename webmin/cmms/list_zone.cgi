@@ -23,6 +23,7 @@ else {
 &ui_print_header(undef, $text{'zone_title'}, "");
 
 my $mc = new TAER::MysqlConnection;
+$mc->database('cmms');
 $mc->user('cmms');
 $mc->password('cmms');
 $mc->connect;
