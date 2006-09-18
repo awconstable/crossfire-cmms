@@ -364,6 +364,7 @@ sub store_xml {
 		      <year>$meta->{YEAR}</year>
 		      <comment>$acomment</comment>
 		      <cover>$cover</cover>
+		      <artist>$meta->{ARTIST}</artist>
 		      <genre>$meta->{GENRE}</genre>
 		      <folder>$folder</folder>
 		    </album>
