@@ -355,8 +355,7 @@ sub store_xml {
 	my $acomment = $meta->{COMMENT};
 	$acomment =~ s/[\r\n]+$//g;
 
-	my $xml = qq(
-		<?xml version="1.0" encoding="ISO-8859-1"?>
+	my $xml = qq(<?xml version="1.0" encoding="ISO-8859-1"?>
 		  <import>
 		    <album>
 		      <name>$meta->{ALBUM}</name>
