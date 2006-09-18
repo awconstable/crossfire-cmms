@@ -27,7 +27,7 @@ sub new {
 
 	bless $self, $class;
 	$self->mysqlConnection($params{mc});
-	$self->{discid} = $self->discid; # cache discid
+	$self->{discid} = $self->discid unless $params{nocache}; # cache discid
 
 	return $self;
 }

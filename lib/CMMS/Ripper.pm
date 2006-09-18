@@ -59,8 +59,10 @@ sub new {
 	    }
 	}
 
+	my $nocache = ($params{nocache}?1:0);
+
 	my $metadata = $self->{conf}->{ripper}->{metadata};
-	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf}, loghandle=>\$self->{loghandle})";
+	eval "use CMMS::Ripper::DiscID::$metadata;\n\$self->{metadata} = new CMMS::Ripper::DiscID::$metadata(mc => \$mc, conf => \$self->{conf}, loghandle=>\$self->{loghandle}, nocache=>$nocache)";
 	die("Problem loading metadata $metadata: $@") if $@;
 
 	my $ripper = $self->{conf}->{ripper}->{ripper};
