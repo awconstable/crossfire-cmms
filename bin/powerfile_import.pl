@@ -4,7 +4,7 @@ use strict;
 use XML::Simple;
 use CMMS::Ripper;
 
-my $ripper = new CMMS::Ripper(conf => '/etc/cmms.conf');
+my $ripper = new CMMS::Ripper(conf => '/etc/cmms.conf', nocache => 1);
 my $mc = $ripper->mysqlConnection;
 
 my $xml = XMLin('./export.xml');
