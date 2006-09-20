@@ -5,7 +5,7 @@ use warnings;
 use base qw(CMMS::Ripper::Extractor::Generic);
 use CMMS::Psudo;
 use CMMS::File;
-use POSIX qw(mktime);
+use POSIX qw(:sys_wait_h mktime);
 
 our %smilies = (
 #             12345678901234567890
@@ -25,7 +25,6 @@ our %smilies = (
 my $start   = mktime(localtime());
 my $timeout = 10*60;
 
-our($CDPARANOIA,$pid);
 $SIG{ALRM} = \&_grim_reaper;
 
 sub _rip {
@@ -47,7 +46,7 @@ sub _rip {
 	my $file = safe_chars(sprintf('%02d',$number)." $artist $track");
 	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
-	($CDPARANOIA,$pid) = psudo_tty('cdparanoia'.($self->{conf}->{ripper}->{device}?" -d $self->{conf}->{ripper}->{device}":'')." -w -e $number $tmp$file.wav");
+	my($CDPARANOIA,$pid) = psudo_tty('cdparanoia'.($self->{conf}->{ripper}->{device}?" -d $self->{conf}->{ripper}->{device}":'')." -w -e $number $tmp$file.wav");
 
 	my $rawsize = 2352;
 	my($from_sec,$to_sec,$range);
@@ -60,7 +59,9 @@ sub _rip {
 		# trap error
 		if (/^004:\s(.*)$/) {
 			$self->{detail}->set(data => 'Unable to read CD.');
+			kill 9, $pid;
 			close($CDPARANOIA);
+			waitpid $pid, 0;
 			sleep 1; # wait for display.. there is no rush..
 			warn($1);
 			return undef;
@@ -102,8 +103,9 @@ sub _rip {
 
 			if($1 =~ /^:-0|;-\(|8-X|8-\|:-P$/) {
 				$self->{detail}->set(data => 'Read Error-skipping');
-				kill(9,$pid); # we must drastically kill cdparanoia :(
+				kill 9, $pid; # we must drastically kill cdparanoia :(
 				close($CDPARANOIA);
+				waitpid $pid, 0;
 				warn('Unable to rip track');
 				return undef;
 				last;
@@ -113,8 +115,9 @@ sub _rip {
 
 		if(/\[(.+)?(e|V)(.+)?\|/) {
 			$self->{detail}->set(data => 'Read Error-skipping');
-			kill(9,$pid); # we must drastically kill cdparanoia :(
+			kill 9, $pid; # we must drastically kill cdparanoia :(
 			close($CDPARANOIA);
+			waitpid $pid, 0;
 			warn('Unable to rip track');
 			return undef;
 			last;
@@ -134,8 +137,9 @@ sub _rip {
 		}
 	}
 
-	close($CDPARANOIA);
 	kill 9, $pid;
+	close($CDPARANOIA);
+	waitpid $pid, 0;
 
 	alarm 0;
 
@@ -153,7 +157,7 @@ sub timeout {
 sub _grim_reaper {
 	if($_ = `ps -efww | grep perl | grep ripper | awk {'print \$2'}`) {
 		foreach(split("\n",$_)) {
-			kill(9,$_) if $_ ne $$;
+			kill 9, $_ if $_ ne $$;
 		}
 	}
 

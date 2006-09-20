@@ -6,6 +6,7 @@ use base qw(CMMS::Ripper::Encoder::Generic);
 use CMMS::Psudo;
 use CMMS::File;
 use MP3::Tag;
+use POSIX qw(:sys_wait_h);
 
 sub _encode {
 	my($self,$number,$track,$artist,$album,$comment,$year,$genre,$aartist) = @_;
@@ -68,8 +69,9 @@ sub _encode {
 		}
 	}
 
-	close($LAME);
 	kill 9, $pid;
+	close($LAME);
+	waitpid $pid, 0;
 
 	my($artist1,$album1,$track1,$comment1) = map{s/"/\\"/g;$_}($artist,$album,$track,$comment);
 

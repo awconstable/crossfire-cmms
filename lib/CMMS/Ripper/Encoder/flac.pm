@@ -5,6 +5,7 @@ use warnings;
 use base qw(CMMS::Ripper::Encoder::Generic);
 use CMMS::Psudo;
 use CMMS::File;
+use POSIX qw(:sys_wait_h);
 
 sub _encode {
 	my($self,$number,$track,$artist,$album,$comment,$year,$genre,$aartist) = @_;
@@ -49,8 +50,9 @@ sub _encode {
 		}
 	}
 
-	close($FLAC);
 	kill 9, $pid;
+	close($FLAC);
+	waitpid $pid, 0;
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);
