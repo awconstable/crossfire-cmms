@@ -50,6 +50,7 @@ sub _encode {
 	}
 
 	close($FLAC);
+	kill 9, $pid;
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);

@@ -69,6 +69,7 @@ sub _encode {
 	}
 
 	close($LAME);
+	kill 9, $pid;
 
 	my($artist1,$album1,$track1,$comment1) = map{s/"/\\"/g;$_}($artist,$album,$track,$comment);
 

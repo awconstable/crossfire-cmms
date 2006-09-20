@@ -135,6 +135,7 @@ sub _rip {
 	}
 
 	close($CDPARANOIA);
+	kill 9, $pid;
 
 	alarm 0;
 
