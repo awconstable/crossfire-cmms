@@ -18,7 +18,9 @@ my $listen = IO::Socket::INET->new(Proto => 'tcp',
                                    LocalHost => $conf->{bind},
 				   LocalPort => $conf->{port},
 				   Listen => 1,
-				   Reuse => 1) or die "Unable to start crestron server: ".$!;
+				   ReuseAddr => 1,
+				   MultiHomed => 1
+) or die "Unable to start crestron server: ".$!;
 print STDERR "Server started [",$listen->sockhost, ":", $listen->sockport, "]\n";
 
 
