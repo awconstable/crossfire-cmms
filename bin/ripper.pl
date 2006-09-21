@@ -19,8 +19,8 @@ my $ripper = new CMMS::Ripper(conf => ($mode?'/etc/cmms2.conf':'/etc/cmms.conf')
 
 my $album = $ripper->metadata;
 
-$ripper->check($album) or &error; # Must unlock draw before dying!
-$ripper->rip($album) or die("Album: $album->{ALBUM} timed out");
+$ripper->check($album) or error('Album already ripped'); # Must unlock draw before dying!
+$ripper->rip($album) or error("Album: $album->{ALBUM} timed out");
 
 # Unlock CD
 #`cdctl -o0`;
@@ -34,10 +34,11 @@ $ripper->purge;
 `eject`;
 
 sub error {
+	$_ = shift;
 	#`cdctl -o0`;
 	# Try to eject CD
 	`eject`;
-	die('Album already ripped');
+	die($_);
 }
 
 sub grim_reaper {
