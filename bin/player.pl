@@ -43,7 +43,7 @@ while(1) {
 			my $new = $listen->accept;
 			$new->autoflush(1);
 			$select->add($new);
-			print STDERR ('Client '.$sock->fileno.') ['.$sock->peerhost.':'.$sock->peerport."] connected\n";
+			print STDERR 'Client ('.$sock->fileno.') ['.$sock->peerhost.':'.$sock->peerport."] connected\n";
 			next;
 		} else {
 			my $buff = '';
