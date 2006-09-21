@@ -4,6 +4,9 @@ use strict;
 use CMMS::Ripper;
 use Getopt::Long;
 
+close(STDERR);
+open(STDERR,'>> /usr/local/cmms/logs/ripper.log');
+
 my $mode;
 GetOptions(mode => \$mode);
 

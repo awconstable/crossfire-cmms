@@ -33,6 +33,8 @@ my $listen = new IO::Socket::INET(
 ) or die "Unable to start player server: ".$!;
 print STDERR "Server started [",$listen->sockhost, ":", $listen->sockport, "]\n";
 
+$listen->autoflush(1);
+
 my $pid = open2(\*RDR,\*MPG,'/usr/local/bin/flac123 -R 2>&1');
 
 my $select = new IO::Select($listen,\*RDR);
@@ -43,7 +45,7 @@ while(1) {
 			my $new = $listen->accept;
 			$new->autoflush(1);
 			$select->add($new);
-			print STDERR 'Client ('.$sock->fileno.') ['.$sock->peerhost.':'.$sock->peerport."] connected\n";
+			print STDERR 'Client ('.$new->fileno.') ['.$new->peerhost.':'.$new->peerport."] connected\n";
 			next;
 		} else {
 			my $buff = '';
@@ -51,7 +53,12 @@ while(1) {
 				print STDERR 'Client ('.$sock->fileno.') ['.$sock->peerhost.':'.$sock->peerport."] disconnected\n";
 				$select->remove($sock);
 				$sock->close();
+				next;
 			}
+
+			$buff =~ s/\r+//g;
+			$buff =~ s/\n+$//g;
+
 			if($buff =~ /^play|pause|stop|seek/) {
 				my $command = $buff;
 				$buff = "210: $buff";
