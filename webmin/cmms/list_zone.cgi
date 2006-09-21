@@ -28,9 +28,6 @@ $mc->user('cmms');
 $mc->password('cmms');
 $mc->connect;
 
-my $host = $ENV{HTTP_HOST};
-$host =~ s/:[0-9]+//;
-
 my $cgi = new CGI;
 
 %conf  = ParseConfig('/etc/cmms.conf');
