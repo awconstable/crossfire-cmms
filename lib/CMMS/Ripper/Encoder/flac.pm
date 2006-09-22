@@ -26,9 +26,7 @@ sub _encode {
 	my $oprog = '';
 	$self->{setings}->set(data => (length($track)>20?substr($track,0,20):$track));
 
-	while(1) {
-		sysread $FLAC,$_,100;
-
+	while(sysread $FLAC,$_,250) {
 		if(/.+: ([0-9]+)% complete, ratio=([0-9\.]+)/) {
         		my $prog = sprintf("%3s%%  %s", $1, $2);
 			if($oprog ne $prog) {
@@ -43,7 +41,7 @@ sub _encode {
 			last;
 		}
 
-		if(/can't open input file/) {
+		if(/can't open input file/ || /ERROR/) {
 			$self->{status}->set(data => 'Encoding error');
 			print STDERR "Encoding error: $_\n";
 			last;

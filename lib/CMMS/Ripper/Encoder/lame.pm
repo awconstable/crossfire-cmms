@@ -27,9 +27,7 @@ sub _encode {
 	my($oprog,$orate) = ('','44.1 kHz 160 kbps');
 	$self->{setings}->set(data => $orate);
 
-	while(1) {
-		sysread $LAME,$_,100;
-
+	while(sysread $LAME,$_,250) {
 		if(/
       \d+\/\d+\s+     # 300 6288   
 	\(\s*(\d+)%\)	# ( 5%)           $1
