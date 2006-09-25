@@ -174,13 +174,6 @@ PLAYORDER=
 	} else {
 		warn "Album $album->{name} already ripped";
 	}
-
-	use Data::Dumper;
-	#print Dumper($album);
-	#print Dumper($albumdata);
-	print Dumper(\@tracks);
-	#print Dumper($metadata);
-	die("Test");
 }
 
 sub usage {
