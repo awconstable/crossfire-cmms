@@ -79,7 +79,6 @@ sub _encode {
 	$id3v2->add_frame('TALB',$album1) if $album;
 	$id3v2->add_frame('TPE1',$artist1) if $artist;
 	$id3v2->add_frame('TIT2',$track1) if $track;
-	$id3v2->add_frame('TIT3',$comment1) if $comment;
 	$id3v2->add_frame('TRCK',$number) if $number;
 	$id3v2->add_frame('TYER',$year) if $year;
 	$id3v2->add_frame('TCON',$genre) if $genre;

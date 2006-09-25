@@ -101,11 +101,9 @@ sub default {
 #
 DISCID=$discid
 DTITLE=Unknown / Unknown $discid
-".join("
-",map{'TTITLE'.($_-1)."=Unknown / Track $_"}@tracks)."
+".join("\n",map{'TTITLE'.($_-1)."=Unknown / Track $_"}@tracks)."
 EXTD=CMMSRipper
-".join("
-",map{'EXTT'.($_-1).'='}@tracks)."
+".join("\n",map{'EXTT'.($_-1).'='}@tracks)."
 PLAYORDER=
 ";
 	close(CDDB);

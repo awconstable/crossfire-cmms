@@ -147,11 +147,9 @@ foreach my $album (values %{$tables->{album}->{albums}}) {
 #
 DISCID=$album->{discid}
 DTITLE=$album->{tracks}->[0]->{artist} / $album->{name}
-".join("
-",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@{$album->{tracks}})."
+".join("\n",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@{$album->{tracks}})."
 EXTD=".($album->{comment}?$album->{comment}:'')."
-".join("
-",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@{$album->{tracks}})."
+".join("\n",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@{$album->{tracks}})."
 PLAYORDER=
 ";
 	close(CDDB);

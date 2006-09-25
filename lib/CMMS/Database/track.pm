@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.15 2006/08/11 20:46:46 toby Exp $
+#$Id: track.pm,v 1.16 2006/09/25 10:56:27 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -19,8 +19,9 @@ CMMS::Database::track
 use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
+use MP3::Tag;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -245,6 +246,31 @@ EndWhere
     ;
 
     return $self->get_list( "track_data", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+}
+
+sub push {
+	my $self = shift;
+	my $mc = $self->mysqlConnection();
+
+	my $id = $self->SUPER::push(@_);
+
+	my $tl = $self->get_track_list(1,999);
+	foreach my $track (@{$tl}) {
+		next unless $track->{file_name} =~ /\.mp3$/i;
+
+		my $mp3 = MP3::Tag->new("$track->{file_location}$track->{file_name}");
+		my $id3v2 = $mp3->new_tag('ID3v2');
+
+		$id3v2->add_frame('TALB',$mc->enum_lookup('album','id','name',$self->get('album_id'))) if $mc->enum_lookup('album','id','name',$self->get('album_id'));
+		$id3v2->add_frame('TPE1',$self->get('artist')) if $self->get('artist');
+		$id3v2->add_frame('TIT2',$self->get('title')) if $self->get('title');
+		$id3v2->add_frame('TRCK',$self->get('track_number')) if $self->get('track_number');
+		$id3v2->add_frame('TYER',$self->get('year')) if $self->get('year');
+		$id3v2->add_frame('TCON',$mc->enum_lookup('genre','id','name',$self->get('genre_id'))) if $mc->enum_lookup('genre','id','name',$self->get('genre_id'));
+		$id3v2->write_tag;
+	}
+
+	return $id;
 }
 
 1;
