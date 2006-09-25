@@ -140,8 +140,8 @@ sub player {
 	}
 
 	my $p;
-	$p = open2($rdr,$mpg,'/usr/local/bin/flac123 -R 2>&1') if $t eq 'flac';
-	$p = open2($rdr,$mpg,'/usr/bin/mpg123 -R 2>&1') if $t eq 'mp3';
+	$p = open2($rdr,$mpg,'nice -n -10 /usr/local/bin/flac123 -R 2>&1') if $t eq 'flac';
+	$p = open2($rdr,$mpg,'nice -n -10 /usr/bin/mpg123 -R 2>&1') if $t eq 'mp3';
 	print STDERR "Opening $t player ($p)\n";
 	$select->add($rdr);
 

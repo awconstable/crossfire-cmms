@@ -21,7 +21,7 @@ sub _encode {
 
 	print STDERR "$tmp$file.flac\n";
 
-	my($FLAC,$pid) = psudo_tty("flac $tmp$file.wav -o $tmp$file.flac 2>&1");
+	my($FLAC,$pid) = psudo_tty("nice -n 10 flac $tmp$file.wav -o $tmp$file.flac 2>&1");
 
 	my $oprog = '';
 	$self->{setings}->set(data => (length($track)>20?substr($track,0,20):$track));

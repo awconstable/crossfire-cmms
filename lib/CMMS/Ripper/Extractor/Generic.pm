@@ -118,7 +118,7 @@ sub rip {
 	$self->add_to_log( "INFO", "ripper/generic", "Normalizing tracks for ".$metadata->{ALBUM} );	    
 
 	# Normalize wav volume
-	`normalize -b $self->{conf}->{ripper}->{tmpdir}*.wav`;
+	`nice -n 10 normalize -b $self->{conf}->{ripper}->{tmpdir}*.wav`;
 
 	$self->{detail}->set(data => 'All tracks ripped');
 	print STDERR "All tracks ripped\n";

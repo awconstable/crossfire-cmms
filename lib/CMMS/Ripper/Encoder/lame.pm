@@ -22,7 +22,7 @@ sub _encode {
 
 	print STDERR "$tmp$file.mp3\n";
 
-	my($LAME,$pid) = psudo_tty("lame -b 160 $tmp$file.wav $tmp$file.mp3 2>&1");
+	my($LAME,$pid) = psudo_tty("nice -n 10 lame -b 160 $tmp$file.wav $tmp$file.mp3 2>&1");
 
 	my($oprog,$orate) = ('','44.1 kHz 160 kbps');
 	$self->{setings}->set(data => $orate);
