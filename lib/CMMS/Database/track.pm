@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.17 2006/09/25 12:15:50 byngmeister Exp $
+#$Id: track.pm,v 1.18 2006/09/25 14:56:17 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use MP3::Tag;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
