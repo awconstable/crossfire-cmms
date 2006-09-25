@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.16 2006/09/25 10:56:27 byngmeister Exp $
+#$Id: track.pm,v 1.17 2006/09/25 12:15:50 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use MP3::Tag;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -254,8 +254,8 @@ sub push {
 
 	my $id = $self->SUPER::push(@_);
 
-	my $tl = $self->get_track_list(1,999);
-	foreach my $track (@{$tl}) {
+	my $tl = $self->get_track_list;
+	foreach my $track (@{$tl->{elements}}) {
 		next unless $track->{file_name} =~ /\.mp3$/i;
 
 		my $mp3 = MP3::Tag->new("$track->{file_location}$track->{file_name}");

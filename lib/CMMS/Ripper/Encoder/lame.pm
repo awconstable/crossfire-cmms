@@ -91,6 +91,7 @@ sub _encode {
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.mp3 $folder` if -f "$tmp$file.mp3";
+	`chown nobody:nobody $folder$file.mp3` if -f "$folder$file.mp3";
 	print STDERR "mv $tmp$file.mp3 $folder\n";
 
 	return 1;

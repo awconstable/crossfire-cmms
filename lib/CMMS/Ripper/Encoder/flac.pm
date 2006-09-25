@@ -59,6 +59,7 @@ sub _encode {
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.flac $folder` if -f "$tmp$file.flac";
+	`chown nobody:nobody $folder$file.flac` if -f "$folder$file.flac";
 	print STDERR "mv $tmp$file.flac $folder\n";
 
 	return 1;

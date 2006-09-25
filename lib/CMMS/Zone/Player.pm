@@ -154,7 +154,6 @@ sub update_zone {
     my $mc = $self->mysqlConnection;
     my $zone = $self->{zone}->{number};
 
-    # select flac files
     my $sql = qq(UPDATE zone SET current_track_id=$track_id WHERE id=$zone);
 
     my $q = $mc->query($sql);
@@ -168,12 +167,12 @@ sub trackid2filename {
 
 	my $mc = $self->mysqlConnection;
 
-	# select flac files
+	# select flac,mp3 files
 	my $sql = qq{
 		SELECT file_location, file_name 
 		FROM track_data 
 		WHERE track_id = %d 
-		AND file_name like '%%flac'
+		ORDER BY file_name LIMIT 1
 	};
 
 	$sql = sprintf($sql, $trackid);
