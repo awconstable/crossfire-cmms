@@ -70,7 +70,7 @@ sub check_cmd {
 
 sub send2player {
   my ($handle, $command) = @_;
-  qlog INFO, "Sending to player '$command'\n";
+  qlog INFO, "Sending to player '$command'";
   print $handle $command, "\n";
 }
 

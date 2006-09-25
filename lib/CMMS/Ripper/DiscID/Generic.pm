@@ -58,7 +58,7 @@ sub default {
 
 	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
-	my $discid = md5_hex($self->{discid});
+	my $discid = $self->{discid};
 	my $metadata = {
 		GENRE => 'Misc',
 		DISCID => $self->{discid},
@@ -78,7 +78,7 @@ sub default {
 	#  1.    22557 [05:00.57]        0 [00:00.00]    no   no  2
 	#  2.    14365 [03:11.40]    22557 [05:00.57]    no   no  2
 	my @tracks = ($query =~ /\s+([0-9]+)\.\s+/g);
-	my @offsets = ($query =~ /\]\s+([0-9]+)\s+\[/g);
+	my @offsets = grep{($_*75)}($query =~ /\]\s+([0-9]+)\s+\[/g);
 	#my($total) = ($query =~ /TOTAL\s+([0-9]+)/);
 	#$total = $total / 60;
 
@@ -86,7 +86,28 @@ sub default {
 	my $total = ($mins * 60) + $secs;
 
 	open(CDDB,"> ${tmp}album.cddb");
-	print CDDB "# xmcd\n#\n# Track frame offsets:\n".join("\n",map{"#       $_"}@offsets)."\n#\n# Disc length: $total seconds\n#\n# Revision: 1\n# Processed by: CMMSRipper\n# Submitted via: CMMSRipper\n# Normalized: r4:DSETVAR1\n#\nDISCID=$discid\nDTITLE=Unknown $discid\n".join("\n",map{'TTITLE'.($_-1)."=Track $_"}@tracks)."\nEXTD=CMMSRipper\n".join("\n",map{'EXTT'.($_-1).'='}@tracks)."\nPLAYORDER=\n";
+	print CDDB "# xmcd
+#
+# Track frame offsets:
+".join("
+",map{"#       $_"}@offsets)."
+#
+# Disc length: $total seconds
+#
+# Revision: 1
+# Processed by: CMMSRipper
+# Submitted via: CMMSRipper
+# Normalized: r4:DSETVAR1
+#
+DISCID=$discid
+DTITLE=Unknown / Unknown $discid
+".join("
+",map{'TTITLE'.($_-1)."=Unknown / Track $_"}@tracks)."
+EXTD=CMMSRipper
+".join("
+",map{'EXTT'.($_-1).'='}@tracks)."
+PLAYORDER=
+";
 	close(CDDB);
 	my $albumdata = new CDDB::File("${tmp}album.cddb");
 

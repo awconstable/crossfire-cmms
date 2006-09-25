@@ -59,43 +59,46 @@ while(1) {
 			$buff =~ s/\r+//g;
 			$buff =~ s/\n+$//g;
 
-			if($buff =~ /^play|pause|stop|seek/) {
-				my $command = $buff;
-				$buff = "210: $buff";
-				$command =~ s/seek/jump/;
-				$command =~ s/play/load/;
-				print MPG $command."\n";
-			} elsif($buff =~ /^\@/) {
-				if($buff =~ /\@F [0-9]+ [0-9]+ ([0-9\.]+) ([0-9\.]+)/) {
-					my ($up, $down) = map{ceil($_)} ($1, $2);
-					next if $up eq $oup && $down eq $odown;
-					$oup = $up;
-					$odown = $down;
-					$buff = "230: time $up $down";
-					$buff .= "\r\n230: endofsong\r\n200: endofsong" if $down == 0;
-				} elsif($buff =~ /\@P 1/) {
-					$buff = "230: pause\r\n200: pause";
-				} elsif($buff =~ /\@P 2/) {
-					$buff = "230: pause\r\n200: unpause";
-				} elsif($buff =~ /\@I (\/.+)/) {
-					my $file = $1;
-					$file .= '.flac' unless $file =~ /\.flac$/;
-					$buff = "240: songtype $file\r\n220: canplay mod_flac123 $file\r\n230: play mod_flac123 $file\r\n230: playing\r\n200: play mod_flac123 $file";
-				} elsif($buff =~ /\@P 0/) {
-					$buff = "230: stop\r\n200: stop";
+			foreach $buff (split("\n",$buff)) {
+	
+				if($buff =~ /^play|pause|stop|seek/) {
+					my $command = $buff;
+					$buff = "210: $buff";
+					$command =~ s/seek/jump/;
+					$command =~ s/play/load/;
+					print MPG $command."\n";
+				} elsif($buff =~ /^\@/) {
+					if($buff =~ /\@F [0-9]+ [0-9]+ ([0-9\.]+) ([0-9\.]+)/) {
+						my ($up, $down) = map{ceil($_)} ($1, $2);
+						next if $up eq $oup && $down eq $odown;
+						$oup = $up;
+						$odown = $down;
+						$buff = "230: time $up $down";
+						$buff .= "\r\n230: endofsong\r\n200: endofsong" if $down == 0;
+					} elsif($buff =~ /\@P 1/) {
+						$buff = "230: pause\r\n200: pause";
+					} elsif($buff =~ /\@P 2/) {
+						$buff = "230: pause\r\n200: unpause";
+					} elsif($buff =~ /\@I (\/.+)/) {
+						my $file = $1;
+						$file .= '.flac' unless $file =~ /\.flac$/;
+						$buff = "240: songtype $file\r\n220: canplay mod_flac123 $file\r\n230: play mod_flac123 $file\r\n230: playing\r\n200: play mod_flac123 $file";
+					} elsif($buff =~ /\@P 0/) {
+						$buff = "230: stop\r\n200: stop";
+					} else {
+						next;
+					}
 				} else {
 					next;
 				}
-			} else {
-				next;
-			}
-
-			foreach my $hndl ($select->handles) {
-				next unless $hndl->fileno;
-				next if $hndl == $listen;
-				next if $hndl == \*RDR;
-
-				print $hndl "$buff\r\n";
+	
+				foreach my $hndl ($select->handles) {
+					next unless $hndl->fileno;
+					next if $hndl == $listen;
+					next if $hndl == \*RDR;
+	
+					print $hndl "$buff\r\n";
+				}
 			}
 		}
 	}

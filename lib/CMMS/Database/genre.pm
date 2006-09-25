@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.11 2006/08/25 09:52:36 byngmeister Exp $
+#$Id: genre.pm,v 1.12 2006/09/25 10:23:20 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS

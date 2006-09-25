@@ -16,7 +16,7 @@ sub _encode {
 	$self->{status}->set(data => 'Flac Encoding '.sprintf('%02d',$number));
 	print STDERR 'Flac Encoding track '.sprintf('%02d',$number)."\n";
 
-	my $file = safe_chars(sprintf('%02d',$number)." $artist $track");
+	my $file = substr(safe_chars(sprintf('%02d',$number)." $track"),0,35);
 	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
 	print STDERR "$tmp$file.flac\n";
@@ -54,10 +54,8 @@ sub _encode {
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);
-	$comment = substr(safe_chars($comment),0,32);
 
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
-	$folder .= "$comment/" if $comment;
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.flac $folder` if -f "$tmp$file.flac";

@@ -17,7 +17,7 @@ sub _encode {
 	$self->{status}->set(data => 'MP3 Encoding '.sprintf('%02d',$number));
 	print STDERR 'MP3 Encoding track '.sprintf('%02d',$number)."\n";
 
-	my $file = safe_chars(sprintf('%02d',$number)." $artist $track");
+	my $file = substr(safe_chars(sprintf('%02d',$number)." $track"),0,35);
 	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
 	print STDERR "$tmp$file.mp3\n";
@@ -79,18 +79,16 @@ sub _encode {
 	$id3v2->add_frame('TALB',$album1) if $album;
 	$id3v2->add_frame('TPE1',$artist1) if $artist;
 	$id3v2->add_frame('TIT2',$track1) if $track;
-	$id3v2->add_frame('COMM',$comment1) if $comment;
+	$id3v2->add_frame('TIT3',$comment1) if $comment;
 	$id3v2->add_frame('TRCK',$number) if $number;
-	$id3v2->add_frame('TPRO',"$year ") if $year;
+	$id3v2->add_frame('TYER',$year) if $year;
 	$id3v2->add_frame('TCON',$genre) if $genre;
 	$id3v2->write_tag;
 
 	$aartist = safe_chars($aartist);
 	$album = safe_chars($album);
-	$comment = substr(safe_chars($comment),0,32);
 
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
-	$folder .= "$comment/" if $comment;
 
 	`mkdir -p $folder` unless -d $folder;
 	`mv $tmp$file.mp3 $folder` if -f "$tmp$file.mp3";

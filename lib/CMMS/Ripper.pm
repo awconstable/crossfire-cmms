@@ -187,9 +187,7 @@ sub amazon_cover {
 
 	my $artist = safe_chars($meta->{ARTIST});
 	my $album = safe_chars($meta->{ALBUM});
-	my $comment = safe_chars($meta->{COMMENT});
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$artist/$album/";
-	$folder .= "$comment/" if $comment;
 	`mkdir -p $folder` unless -d $folder;
 
 	open(IMG,"> ${folder}cover.$ext");
@@ -254,9 +252,7 @@ sub store {
 	my $s_aartist = safe_chars($meta->{ARTIST});
 	my $agenre = safe_chars($meta->{GENRE});
 	my $album = safe_chars($meta->{ALBUM});
-	my $comment = substr(safe_chars($meta->{COMMENT}),0,32);
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$s_aartist/$album/";
-	$folder .= "$comment/" if $comment;
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
@@ -287,7 +283,7 @@ sub store {
 	$album_id = $mc->last_id;
 
 
-	$self->add_to_log( "INFO", "store", "Adding genre of ".$meta->{GENTRE} );
+	$self->add_to_log( "INFO", "store", "Adding genre of ".$meta->{GENRE} );
 	$sql = 'SELECT id FROM genre WHERE name = '.$mc->quote($meta->{GENRE});
 	($_) = @{$mc->query_and_get($sql)||[]};
 	$genre_id = $_->{id} || -1;
@@ -298,7 +294,7 @@ sub store {
 		my $artist = $track->artist;
 		$artist = 'Unknown' if $artist =~ /^unknown/i;
 		my $title = $track->title;
-		$title = safe_chars("$track_num $artist $title");
+		$title = substr(safe_chars("$track_num $title"),0,35);
 		@files = <$folder/$title.*>;
 		next unless scalar @files;
 
@@ -336,9 +332,7 @@ sub store_xml {
 
 	my $aartist = safe_chars($meta->{ARTIST});
 	my $album = safe_chars($meta->{ALBUM});
-	my $comment = substr(safe_chars($meta->{COMMENT}),0,32);
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
-	$folder .= "$comment/" if $comment;
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
@@ -378,7 +372,7 @@ sub store_xml {
 		my $artist = $track->artist;
 		$artist = 'Unknown' if $artist =~ /^unknown/i;
 		my $title = $track->title;
-		$title = safe_chars("$track_num $artist $title");
+		$title = substr(safe_chars("$track_num $title"),0,35);
 		@files = <$folder/$title.*>;
 		next unless scalar @files;
 
