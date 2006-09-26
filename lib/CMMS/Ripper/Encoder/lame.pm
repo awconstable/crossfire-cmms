@@ -63,6 +63,7 @@ sub _encode {
 		if(/Could not find/) {
 			$self->{status}->set(data => 'Encoding error');
 			print STDERR "Encoding error: $_\n";
+			`rm -f $tmp$file.mp3` if -f "$tmp$file.mp3";
 			last;
 		}
 	}
@@ -71,28 +72,30 @@ sub _encode {
 	close($LAME);
 	waitpid $pid, 0;
 
-	my($artist1,$album1,$track1,$comment1) = map{s/"/\\"/g;$_}($artist,$album,$track,$comment);
+	if(-f "$tmp$file.mp3") {
+		my($artist1,$album1,$track1,$comment1) = map{s/"/\\"/g;$_}($artist,$album,$track,$comment);
 
-	my $mp3 = MP3::Tag->new("$tmp$file.mp3");
-	my $id3v2 = $mp3->new_tag('ID3v2');
+		my $mp3 = MP3::Tag->new("$tmp$file.mp3");
+		my $id3v2 = $mp3->new_tag('ID3v2');
 
-	$id3v2->add_frame('TALB',$album1) if $album;
-	$id3v2->add_frame('TPE1',$artist1) if $artist;
-	$id3v2->add_frame('TIT2',$track1) if $track;
-	$id3v2->add_frame('TRCK',$number) if $number;
-	$id3v2->add_frame('TYER',$year) if $year;
-	$id3v2->add_frame('TCON',$genre) if $genre;
-	$id3v2->write_tag;
+		$id3v2->add_frame('TALB',$album1) if $album;
+		$id3v2->add_frame('TPE1',$artist1) if $artist;
+		$id3v2->add_frame('TIT2',$track1) if $track;
+		$id3v2->add_frame('TRCK',$number) if $number;
+		$id3v2->add_frame('TYER',$year) if $year;
+		$id3v2->add_frame('TCON',$genre) if $genre;
+		$id3v2->write_tag;
 
-	$aartist = safe_chars($aartist);
-	$album = safe_chars($album);
+		$aartist = safe_chars($aartist);
+		$album = safe_chars($album);
 
-	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
+		my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
 
-	`mkdir -p $folder` unless -d $folder;
-	`mv $tmp$file.mp3 $folder` if -f "$tmp$file.mp3";
-	`chown nobody:nobody $folder$file.mp3` if -f "$folder$file.mp3";
-	print STDERR "mv $tmp$file.mp3 $folder\n";
+		`mkdir -p $folder` unless -d $folder;
+		`mv $tmp$file.mp3 $folder`;
+		`chown nobody:nobody $folder$file.mp3` if -f "$folder$file.mp3";
+		print STDERR "mv $tmp$file.mp3 $folder\n";
+	}
 
 	return 1;
 }

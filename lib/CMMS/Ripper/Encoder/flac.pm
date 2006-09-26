@@ -41,9 +41,10 @@ sub _encode {
 			last;
 		}
 
-		if(/can't open input file/ || /ERROR/) {
+		if(/can't open input file/ || /ERROR/ || /unexpected EOF/) {
 			$self->{status}->set(data => 'Encoding error');
 			print STDERR "Encoding error: $_\n";
+			`rm -f $tmp$file.flac` if -f "$tmp$file.flac";
 			last;
 		}
 	}
@@ -52,15 +53,17 @@ sub _encode {
 	close($FLAC);
 	waitpid $pid, 0;
 
-	$aartist = safe_chars($aartist);
-	$album = safe_chars($album);
+	if(-f "$tmp$file.flac") {
+		$aartist = safe_chars($aartist);
+		$album = safe_chars($album);
 
-	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
+		my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
 
-	`mkdir -p $folder` unless -d $folder;
-	`mv $tmp$file.flac $folder` if -f "$tmp$file.flac";
-	`chown nobody:nobody $folder$file.flac` if -f "$folder$file.flac";
-	print STDERR "mv $tmp$file.flac $folder\n";
+		`mkdir -p $folder` unless -d $folder;
+		`mv $tmp$file.flac $folder`;
+		`chown nobody:nobody $folder$file.flac` if -f "$folder$file.flac";
+		print STDERR "mv $tmp$file.flac $folder\n";
+	}
 
 	return 1;
 }

@@ -59,11 +59,12 @@ sub default {
 	my $tmp = $self->{conf}->{ripper}->{tmpdir};
 
 	my $discid = $self->{discid};
+	my $dischex = md5_hex($discid);
 	my $metadata = {
 		GENRE => 'Misc',
 		DISCID => $self->{discid},
 		ARTIST => 'Unknown',
-		ALBUM => 'Unknown '.$discid
+		ALBUM => $dischex
 	};
 
 	my $query = '';
@@ -77,10 +78,10 @@ sub default {
 	#===========================================================
 	#  1.    22557 [05:00.57]        0 [00:00.00]    no   no  2
 	#  2.    14365 [03:11.40]    22557 [05:00.57]    no   no  2
+	#TOTAL  304810 [67:44.10]    (audio only)
+
 	my @tracks = ($query =~ /\s+([0-9]+)\.\s+/g);
-	my @offsets = grep{($_*75)}($query =~ /\]\s+([0-9]+)\s+\[/g);
-	#my($total) = ($query =~ /TOTAL\s+([0-9]+)/);
-	#$total = $total / 60;
+	my @offsets = map{@_=split(':',$_);(($_[0]*60)+$_[1])*75}($query =~ /\][^\]]+\[([^\]]+)\]/g);
 
 	my($mins,$secs) = ($query =~ /TOTAL\s+[0-9]+\s+\[([0-9]+):([0-9\.]+)\]/);
 	my $total = ($mins * 60) + $secs;
@@ -100,7 +101,7 @@ sub default {
 # Normalized: r4:DSETVAR1
 #
 DISCID=$discid
-DTITLE=Unknown / Unknown $discid
+DTITLE=Unknown / $dischex
 ".join("\n",map{'TTITLE'.($_-1)."=Track $_"}@tracks)."
 EXTD=
 ".join("\n",map{'EXTT'.($_-1).'='}@tracks)."

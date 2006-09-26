@@ -101,7 +101,7 @@ sub encode {
 	foreach my $track (@{$metadata->{TRACKS}}) {
 		my $artist = $track->artist;
 		$artist = 'Unknown' if $artist =~ /^unknown/i;
-		my $file = safe_chars(sprintf('%02d',$track->number).' '.$artist.' '.$track->title);
+		my $file = substr(safe_chars(sprintf('%02d',$track->number).' '.$track->title),0,35);
 		if(-f "$tmp$file.wav") {
 			print STDERR "$tmp$file.wav\n";
 			$self->add_to_log( "INFO", "ripper/encode", "Encoding track ".$track->number." ".$track->title);
