@@ -19,16 +19,16 @@ sub metadata {
     $discid or $discid = $self->discid;
 
     my $mc = $self->mysqlConnection;
-    
+
     my($metadata) = $self->{FreeDB}->query($discid);
     my $albumdata = {};
-    
+
     if($metadata->{ALBUM}) {
 	$albumdata = $self->{FreeDB}->read($metadata->{GENRE},$metadata->{DISCID});
     } else {
 	($metadata,$albumdata) = $self->default;
     }
-    
+
     $self->{GENRE}    = $metadata->{GENRE};
     $self->{DISCID}   = $metadata->{DISCID};
     $self->{ARTIST}   = $metadata->{ARTIST};
@@ -37,7 +37,7 @@ sub metadata {
     $self->{YEAR}     = $albumdata->year;
     my @tracks        = $albumdata->tracks;
     $self->{TRACKS}   = \@tracks;
-    
+
     return $self;
 }
 

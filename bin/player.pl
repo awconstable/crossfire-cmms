@@ -91,7 +91,7 @@ while(1) {
 						my $file = $last;
 						$file = $1 unless $last;
 						$file .= ".$type" unless $file =~ /\.$type$/;
-						$buff = "240: songtype $file\r\n220: canplay mod_flac123 $file\r\n230: play mod_flac123 $file\r\n230: playing\r\n200: play mod_flac123 $file";
+						$buff = "240: songtype $file\r\n220: canplay mod_${type}123 $file\r\n230: play mod_${type}123 $file\r\n230: playing\r\n200: play mod_${type}123 $file";
 					} elsif($buff =~ /\@P 0/) {
 						$buff = "230: stop\r\n200: stop";
 					} else {

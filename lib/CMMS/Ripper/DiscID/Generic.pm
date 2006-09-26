@@ -101,8 +101,8 @@ sub default {
 #
 DISCID=$discid
 DTITLE=Unknown / Unknown $discid
-".join("\n",map{'TTITLE'.($_-1)."=Unknown / Track $_"}@tracks)."
-EXTD=CMMSRipper
+".join("\n",map{'TTITLE'.($_-1)."=Track $_"}@tracks)."
+EXTD=
 ".join("\n",map{'EXTT'.($_-1).'='}@tracks)."
 PLAYORDER=
 ";
