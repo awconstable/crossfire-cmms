@@ -1,4 +1,4 @@
-#$Id: playlist_current.pm,v 1.14 2006/08/11 20:46:46 toby Exp $
+#$Id: playlist_current.pm,v 1.15 2006/09/26 11:45:57 byngmeister Exp $
 
 package CMMS::Database::playlist_current;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -55,6 +55,7 @@ sub new {
     relationshiporder => [ ],
     no_broadcast => 1,
     no_clone => 1,
+    order_by => 'track_order',
     elements => {
             'id' => {
 	        type => "int",
@@ -121,6 +122,7 @@ sub new {
 	    foreignkey => "track_id",
 	    title => "Track data",
 	    tag => "track_data",
+	    order_by => 'file_name',
 	    display => [
 	    		{ col => "file_location", title => "File location" },
 	    		{ col => "file_name", title => "Filename" },

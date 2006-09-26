@@ -1,4 +1,4 @@
-#$Id: track_data.pm,v 1.10 2006/07/03 15:42:07 byngmeister Exp $
+#$Id: track_data.pm,v 1.11 2006/09/26 11:45:57 byngmeister Exp $
 
 package CMMS::Database::track_data;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -55,6 +55,7 @@ sub new {
     relationshiporder => [ ],
     no_broadcast => 1,
     no_clone => 1,
+    order_by => 'file_name',
     elements => {
             'id' => {
 	        type => "int",

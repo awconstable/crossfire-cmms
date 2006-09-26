@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.18 2006/09/25 14:56:17 byngmeister Exp $
+#$Id: track.pm,v 1.19 2006/09/26 11:45:57 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use MP3::Tag;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -58,6 +58,7 @@ sub new {
     no_broadcast => 1,
     no_clone => 1,
     no_create => 1,
+    order_by => 'track_num',
     elements => {
             'id' => {
 	        type => "int",
@@ -166,6 +167,7 @@ sub new {
 	    foreignkey => "track_id",
 	    title => "Track data",
 	    tag => "track_data",
+	    order_by => 'file_name',
 	    display => [
 	    		{ col => "file_location", title => "File location" },
 	    		{ col => "file_name", title => "Filename" },

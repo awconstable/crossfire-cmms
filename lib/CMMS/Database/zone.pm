@@ -1,4 +1,4 @@
-#$Id: zone.pm,v 1.2 2006/08/11 20:46:46 toby Exp $
+#$Id: zone.pm,v 1.3 2006/09/26 11:45:57 byngmeister Exp $
 
 package CMMS::Database::zone;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -55,6 +55,7 @@ sub new {
     relationshiporder => [ ],
     no_broadcast => 1,
     no_clone => 1,
+    order_by => 'name',
     elements => {
             'id' => {
 	        type => "int",

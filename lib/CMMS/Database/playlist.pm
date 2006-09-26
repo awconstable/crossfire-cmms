@@ -1,4 +1,4 @@
-#$Id: playlist.pm,v 1.11 2006/08/14 07:58:32 toby Exp $
+#$Id: playlist.pm,v 1.12 2006/09/26 11:45:57 byngmeister Exp $
 
 package CMMS::Database::playlist;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use CMMS::Database::playlist_track;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -70,6 +70,7 @@ sub new {
 	},
     },
     default_view => "TrackList",
+    order_by => 'name',
     elements => {
             'id' => {
 	        type => "int",
@@ -100,6 +101,7 @@ sub new {
 	    position_field => "track_order",
 	    position => 1,
 	    no_clone => 1,
+	    order_by => 'track_order',
 	    display => [
 	    		{ col => "track_id", title => "Track" },
 	    		{ col => "track_order", title => "Order" },
