@@ -30,3 +30,5 @@ fi
 
 /usr/bin/perl /usr/libexec/webmin/changepass.pl /etc/webmin setup setup
 /usr/bin/perl /usr/libexec/webmin/changepass.pl /etc/webmin cms cms
+/bin/rm -f /etc/webmin/module.infos.cache
+/sbin/service webmin restart
