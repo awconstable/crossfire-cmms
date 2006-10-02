@@ -8,7 +8,7 @@ use CMMS::Ripper::DiscID::CorewareFreeDB;
 sub new {
 	my $class = shift;
 	my $self = bless $class->SUPER::new(@_), $class;
-	$self->{FreeDB} = new CMMS::Ripper::DiscID::CorewareFreeDB;
+	$self->{FreeDB} = new Net::FreeDB(TIMEOUT => 20);
 
 	return $self;
 }
@@ -20,7 +20,7 @@ sub metadata {
 
     my $mc = $self->mysqlConnection;
 
-    my($metadata) = $self->{FreeDB}->query($discid);
+    my($metadata) = $self->{FreeDB}?$self->{FreeDB}->query($discid):{};
     my $albumdata = {};
 
     if($metadata->{ALBUM}) {
