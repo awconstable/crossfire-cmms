@@ -117,7 +117,10 @@ while(<TRACK>) {
 }
 close(TRACK);
 
-my $ripper = new CMMS::Ripper(conf => '/etc/cmms.conf');
+my $ripper = new CMMS::Ripper(
+	nocache => 1,
+	conf => '/etc/cmms.conf'
+);
 
 foreach my $album (values %{$tables->{album}->{albums}}) {
 	my $total = 0;
