@@ -31,6 +31,8 @@ GetOptions(
 
 &usage if $help || !$sql || !$media;
 
+$media =~ s|/$||;
+
 my $csv = new Text::CSV_XS({sep_char=>"\t"});
 
 my $null = '\\\\N';
@@ -46,16 +48,15 @@ while(<SQL>) {
 
 	if(/copy "($tabl)" from/i) {
 		$table = $1;
-		print STDERR "Table [$table] start\n";
+		print STDERR "Table [$table]\n";
 	} elsif($table && /\\\./) {
-		print STDERR "Table [$table] end\n";
 		$table = undef;
 	} elsif($table) {
 		$csv->parse($_);
 		@_ = $csv->fields;
 
 		if($table eq 'identity') {
-			$tables->{$table}->{$_[0]} = {name=>$_[1]};
+			$tables->{$table}->{$_[0]} = {name=>$_[1]} if defined $_[1];
 		}
 
 		if($table eq 'album') {
@@ -136,6 +137,11 @@ foreach my $album (values %{$tables->{album}}) {
 		my $newname = substr(safe_chars(sprintf('%02d',$track->{number}).' '.$track->{title}),0,35);
 		`cp $media/$track->{file} /tmp/$newname.wav`;
 	}
+
+	use Data::Dumper;print Dumper($offsets);exit 0;
+
+	# Normalize wav volume
+	`nice -n 10 normalize -b /tmp/*.wav`;
 
 	open(CDDB,'> /tmp/album.cddb');
 	print CDDB "# xmcd

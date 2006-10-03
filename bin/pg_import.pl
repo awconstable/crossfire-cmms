@@ -23,6 +23,8 @@ GetOptions(
 
 &usage if $help || !$sql || !$media;
 
+$media =~ s|/$||;
+
 my $base = $sql;
 $base =~ s/[^\/]+$//;
 

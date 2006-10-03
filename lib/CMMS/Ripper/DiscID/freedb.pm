@@ -3,7 +3,7 @@ package CMMS::Ripper::DiscID::freedb;
 use strict;
 use warnings;
 use base qw(CMMS::Ripper::DiscID::Generic);
-use CMMS::Ripper::DiscID::CorewareFreeDB;
+use Net::FreeDB;
 
 sub new {
 	my $class = shift;
