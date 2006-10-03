@@ -94,7 +94,7 @@ while(<SQL>) {
 
 		if($table eq 'staticplaylist') {
 			$tables->{track}->{$_[2]} = {} unless $tables->{track}->{$_[2]};
-			$tables->{track}->{$_[2]}->{number} = ($_[1]+1);
+			$tables->{track}->{$_[2]}->{track_num} = ($_[1]+1);
 		}
 
 		if($table eq 'cddb_genres' || $table eq 'cddb_sub_genres') {
@@ -131,14 +131,13 @@ my $ripper = new CMMS::Ripper(
 foreach my $album (values %{$tables->{album}}) {
 	my $total = 0;
 	my $offsets = [];
-	foreach my $track (@{$album->{tracks}}) {
+	my @tracks = sort{$a->{track_num}<=>$b->{track_num}} @{$album->{tracks}};
+	foreach my $track (@tracks) {
 		push @{$offsets}, ($total*75);
 		$total += $track->{length_seconds};
-		my $newname = substr(safe_chars(sprintf('%02d',$track->{number}).' '.$track->{title}),0,35);
+		my $newname = substr(safe_chars(sprintf('%02d',$track->{track_num}).' '.$track->{title}),0,35);
 		`cp $media/$track->{file} /tmp/$newname.wav`;
 	}
-
-	use Data::Dumper;print Dumper($offsets);exit 0;
 
 	# Normalize wav volume
 	`nice -n 10 normalize -b /tmp/*.wav`;
@@ -147,8 +146,7 @@ foreach my $album (values %{$tables->{album}}) {
 	print CDDB "# xmcd
 #
 # Track frame offsets:
-".join("
-",map{"#       $_"}@{$offsets})."
+".join("\n",map{"#       $_"}@{$offsets})."
 #
 # Disc length: $total seconds
 #
@@ -159,15 +157,15 @@ foreach my $album (values %{$tables->{album}}) {
 #
 DISCID=$album->{discid}
 DTITLE=$album->{tracks}->[0]->{artist} / $album->{name}
-".join("\n",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@{$album->{tracks}})."
+".join("\n",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@tracks)."
 EXTD=
-".join("\n",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@{$album->{tracks}})."
+".join("\n",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@tracks)."
 PLAYORDER=
 ";
 	close(CDDB);
 	my $albumdata = new CDDB::File('/tmp/album.cddb');
 
-	my @tracks = $albumdata->tracks;
+	@tracks = $albumdata->tracks;
 
 	my $metadata = {
 		GENRE => $album->{genre},
@@ -182,6 +180,7 @@ PLAYORDER=
 		$ripper->encode($metadata);
 		$ripper->cover($metadata);
 		$ripper->store($metadata);
+		$ripper->purge;
 	} else {
 		warn "Album $album->{name} already ripped";
 	}

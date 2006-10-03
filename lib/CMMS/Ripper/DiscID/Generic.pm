@@ -90,8 +90,7 @@ sub default {
 	print CDDB "# xmcd
 #
 # Track frame offsets:
-".join("
-",map{"#       $_"}@offsets)."
+".join("\n",map{"#       $_"}@offsets)."
 #
 # Disc length: $total seconds
 #

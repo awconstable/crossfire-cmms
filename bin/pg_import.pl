@@ -140,8 +140,7 @@ foreach my $album (values %{$tables->{album}->{albums}}) {
 	print CDDB "# xmcd
 #
 # Track frame offsets:
-".join("
-",map{"#       $_"}@{$offsets})."
+".join("\n",map{"#       $_"}@{$offsets})."
 #
 # Disc length: $total seconds
 #
