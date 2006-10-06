@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.21 2006/10/06 13:14:24 byngmeister Exp $
+#$Id: track.pm,v 1.22 2006/10/06 13:42:46 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use MP3::Tag;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -215,6 +215,8 @@ sub get_self {
 track.*,
 album.name as album_id,
 artist.name as artist_id,
+composer.name as composer_id,
+conductor.name as conductor_id,
 genre.name as genre_id
 EndSelects
     ;
@@ -223,6 +225,8 @@ EndSelects
 track,
 album,
 artist,
+composer,
+conductor,
 genre
 EndTables
     ;
@@ -230,6 +234,8 @@ EndTables
     my $where = <<EndWhere
 album.id = track.album_id
 and artist.id = track.artist_id
+and composer.id = track.composer_id
+and conductor.id = track.conductor_id
 and genre.id = track.genre_id
 $extras
 EndWhere
