@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.20 2006/09/26 12:07:41 byngmeister Exp $
+#$Id: track.pm,v 1.21 2006/10/06 13:14:24 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use MP3::Tag;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -50,9 +50,9 @@ sub new {
     tag => "track",
     title => "Track",
     title_field => "title",
-    display => [ "id", "track_num", "artist_id", "album_id", "title", "genre_id", "length_seconds", "comment", "year", "composer", "ctime"  ],
-    list_display => [ "artist_id", "album_id", "title", "genre_id", ],
-    tagorder => [ "id", "album_id", "artist_id", "genre_id", "title", "track_num", "length_seconds", "ctime", "comment", "year", "composer",  ],
+    display => [ "id", "track_num", "artist_id", "composer_id", "conductor_id", "album_id", "title", "genre_id", "length_seconds", "comment", "year", "ctime"  ],
+    list_display => [ "artist_id", "album_id", "composer_id", "conductor_id", "title", "genre_id", ],
+    tagorder => [ "id", "album_id", "artist_id", "composer_id", "conductor_id", "genre_id", "title", "track_num", "length_seconds", "ctime", "comment", "year"  ],
     tagrelationorder => [ ],
     relationshiporder => [ "track_data" ],
     no_broadcast => 1,
@@ -92,6 +92,30 @@ sub new {
 		    read_only => 1,
 		},
 		mandatory => 1,
+            },
+            'composer_id' => {
+	        type => "int",
+		tag  => "Composer",
+		title => "Composer",
+		lookup => {
+		    table => "composer",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		}
+            },
+            'conductor_id' => {
+	        type => "int",
+		tag  => "Conductor",
+		title => "Conductor",
+		lookup => {
+		    table => "conductor",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		}
             },
             'genre_id' => {
 	        type => "int",
@@ -150,14 +174,7 @@ sub new {
 		title => "Year",
 		size => 4,
 		maxsize => 4,
-            },
-            'composer' => {
-	        type => "varchar",
-		tag  => "Composer",
-		title => "Composer",
-		size => 40,
-		maxsize => 255,
-            },
+            }
 
     },
     relationships => {

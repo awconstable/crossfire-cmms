@@ -1,14 +1,12 @@
-#$Id: artist.pm,v 1.12 2006/10/06 13:14:24 byngmeister Exp $
-
-package CMMS::Database::artist;
+package CMMS::Database::conductor;
 
 =head1 NAME
 
-CMMS::Database::artist
+CMMS::Database::conductor
 
 =head1 SYNOPSIS
 
-  use CMMS::Database::artist;
+  use CMMS::Database::conductor;
 
 =head1 DESCRIPTION
 
@@ -20,7 +18,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -33,7 +31,7 @@ sub new {
   
   # Create the object
   #
-  my $self = new CMMS::Database::Object( $dbInterface, "artist", $id );
+  my $self = new CMMS::Database::Object( $dbInterface, "conductor", $id );
  
   # Bless the object
   #
@@ -45,9 +43,9 @@ sub new {
   # Setup object definitions
   #
   $self->definition({
-    name => "artist",
-    tag => "artist",
-    title => "artist",
+    name => "conductor",
+    tag => "conductor",
+    title => "conductor",
     display => [ "id", "name",  ],
     list_display => [ "name"  ],
     tagorder => [ "id", "name",  ],
@@ -77,7 +75,7 @@ sub new {
 	'album' => {
 	    type => "one2many",
 	    localkey => "id",
-	    foreignkey => "artist_id",
+	    foreignkey => "conductor_id",
 	    title => "Album(s)",
 	    tag => "album",
 	    order_by => 'name',
@@ -93,7 +91,7 @@ sub new {
 	'track' => {
 	    type => "one2many",
 	    localkey => "id",
-	    foreignkey => "artist_id",
+	    foreignkey => "conductor_id",
 	    title => "Track(s)",
 	    tag => "track",
 	    order_by => 'title',
@@ -114,6 +112,35 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+sub get_self {
+    my $self = shift;
+    my $page = shift;
+    my $size = shift;
+    my $extras = shift;
+
+    $extras and $extras = "and $extras";
+
+    my $selects = <<EndSelects
+conductor.*
+EndSelects
+    ;
+
+    my $tables = <<EndTables
+conductor,
+track
+EndTables
+    ;
+
+    my $where = <<EndWhere
+track.conductor_id = conductor.id
+group by conductor.id
+order by conductor.name
+EndWhere
+    ;
+
+    return $self->get_list( "conductor", $page, $size, { tables=>$tables, select => $selects, where => $where, dump_sql=>1 } );
 }
 
 sub get_album_list {
@@ -140,7 +167,7 @@ EndTables
     ;
 
     my $where = <<EndWhere
-album.artist_id = $id
+album.conductor_id = $id
 and artist.id = album.artist_id
 and composer.id = album.composer_id
 and conductor.id = album.conductor_id
@@ -178,7 +205,7 @@ EndTables
     ;
 
     my $where = <<EndWhere
-track.artist_id = $id
+track.conductor_id = $id
 and album.id = track.album_id
 and artist.id = track.artist_id
 and composer.id = track.composer_id

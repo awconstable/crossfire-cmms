@@ -1,4 +1,4 @@
-#$Id: album.pm,v 1.15 2006/10/06 10:19:17 byngmeister Exp $
+#$Id: album.pm,v 1.16 2006/10/06 13:14:24 byngmeister Exp $
 
 package CMMS::Database::album;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -49,9 +49,9 @@ sub new {
     tag => "album",
     title => "Album",
     title_field => "name",
-    display => [ "id", "name", "conductor", "discid", "year", "comment", "cover", "artist_id", "genre_id"  ],
+    display => [ "id", "name", "discid", "year", "comment", "cover", "artist_id", "composer_id", "conductor_id", "genre_id"  ],
     list_display => [ "name", "cover",  ],
-    tagorder => [ "id", "discid", "name", "conductor", "year", "comment", "cover",  ],
+    tagorder => [ "id", "discid", "name", "year", "comment", "cover",  ],
     tagrelationorder => [ ],
     relationshiporder => [ "track" ],
     no_broadcast => 1,
@@ -78,6 +78,30 @@ sub new {
 		    read_only => 1,
 		},
 		mandatory => 1,
+            },
+            'composer_id' => {
+	        type => "int",
+		tag  => "Composer",
+		title => "Composer",
+		lookup => {
+		    table => "composer",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		}
+            },
+            'conductor_id' => {
+	        type => "int",
+		tag  => "Conductor",
+		title => "Conductor",
+		lookup => {
+		    table => "conductor",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		}
             },
             'genre_id' => {
 	        type => "int",
@@ -106,13 +130,6 @@ sub new {
 		size => 80,
 		maxsize => 255,
 		mandatory => 1,
-            },
-            'conductor' => {
-	        type => "varchar",
-		tag  => "Conductor",
-		title => "Conductor",
-		size => 40,
-		maxsize => 255,
             },
             'year' => {
 	        type => "varchar",
@@ -158,6 +175,8 @@ sub new {
 	    order_by => 'track_num',
 	    display => [
 	    		{ col => "artist_id", title => "Artist" },
+	    		{ col => "composer_id", title => "Composer" },
+	    		{ col => "conductor_id", title => "Conductor" },
 	    		{ col => "genre_id", title => "Genre" },
 	    		{ col => "title", title => "Title" },
 	    		{ col => "track_num", title => "Track No." },
@@ -182,6 +201,8 @@ sub get_track_list {
 track.*,
 album.name as album_id,
 artist.name as artist_id,
+composer.name as composer_id,
+conductor.name as conductor_id,
 genre.name as genre_id
 EndSelects
     ;
@@ -190,6 +211,8 @@ EndSelects
 track,
 album,
 artist,
+composer,
+conductor,
 genre
 EndTables
     ;
@@ -198,6 +221,8 @@ EndTables
 track.album_id = $id
 and album.id = track.album_id
 and artist.id = track.artist_id
+and composer.id = track.composer_id
+and conductor.id = track.conductor_id
 and genre.id = track.genre_id
 order by track.track_num
 EndWhere

@@ -8,6 +8,26 @@ CREATE TABLE artist (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE conductor (
+  id INT(11) NOT NULL auto_increment,
+  name VARCHAR(255) NOT NULL,
+  _perm_user INT(16) DEFAULT '1',
+  _perm_group INT(16) DEFAULT '1',
+  _perm_access INT(16) DEFAULT '664',
+  UNIQUE name (name),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE composer (
+  id INT(11) NOT NULL auto_increment,
+  name VARCHAR(255) NOT NULL,
+  _perm_user INT(16) DEFAULT '1',
+  _perm_group INT(16) DEFAULT '1',
+  _perm_access INT(16) DEFAULT '664',
+  UNIQUE name (name),
+  PRIMARY KEY (id)
+);
+
 CREATE TABLE genre (
   id INT(11) NOT NULL auto_increment,
   name VARCHAR(124) NOT NULL,
@@ -22,9 +42,10 @@ CREATE TABLE album (
   id INT(11) NOT NULL auto_increment,
   discid VARCHAR(255),
   artist_id INT(11),
+  composer_id INT(11),
+  conductor_id INT(11),
   genre_id INT(11),
   name VARCHAR(255) NOT NULL,
-  conductor varchar(255),
   year VARCHAR(4),
   comment TEXT,
   cover VARCHAR(255),
@@ -39,6 +60,8 @@ CREATE TABLE track (
   id INT(11) NOT NULL auto_increment,
   album_id INT(11),
   artist_id INT(11),
+  composer_id INT(11),
+  conductor_id INT(11),
   genre_id INT(11),
   title VARCHAR(255) NOT NULL,
   track_num SMALLINT NOT NULL,
@@ -46,7 +69,6 @@ CREATE TABLE track (
   ctime timestamp,
   comment text,
   year varchar(4),
-  composer varchar(255),
   _perm_user INT(16) DEFAULT '1',
   _perm_group INT(16) DEFAULT '1',
   _perm_access INT(16) DEFAULT '664',
