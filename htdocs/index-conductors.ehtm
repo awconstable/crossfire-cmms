@@ -1,0 +1,23 @@
+[-
+($session_id, $cgi, $mc) = @param;
+-]
+<div class="subtitle">Conductors</div>
+<form name="fw" method="post" action="index.ehtml" enctype="multipart/form-data">
+<input type="hidden" name="v" value="conductors">
+<script type="text/javascript">
+<!--
+
+// Variables
+
+function submitform( view )
+{
+      document.body.style.cursor = 'wait';
+      document.fw.submit();
+}
+
+
+ 
+// -->
+</script>
+[- Execute "embselect_conductor.ehtm" -]
+</form>
