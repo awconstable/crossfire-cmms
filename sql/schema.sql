@@ -24,6 +24,7 @@ CREATE TABLE album (
   artist_id INT(11),
   genre_id INT(11),
   name VARCHAR(255) NOT NULL,
+  conductor varchar(255),
   year VARCHAR(4),
   comment TEXT,
   cover VARCHAR(255),
