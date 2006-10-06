@@ -10,7 +10,7 @@ CREATE TABLE artist (
 
 CREATE TABLE conductor (
   id INT(11) NOT NULL auto_increment,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
   _perm_user INT(16) DEFAULT '1',
   _perm_group INT(16) DEFAULT '1',
   _perm_access INT(16) DEFAULT '664',
@@ -20,7 +20,7 @@ CREATE TABLE conductor (
 
 CREATE TABLE composer (
   id INT(11) NOT NULL auto_increment,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
   _perm_user INT(16) DEFAULT '1',
   _perm_group INT(16) DEFAULT '1',
   _perm_access INT(16) DEFAULT '664',
