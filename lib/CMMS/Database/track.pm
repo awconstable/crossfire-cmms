@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.23 2006/10/09 08:30:00 byngmeister Exp $
+#$Id: track.pm,v 1.24 2006/10/09 08:45:14 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use MP3::Tag;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.23 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -289,7 +289,7 @@ sub push {
 		$id3v2->add_frame('TALB',$mc->enum_lookup('album','id','name',$self->get('album_id'))) if $mc->enum_lookup('album','id','name',$self->get('album_id'));
 		$id3v2->add_frame('TPE1',$mc->enum_lookup('artist','id','name',$self->get('artist_id'))) if $mc->enum_lookup('artist','id','name',$self->get('artist_id'));
 		$id3v2->add_frame('TIT2',$self->get('title')) if $self->get('title');
-		$id3v2->add_frame('TRCK',$self->get('track_number')) if $self->get('track_number');
+		$id3v2->add_frame('TRCK',$self->get('track_num')) if $self->get('track_num');
 		$id3v2->add_frame('TYER',$self->get('year')) if $self->get('year');
 		$id3v2->add_frame('TCOM',$mc->enum_lookup('composer','id','name',$self->get('composer_id'))) if $mc->enum_lookup('composer','id','name',$self->get('composer_id'));
 		$id3v2->add_frame('TPE3',$mc->enum_lookup('conductor','id','name',$self->get('conductor_id'))) if $mc->enum_lookup('conductor','id','name',$self->get('conductor_id'));
