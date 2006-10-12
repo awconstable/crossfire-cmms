@@ -258,7 +258,7 @@ sub store {
 
 	# Find the albums artist/genre IDs or create if it is not in database
 	my $aartist_id = $self->artist_find_or_create($aartist);
-	my $agenre_id  = $self->genre_find_or_create($agenre);
+	my $agenre_id  = $self->genre_find_or_create($meta->{GENRE});
 
 	# If no tracks exist, bug out
 	die("No tracks for this album") unless scalar @files; # Don't store album if no tracks

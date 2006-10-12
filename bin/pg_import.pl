@@ -174,7 +174,8 @@ PLAYORDER=
 
 	if($ripper->check($metadata)) {
 		$ripper->cover($metadata);
-		$ripper->store($metadata);
+		#$ripper->store($metadata);
+		$ripper->store_xml($metadata);
 	} else {
 		warn "Album $album->{name} already ripped";
 	}
