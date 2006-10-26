@@ -137,7 +137,7 @@ foreach my $album (values %{$tables->{album}->{albums}}) {
 	}
 
 	unless($album->{tracks}->[0]->{artist}) {
-		print STDERR "Empty artist\n";
+		print STDERR "album [$album->{name}] Empty artist\n";
 		next;
 	}
 
@@ -151,8 +151,13 @@ foreach my $album (values %{$tables->{album}->{albums}}) {
 		my $newname = lc $track->{file_name};
 		$newname =~ s/\W+/_/g;
 		$newname =~ s/_(mp3|flac|wav)$/.$1/g;
-		print STDERR "cp '$media/$track->{file_location}$track->{file_name}' '/usr/local/cmms/htdocs/media/$newlocation/$newname'\n";
+		#print STDERR "cp '$media/$track->{file_location}$track->{file_name}' '/usr/local/cmms/htdocs/media/$newlocation/$newname'\n";
 		`cp "$media/$track->{file_location}$track->{file_name}" "/usr/local/cmms/htdocs/media/$newlocation/$newname"` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
+	}
+
+	unless(scalar @{$offsets} > 1) {
+		print STDERR "album [$album->{name}] only has 1 track which breaks CDDB :(\n";
+		next;
 	}
 
 	open(CDDB,'> /tmp/album.cddb');
