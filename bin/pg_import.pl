@@ -99,6 +99,7 @@ while(<TRACK>) {
 	next unless $_;
 	$csv->parse($_);
 	@_ = $csv->fields;
+
 	push @{$tables->{album}->{albums}->{$_[1]}->{tracks}}, {
 		artist => $tables->{artist}->{artists}->{$_[2]}->{name},
 		genre => $tables->{genre}->{genres}->{$_[3]}->{name},
@@ -127,13 +128,24 @@ my $ripper = new CMMS::Ripper(
 foreach my $album (values %{$tables->{album}->{albums}}) {
 	my $total = 0;
 	my $offsets = [];
+
+	unless($album->{name}) {
+		print STDERR "Empty album\n";
+		next;
+	}
+
 	foreach my $track (@{$album->{tracks}}) {
 		push @{$offsets}, ($total*75);
 		$total += $track->{length_seconds};
-		`mkdir -p /usr/local/cmms/htdocs/media/$track->{file_location}` unless -d "/usr/local/cmms/htdocs/media/$track->{file_location}";
-		my $newname = $track->{file_name};
-		$newname =~ s/\-/_/g;
-		`cp $media/$track->{file_location}/$track->{file_name} /usr/local/cmms/htdocs/media/$track->{file_location}$newname`;
+		my $newlocation = lc $track->{file_location};
+		$newlocation =~ s|/$||;
+		$newlocation =~ s/[\s]+/_/g;
+		`mkdir -p "/usr/local/cmms/htdocs/media/$newlocation"` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
+		my $newname = lc $track->{file_name};
+		$newname =~ s/\W+/_/g;
+		$newname =~ s/_(mp3|flac|wav)$/.$1/g;
+		print STDERR "cp '$media/$track->{file_location}$track->{file_name}' '/usr/local/cmms/htdocs/media/$newlocation/$newname'\n";
+		`cp "$media/$track->{file_location}$track->{file_name}" "/usr/local/cmms/htdocs/media/$newlocation/$newname"`;
 	}
 
 	open(CDDB,'> /tmp/album.cddb');
@@ -174,8 +186,8 @@ PLAYORDER=
 
 	if($ripper->check($metadata)) {
 		$ripper->cover($metadata);
-		#$ripper->store($metadata);
-		$ripper->store_xml($metadata);
+		$ripper->store($metadata);
+		#$ripper->store_xml($metadata);
 	} else {
 		warn "Album $album->{name} already ripped";
 	}
