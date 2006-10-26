@@ -5,6 +5,8 @@ use Getopt::Long;
 use Text::CSV_XS;
 use CDDB::File;
 use CMMS::Ripper;
+use CMMS::File;
+use Digest::MD5 qw(md5_hex);
 
 my $tables = {
 	album => {albums=>{}},
@@ -134,18 +136,23 @@ foreach my $album (values %{$tables->{album}->{albums}}) {
 		next;
 	}
 
+	unless($album->{tracks}->[0]->{artist}) {
+		print STDERR "Empty artist\n";
+		next;
+	}
+
+	$album->{discid} = md5_hex($album->{name}) if $album->{discid} eq '';
+
 	foreach my $track (@{$album->{tracks}}) {
 		push @{$offsets}, ($total*75);
 		$total += $track->{length_seconds};
-		my $newlocation = lc $track->{file_location};
-		$newlocation =~ s|/$||;
-		$newlocation =~ s/[\s]+/_/g;
+		my $newlocation = safe_chars($album->{tracks}->[0]->{artist}).'/'.safe_chars($album->{name});
 		`mkdir -p "/usr/local/cmms/htdocs/media/$newlocation"` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
 		my $newname = lc $track->{file_name};
 		$newname =~ s/\W+/_/g;
 		$newname =~ s/_(mp3|flac|wav)$/.$1/g;
 		print STDERR "cp '$media/$track->{file_location}$track->{file_name}' '/usr/local/cmms/htdocs/media/$newlocation/$newname'\n";
-		`cp "$media/$track->{file_location}$track->{file_name}" "/usr/local/cmms/htdocs/media/$newlocation/$newname"`;
+		`cp "$media/$track->{file_location}$track->{file_name}" "/usr/local/cmms/htdocs/media/$newlocation/$newname"` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
 	}
 
 	open(CDDB,'> /tmp/album.cddb');
@@ -189,7 +196,7 @@ PLAYORDER=
 		$ripper->store($metadata);
 		#$ripper->store_xml($metadata);
 	} else {
-		warn "Album $album->{name} already ripped";
+		warn "Album [$album->{discid}] [$album->{name}] already ripped";
 	}
 }
 
