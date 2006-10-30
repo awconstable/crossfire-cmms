@@ -148,11 +148,11 @@ foreach my $album (values %{$tables->{album}->{albums}}) {
 		$total += $track->{length_seconds};
 		my $newlocation = safe_chars($album->{tracks}->[0]->{artist}).'/'.safe_chars($album->{name});
 		`mkdir -p "/usr/local/cmms/htdocs/media/$newlocation"` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
-		my $newname = lc $track->{file_name};
-		$newname =~ s/\W+/_/g;
-		$newname =~ s/_(mp3|flac|wav)$/.$1/g;
-		#print STDERR "cp '$media/$track->{file_location}$track->{file_name}' '/usr/local/cmms/htdocs/media/$newlocation/$newname'\n";
-		`cp "$media/$track->{file_location}$track->{file_name}" "/usr/local/cmms/htdocs/media/$newlocation/$newname"` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
+		my $number = sprintf('%02d',$track->{track_num});
+		my($ext) = ($track->{file_name} =~ /(mp3|flac|wav)$/i);
+		my $newname = substr(safe_chars($number.' '.$track->{title}),0,35).".$ext";
+		#print STDERR "cp '$media/$track->{file_location}$track->{file_name}' /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
+		`cp "$media/$track->{file_location}$track->{file_name}" /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
 	}
 
 	unless(scalar @{$offsets} > 1) {
