@@ -7,6 +7,7 @@ use CDDB::File;
 use CMMS::Ripper;
 use CMMS::File;
 use Digest::MD5 qw(md5_hex);
+use POSIX qw(floor);
 
 my $tables = {
 	album => {albums=>{}},
@@ -45,25 +46,38 @@ while(<SQL>) {
 }
 close(SQL);
 
-my $null = '\\\\N';
+my $null = quotemeta '\\N';
 
 my $csv = new Text::CSV_XS({sep_char=>"\t"});
 
 open(ALBUM,'< '.$tables->{album}->{file});
+my $num = 0;
 while(<ALBUM>) {
 	s/[\r\n]+//;
 	s/$null//g;
 
 	next unless $_;
+	next unless /^[0-9]/;
+
+        s/"/""/g;
+        s/\t/"\t"/g;
+        s/^/"/;
+        s/$/"/;
+        s/[Ãºú©¶³]/?/g;
+
 	$csv->parse($_);
 	@_ = $csv->fields;
+	$_[0] = $num unless $_[0];
+
 	$tables->{album}->{albums}->{$_[0]} = {
-		discid => $_[1] || '',
-		name => $_[2] || '',
-		year => $_[3] || '',
-		comment => $_[4] || '',
+		discid => $_[1]?$_[1]:'',
+		name => $_[2]?$_[2]:'Unknown'.$num,
+		year => $_[3]?$_[3]:'',
+		comment => $_[4]?$_[4]:'',
 		tracks => []
 	};
+
+	$num++;
 }
 close(ALBUM);
 
@@ -73,6 +87,13 @@ while(<ARTIST>) {
 	s/$null//g;
 
 	next unless $_;
+
+        s/"/""/g;
+        s/\t/"\t"/g;
+        s/^/"/;
+        s/$/"/;
+        s/[Ãºú©¶³]/?/g;
+
 	$csv->parse($_);
 	@_ = $csv->fields;
 	next unless $_[1];
@@ -86,6 +107,13 @@ while(<GENRE>) {
 	s/$null//g;
 
 	next unless $_;
+
+        s/"/""/g;
+        s/\t/"\t"/g;
+        s/^/"/;
+        s/$/"/;
+        s/[Ãºú©¶³]/?/g;
+
 	$csv->parse($_);
 	@_ = $csv->fields;
 	next unless $_[1];
@@ -99,25 +127,37 @@ while(<TRACK>) {
 	s/$null//g;
 
 	next unless $_;
+	next unless /^[0-9]/;
+
+        s/"/""/g;
+        s/\t/"\t"/g;
+        s/^/"/;
+        s/$/"/;
+        s/[Ãºú©¶³]/?/g;
+
 	$csv->parse($_);
 	@_ = $csv->fields;
+	$_[1] = -1 unless $_[1];
+	$_[2] = -1 unless $_[2];
+	$_[3] = -1 unless $_[3];
+	next unless $_[6];
 
 	push @{$tables->{album}->{albums}->{$_[1]}->{tracks}}, {
 		artist => $tables->{artist}->{artists}->{$_[2]}->{name},
 		genre => $tables->{genre}->{genres}->{$_[3]}->{name},
-		title => $_[4] || '',
-		track_num => $_[5] || '',
-		file_location => $_[6] || '',
-		file_name => $_[7] || '',
-		file_type => $_[8] || '',
-		bitrate => $_[9] || '',
-		filesize => $_[10] || '',
-		length_seconds => $_[11] || '',
-		info_source => $_[12] || '',
-		ctime => $_[13] || '',
-		comment => $_[14] || '',
-		year => $_[15] || '',
-		composer => $_[16] || ''
+		title => $_[4]?$_[4]:'',
+		track_num => $_[5]?$_[5]:'',
+		file_location => $_[6]?$_[6]:'',
+		file_name => $_[7]?$_[7]:'',
+		file_type => $_[8]?$_[8]:'',
+		bitrate => $_[9]?$_[9]:'',
+		filesize => $_[10]?$_[10]:'',
+		length_seconds => $_[11]?$_[11]:1,
+		info_source => $_[12]?$_[12]:'',
+		ctime => $_[13]?$_[13]:'',
+		comment => $_[14]?$_[14]:'',
+		year => $_[15]?$_[15]:'',
+		composer => $_[16]?$_[16]:''
 	};
 }
 close(TRACK);
@@ -127,40 +167,67 @@ my $ripper = new CMMS::Ripper(
 	conf => '/etc/cmms.conf'
 );
 
-foreach my $album (values %{$tables->{album}->{albums}}) {
+while(my($album_id,$album) = each %{$tables->{album}->{albums}}) {
 	my $total = 0;
 	my $offsets = [];
 
+	my @tracks = sort{$a->{track_num} <=> $b->{track_num}}@{$album->{tracks}};
+
 	unless($album->{name}) {
-		print STDERR "Empty album\n";
-		next;
+		print STDERR "Empty album [$album_id]\n";
+		$album->{name} = 'Unknown';
 	}
 
-	unless($album->{tracks}->[0]->{artist}) {
-		print STDERR "album [$album->{name}] Empty artist\n";
-		next;
+	unless($tracks[0]->{artist}) {
+		print STDERR "album [$album_id] [$album->{name}] Empty artist\n";
+		$tracks[0]->{artist} = 'Unknown';
 	}
+
+	unless($tracks[0]->{genre}) {
+		print STDERR "album [$album_id] [$album->{name}] Empty genre\n";
+		$tracks[0]->{genre} = 'Unknown';
+	}
+
+	$album->{name} =~ s/#/No./g;
 
 	$album->{discid} = md5_hex($album->{name}) if $album->{discid} eq '';
 
-	foreach my $track (@{$album->{tracks}}) {
-		push @{$offsets}, ($total*75);
-		$total += $track->{length_seconds};
-		my $newlocation = safe_chars($album->{tracks}->[0]->{artist}).'/'.safe_chars($album->{name});
-		`mkdir -p "/usr/local/cmms/htdocs/media/$newlocation"` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
+	my $newlocation = safe_chars($tracks[0]->{artist}).'/'.safe_chars($album->{name});
+	`mkdir -p /usr/local/cmms/htdocs/media/$newlocation` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
+
+	foreach my $track (@tracks) {
+		next unless $track->{file_name};
+		$track->{title} =~ s/#/No./g;
 		my $number = sprintf('%02d',$track->{track_num});
 		my($ext) = ($track->{file_name} =~ /(mp3|flac|wav)$/i);
 		my $newname = substr(safe_chars($number.' '.$track->{title}),0,35).".$ext";
 		#print STDERR "cp '$media/$track->{file_location}$track->{file_name}' /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
 		`cp "$media/$track->{file_location}$track->{file_name}" /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
+
+		my $bitrate = 320*1024;
+		my $filesize = -s "/usr/local/cmms/htdocs/media/$newlocation/$newname";
+		my $size = $filesize*8;
+		$track->{length_seconds} = floor($size/$bitrate);
+		push @{$offsets}, ($total*75);
+		$total += $track->{length_seconds};
 	}
 
-	unless(scalar @{$offsets} > 1) {
-		print STDERR "album [$album->{name}] only has 1 track which breaks CDDB :(\n";
+	my $fname = md5_hex($album->{name});
+
+	unless(scalar @{$offsets}) {
+		print STDERR "album [$album_id] [$album->{name}] has no tracks\n";
 		next;
 	}
 
-	open(CDDB,'> /tmp/album.cddb');
+	unless(scalar @{$offsets} > 1) {
+		print STDERR "album [$fname] [$album_id] [$album->{name}] only has 1 track [$tracks[0]->{track_num}] which breaks CDDB :(\n";
+		$tracks[0]->{track_num} = 1;
+		push @{$offsets}, ($tracks[0]->{length_seconds}*75);
+		#next;
+	}
+
+	#open(CDDB,'> /tmp/album.cddb');
+	open(CDDB,"> /tmp/$fname.cddb");
 	print CDDB "# xmcd
 #
 # Track frame offsets:
@@ -174,26 +241,27 @@ foreach my $album (values %{$tables->{album}->{albums}}) {
 # Normalized: r4:DSETVAR1
 #
 DISCID=$album->{discid}
-DTITLE=$album->{tracks}->[0]->{artist} / $album->{name}
-".join("\n",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@{$album->{tracks}})."
+DTITLE=$tracks[0]->{artist} / $album->{name}
+".join("\n",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@tracks)."
 EXTD=".($album->{comment}?$album->{comment}:'')."
-".join("\n",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@{$album->{tracks}})."
+".join("\n",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@tracks)."
 PLAYORDER=
 ";
 	close(CDDB);
-	my $albumdata = new CDDB::File('/tmp/album.cddb');
+	#my $albumdata = new CDDB::File('/tmp/album.cddb');
+	my $albumdata = new CDDB::File("/tmp/$fname.cddb");
 
-	my @tracks = $albumdata->tracks;
+	my @meta_tracks = $albumdata->tracks;
 
 	my $metadata = {
-		GENRE => $album->{tracks}->[0]->{genre},
+		GENRE => $tracks[0]->{genre},
 		DISCID => $album->{discid},
 		discid => $album->{discid},
-		ARTIST => $album->{tracks}->[0]->{artist},
+		ARTIST => $tracks[0]->{artist},
 		ALBUM => $album->{name},
 		COMMENT => $album->{comment},
 		YEAR => $album->{year},
-		TRACKS => \@tracks
+		TRACKS => \@meta_tracks
 	};
 
 	if($ripper->check($metadata)) {

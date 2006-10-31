@@ -35,7 +35,7 @@ $media =~ s|/$||;
 
 my $csv = new Text::CSV_XS({sep_char=>"\t"});
 
-my $null = '\\\\N';
+my $null = quotemeta '\\N';
 my $tabl = join '|', keys %{$tables};
 my $table = undef;
 
@@ -52,6 +52,11 @@ while(<SQL>) {
 	} elsif($table && /\\\./) {
 		$table = undef;
 	} elsif($table) {
+		s/"/""/g;
+        	s/\t/"\t"/g;
+        	s/^/"/;
+        	s/$/"/;
+
 		$csv->parse($_);
 		@_ = $csv->fields;
 
@@ -156,7 +161,7 @@ foreach my $album (values %{$tables->{album}}) {
 # Normalized: r4:DSETVAR1
 #
 DISCID=$album->{discid}
-DTITLE=$album->{tracks}->[0]->{artist} / $album->{name}
+DTITLE=$tracks[0]->{artist} / $album->{name}
 ".join("\n",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@tracks)."
 EXTD=
 ".join("\n",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@tracks)."
@@ -171,7 +176,7 @@ PLAYORDER=
 		GENRE => $album->{genre},
 		DISCID => $album->{discid},
 		discid => $album->{discid},
-		ARTIST => $album->{tracks}->[0]->{artist},
+		ARTIST => $tracks[0]->{artist},
 		ALBUM => $album->{name},
 		TRACKS => \@tracks
 	};
