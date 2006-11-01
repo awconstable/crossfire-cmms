@@ -8,16 +8,16 @@ use CMMS::Ripper;
 use CMMS::File;
 use Digest::MD5 qw(md5_hex);
 
-my($base,$help);
+my($media,$help);
 GetOptions(
-	'base=s' => \$base,
+	'media=s' => \$media,
 	help => \$help
 );
 
-&usage if $help || !$base;
+&usage if $help || !$media;
 
 my $xmls = {};
-recurse($base);
+recurse($media);
 
 my $ripper = new CMMS::Ripper(
 	nocache => 1,
@@ -37,25 +37,24 @@ sub recurse {
 
 	foreach my $file (grep{!m|/\.+$|}<$folder/*>) {
 		recurse($file) if -d $file;
+		$file =~ s/(\W)/\\$1/g;
+		$file =~ s|\\/|/|g;
 		copy_files($file) if $file =~ /\.xml/i;
 	}
 }
 
 sub copy_files {
 	my $file = shift;
-	print STDERR "\tFiles [$file]\n";
+	my $folder = $file;
+	$folder =~ s|/[^/]+$||;
+	my $ext = scalar <$folder/*.flac>?'flac':'mp3';
 	$file =~ s/\\(\W)/$1/g;
 	my $xml = eval "XMLin(\$file)";
 	return undef if $@;
 
 	my $discid = md5_hex($xml->{Album}->{Name});
 	$xmls->{$discid} = $file unless $xmls->{$discid};
-
-	my $folder = $file;
-	$folder =~ s|/[^/]+$||;
-	$folder =~ s/(\W)/\\$1/g;
-	$folder =~ s|\\/|/|g;
-	my $ext = scalar <$folder/*.flac>?'flac':'mp3';
+	#return 1;
 
 	my $newlocation = safe_chars($xml->{Album}->{Artist}->{Name}).'/'.safe_chars($xml->{Album}->{Name});
 	`mkdir -p /usr/local/cmms/htdocs/media/$newlocation/` unless -d "/usr/local/cmms/htdocs/media/$newlocation/";
@@ -66,7 +65,7 @@ sub copy_files {
 		$old =~ s/(\W)/\\$1/g;
 		$old =~ s|\\/|/|g;
 		my $newname = substr(safe_chars($number.' '.$track->{Name}),0,35).".$ext";
-		print STDERR "cp $old /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
+		#print STDERR "cp $old /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
 		`cp $old /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
 	}
 
@@ -134,7 +133,7 @@ PLAYORDER=
 
 	if($ripper->check($metadata)) {
 		$ripper->cover($metadata);
-		$ripper->store($metadata);
+		eval "\$ripper->store(\$metadata)";
 		#$ripper->store_xml($metadata);
 	} else {
 		warn "Album [$discid] [$xml->{Album}->{Name}] already ripped";
@@ -148,6 +147,6 @@ sub usage {
 	$script =~ s^.+/^^;
 	$script =~ s/.+\\//;
 
-	print STDERR "Usage:\n\t$script -base [/media/usbdisk/root/]\n\n";
+	print STDERR "Usage:\n\t$script -media [/media/usbdisk/root/]\n\n";
 	exit 0;
 }
