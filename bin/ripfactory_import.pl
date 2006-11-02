@@ -19,7 +19,6 @@ GetOptions(
 my $xmls = {};
 my $cnt = 0;
 recurse($media);
-
 my $ripper = new CMMS::Ripper(
 	nocache => 1,
 	conf => '/etc/cmms.conf'
@@ -50,28 +49,24 @@ sub copy_files {
 	my $folder = $file;
 	$folder =~ s|/[^/]+$||;
 	my $ext = scalar <$folder/*.flac>?'flac':'mp3';
-	unless(`grep ISO-8859-1 $file`) {
-		print STDERR "\tChanging XML charset [$file]\n";
-		my $buff = '';
-		open(FH,'< '.$file);
-		while(<FH>) {
-			$buff .= $_;
-		}
-		close FH;
-		$buff =~ s/<\?(.+?)\?>/<?xml version="1.0" encoding="ISO-8859-1"?>/;
-		open(FH,'> '.$file);
-		print FH $buff;
-		close FH;
-		undef $buff;
-	}
 	$file =~ s/\\(\W)/$1/g;
-	my $xml = eval "XMLin(\$file)";
+	my $buff = '';
+	open(FH,'< '.$file);
+	while(<FH>) {
+		$buff .= $_;
+	}
+	close FH;
+	$buff =~ s/<\?(.+?)\?>/<?xml version="1.0" encoding="ISO-8859-1"?>/;
+	$buff =~ s/&/&amp;/g;
+	my $xml = eval "XMLin(\$buff)";
 	if($@) {
 		my $err = $@;
 		$err =~ s/[\r\n]/\\n/g;
 		print STDERR "\tCan't parse XML doc [$file] ($err)\n";
+		undef $buff;
 		return undef;
 	}
+	undef $buff;
 
 	unless($xml->{Album}->{Name}) {
 		print STDERR "Empty album\n";
@@ -85,7 +80,6 @@ sub copy_files {
 
 	my $discid = md5_hex($xml->{Album}->{Name});
 	$xmls->{$discid} = $xml unless $xmls->{$discid};
-	#return 1;
 
 	my $newlocation = safe_chars($xml->{Album}->{Artist}->{Name}).'/'.safe_chars($xml->{Album}->{Name});
 	`mkdir -p /usr/local/cmms/htdocs/media/$newlocation/` unless -d "/usr/local/cmms/htdocs/media/$newlocation/";
