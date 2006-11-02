@@ -260,8 +260,11 @@ sub store {
 	my $aartist_id = $self->artist_find_or_create($aartist);
 	my $agenre_id  = $self->genre_find_or_create($meta->{GENRE});
 
-	# If no tracks exist, bug out
-	die("No tracks for this album") unless scalar @files; # Don't store album if no tracks
+        # If no tracks exist, bug out
+        unless(scalar @files) {
+                warn 'No tracks for this album';
+                return undef;
+        }
 
 	my $mc = $self->mysqlConnection;
 
@@ -339,7 +342,11 @@ sub store_xml {
 	$self->add_to_log( "INFO", "store", "Storing album to XML" );
 	print STDERR "$folder\n";
 
-	die("No tracks for this album") unless scalar @files; # Don't store album if no tracks
+        # If no tracks exist, bug out
+        unless(scalar @files) {
+                warn 'No tracks for this album';
+                return undef;
+        }
 
 	my($artist_id,$album_id,$genre_id);
 
