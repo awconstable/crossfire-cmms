@@ -285,13 +285,8 @@ sub store {
 	$mc->query('INSERT INTO album (name,discid,year,comment,cover,artist_id,genre_id) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover,$aartist_id,$agenre_id)");
 	$album_id = $mc->last_id;
 
-
-	$self->add_to_log( "INFO", "store", "Adding genre of ".$meta->{GENRE} );
-	$sql = 'SELECT id FROM genre WHERE name = '.$mc->quote($meta->{GENRE});
-	($_) = @{$mc->query_and_get($sql)||[]};
-	$genre_id = $_->{id} || -1;
-
 	@files = ();
+	my $empty_album = 1;
 	foreach my $track (@{$meta->{TRACKS}}) {
 		my $track_num = sprintf('%02d',$track->number);
 		my $artist = $track->artist;
@@ -317,6 +312,8 @@ sub store {
 		$mc->query($sql);
 
 		my $track_id = $mc->last_id;
+		next unless $track_id;
+		$empty_album = 0;
 
 		foreach(@files) {
 			print STDERR "$_\n";
@@ -326,8 +323,8 @@ sub store {
 			$sql = 'INSERT INTO track_data (track_id,file_location,file_name,file_type,bitrate,filesize,info_source) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($track_id,$file_location,$file_name,$file_type,$bitrate,$filesize,$self->{conf}->{ripper}->{metadata})).')';
 			$mc->query($sql);
 		}
-
 	}
+	$mc->query('DELETE FROM album WHERE id = '.$album_id) if $empty_album;
 }
 
 sub store_xml {

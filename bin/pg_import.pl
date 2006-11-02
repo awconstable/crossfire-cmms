@@ -48,7 +48,10 @@ close(SQL);
 
 my $null = quotemeta '\\N';
 
-my $csv = new Text::CSV_XS({sep_char=>"\t"});
+my $csv = new Text::CSV_XS({
+	sep_char => "\t",
+	binary => 1
+});
 
 open(ALBUM,'< '.$tables->{album}->{file});
 my $num = 0;
@@ -226,8 +229,8 @@ while(my($album_id,$album) = each %{$tables->{album}->{albums}}) {
 		#next;
 	}
 
-	#open(CDDB,'> /tmp/album.cddb');
-	open(CDDB,"> /tmp/$fname.cddb");
+	open(CDDB,'> /tmp/album.cddb');
+	#open(CDDB,"> /tmp/$fname.cddb");
 	print CDDB "# xmcd
 #
 # Track frame offsets:
@@ -248,8 +251,8 @@ EXTD=".($album->{comment}?$album->{comment}:'')."
 PLAYORDER=
 ";
 	close(CDDB);
-	#my $albumdata = new CDDB::File('/tmp/album.cddb');
-	my $albumdata = new CDDB::File("/tmp/$fname.cddb");
+	my $albumdata = new CDDB::File('/tmp/album.cddb');
+	#my $albumdata = new CDDB::File("/tmp/$fname.cddb");
 
 	my @meta_tracks = $albumdata->tracks;
 
