@@ -308,7 +308,7 @@ sub store {
 			$mc->query('INSERT INTO artist (name) VALUES('.$artist.')');
 			$artist_id = $mc->last_id;
 		}
-		$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$genre_id,$ttitle,$track->number,$track->length)).',NOW())';
+		$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$agenre_id,$ttitle,$track->number,$track->length)).',NOW())';
 		$mc->query($sql);
 
 		my $track_id = $mc->last_id;
