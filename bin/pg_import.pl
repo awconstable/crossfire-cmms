@@ -4,6 +4,7 @@ use strict;
 use Getopt::Long;
 use Text::CSV_XS;
 use CDDB::File;
+use CMMS::Track;
 use CMMS::Ripper;
 use CMMS::File;
 use Digest::MD5 qw(md5_hex);
@@ -198,8 +199,10 @@ while(my($album_id,$album) = each %{$tables->{album}->{albums}}) {
 	my $newlocation = safe_chars($tracks[0]->{artist}).'/'.safe_chars($album->{name});
 	`mkdir -p /usr/local/cmms/htdocs/media/$newlocation` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
 
+	my $trck_num = 1;
 	foreach my $track (@tracks) {
 		next unless $track->{file_name};
+		$track->{track_num} = $track->{track_num}?$track->{track_num}:$trck_num++;
 		$track->{title} =~ s/#/No./g;
 		my $number = sprintf('%02d',$track->{track_num});
 		my($ext) = ($track->{file_name} =~ /(mp3|flac|wav)$/i);
@@ -254,7 +257,18 @@ PLAYORDER=
 	my $albumdata = new CDDB::File('/tmp/album.cddb');
 	#my $albumdata = new CDDB::File("/tmp/$fname.cddb");
 
-	my @meta_tracks = $albumdata->tracks;
+	my @meta_tracks = map{
+		$_ = new CMMS::Track($_);
+		$_->composer(
+			$tracks[($_->number-1)]->{composer}
+			?
+			$tracks[($_->number-1)]->{composer}
+			:
+			''
+		);
+		$_->conductor('');
+		$_
+	} $albumdata->tracks;
 
 	my $metadata = {
 		GENRE => $tracks[0]->{genre},
@@ -263,6 +277,8 @@ PLAYORDER=
 		ARTIST => $tracks[0]->{artist},
 		ALBUM => $album->{name},
 		COMMENT => $album->{comment},
+		COMPOSER => '',
+		CONDUCTOR => '',
 		YEAR => $album->{year},
 		TRACKS => \@meta_tracks
 	};

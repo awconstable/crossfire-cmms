@@ -3,7 +3,7 @@
 use strict;
 use Getopt::Long;
 use XML::Simple;
-use CDDB::File;
+use CMMS::Track::Enhanced;
 use CMMS::Ripper;
 use CMMS::File;
 use Digest::MD5 qw(md5_hex);
@@ -73,19 +73,32 @@ sub copy_files {
 		$xml->{Album}->{Name} = 'Unknown'.$cnt;
 	}
 
+	if(ref($xml->{Album}->{Name}) eq 'HASH') {
+		print STDERR "Empty album\n";
+		$xml->{Album}->{Name} = 'Unknown'.$cnt;
+	}
+
 	unless($xml->{Album}->{Artist}->{Name}) {
 		print STDERR "album [$xml->{Album}->{Name}] Empty artist\n";
 		$xml->{Album}->{Artist}->{Name} = 'Unknown';
 	}
 
-	my $discid = md5_hex($xml->{Album}->{Name});
-	$xmls->{$discid} = $xml unless $xmls->{$discid};
+	if(ref($xml->{Album}->{Artist}->{Name}) eq 'HASH') {
+		print STDERR "album [$xml->{Album}->{Name}] Empty artist\n";
+		$xml->{Album}->{Artist}->{Name} = 'Unknown';
+	}
 
 	my $newlocation = safe_chars($xml->{Album}->{Artist}->{Name}).'/'.safe_chars($xml->{Album}->{Name});
 	`mkdir -p /usr/local/cmms/htdocs/media/$newlocation/` unless -d "/usr/local/cmms/htdocs/media/$newlocation/";
 
+	my $trck_num = 1;
 	foreach my $track (@{$xml->{Album}->{Track}}) {
-		my $number = sprintf('%02d',$track->{Index}?$track->{Index}:1);
+		$track->{Index} = $track->{Index}?$track->{Index}:$trck_num;
+		$trck_num++;
+		$track->{Performer} = $track->{Performer}->[0] if $track->{Performer} && ref($track->{Performer}) eq 'ARRAY';
+		$track->{Artist}->{Name} = 'Unknown' if ref($track->{Artist}->{Name}) eq 'HASH';
+		$track->{Performer}->{Name} = '' if ref($track->{Performer}->{Name}) eq 'HASH';
+		my $number = sprintf('%02d',$track->{Index});
 		my($old) = <$folder/$number*.$ext>;
 		next unless $old;
 		$old =~ s/(\W)/\\$1/g;
@@ -94,6 +107,9 @@ sub copy_files {
 		#print STDERR "cp $old /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
 		`cp $old /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
 	}
+
+	my $discid = md5_hex($xml->{Album}->{Name});
+	$xmls->{$discid} = $xml unless $xmls->{$discid};
 
 	return 1;
 }
@@ -106,52 +122,27 @@ sub import {
 		$xml->{Album}->{Genre}->{Name} = 'Unknown';
 	}
 
-	my $discid = md5_hex($xml->{Album}->{Name});
-
-	my $total = 0;
-	my $tracks = [];
-	my $offsets = [];
-
-	foreach my $track (@{$xml->{Album}->{Track}}) {
-		push @{$offsets}, ($total*75);
-		$total += (($track->{Length}?$track->{Length}:1)/75);
-		push @{$tracks}, {
-			track_num => $track->{Index}?$track->{Index}:1,
-			artist    => $track->{Artist}->{Name}?$track->{Artist}->{Name}:'Unknown',
-			title     => $track->{Name}?$track->{Name}:'Unknown'
-		};
+	if(ref($xml->{Album}->{Genre}->{Name}) eq 'HASH') {
+		print STDERR "album [$xml->{Album}->{Name}] Empty genre\n";
+		$xml->{Album}->{Genre}->{Name} = 'Unknown';
 	}
 
-	unless(scalar @{$offsets}) {
+	my $discid = md5_hex($xml->{Album}->{Name});
+
+	my $tracks = [];
+	foreach my $track (@{$xml->{Album}->{Track}}) {
+		my $new = new CMMS::Track::Enhanced;
+		$new->number($track->{Index});
+		$new->artist($track->{Performer}->{Name}?$track->{Performer}->{Name}:($track->{Artist}->{Name}?$track->{Artist}->{Name}:'Unknown'));
+		$new->length($track->{Length}?($track->{Length}/75):1);
+		$new->title($track->{Name});
+		push @{$tracks}, $new;
+	}
+
+	unless(scalar @{$tracks}) {
 		print STDERR "album [$xml->{Album}->{Name}] has no tracks\n";
 		next;
 	}
-
-	open(CDDB,'> /tmp/album.cddb');
-	print CDDB "# xmcd
-#
-# Track frame offsets:
-".join("\n",map{"#       $_"}@{$offsets})."
-#
-# Disc length: $total seconds
-#
-# Revision: 1
-# Processed by: CMMSRipper
-# Submitted via: CMMSRipper
-# Normalized: r4:DSETVAR1
-#
-DISCID=$discid
-DTITLE=$xml->{Album}->{Artist}->{Name} / $xml->{Album}->{Name}
-".join("\n",map{'TTITLE'.($_->{track_num}-1)."=$_->{title}"}@{$tracks})."
-EXTD=
-".join("\n",map{'EXTT'.($_->{track_num}-1).'='.($_->{comment}?$_->{comment}:'')}@{$tracks})."
-PLAYORDER=
-";
-	close(CDDB);
-
-	my $albumdata = new CDDB::File('/tmp/album.cddb');
-
-	my @tracks = $albumdata->tracks;
 
 	my $metadata = {
 		GENRE => $xml->{Album}->{Genre}->{Name},
@@ -160,8 +151,10 @@ PLAYORDER=
 		ARTIST => $xml->{Album}->{Artist}->{Name},
 		ALBUM => $xml->{Album}->{Name},
 		COMMENT => '',
-		YEAR => '',
-		TRACKS => \@tracks
+		COMPOSER => '',
+		CONDUCTOR => '',
+		YEAR => $xml->{Album}->{Date}?$xml->{Album}->{Date}:'',
+		TRACKS => $tracks
 	};
 
 	if($ripper->check($metadata)) {

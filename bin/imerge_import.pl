@@ -6,6 +6,7 @@ use Text::CSV_XS;
 use CDDB::File;
 use CMMS::Ripper;
 use CMMS::File;
+use CMMS::Track;
 
 my $tables = {
 	album => {},
@@ -170,7 +171,12 @@ PLAYORDER=
 	close(CDDB);
 	my $albumdata = new CDDB::File('/tmp/album.cddb');
 
-	@tracks = $albumdata->tracks;
+	my @meta_tracks = map{
+		$_ = new CMMS::Track($_);
+		$_->composer('');
+		$_->conductor('');
+		$_
+	} $albumdata->tracks;
 
 	my $metadata = {
 		GENRE => $album->{genre},
@@ -178,14 +184,14 @@ PLAYORDER=
 		discid => $album->{discid},
 		ARTIST => $tracks[0]->{artist},
 		ALBUM => $album->{name},
-		TRACKS => \@tracks
+		TRACKS => \@meta_tracks
 	};
 
 	if($ripper->check($metadata)) {
 		$ripper->encode($metadata);
 		$ripper->cover($metadata);
-		#$ripper->store($metadata);
-		$ripper->store_xml($metadata);
+		$ripper->store($metadata);
+		#$ripper->store_xml($metadata);
 		$ripper->purge;
 	} else {
 		warn "Album $album->{name} already ripped";

@@ -300,7 +300,7 @@ sub sql_artist_where {
 	my ($self, $where) = @_;
 
   return qq{
-         SELECT artist_id, a.name as text 
+         SELECT artist_id as id, a.name as text 
          FROM track t
          LEFT JOIN artist a ON t.artist_id = a.id
          $where
@@ -626,9 +626,11 @@ sub sql_track2playlist {
 
 	return qq {
 		REPLACE INTO playlist_current 
-		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', id, \@id:=1+\@id from track t
+		(zone,track_id,track_order) SELECT '$self->{zone}->{number}', t.id, \@id:=1+\@id from track t
+		LEFT JOIN album a on t.album_id = a.id
+		LEFT JOIN artist w on t.artist_id = w.id
 		$where 
-		ORDER BY album_id, track_num
+		ORDER BY }.($mem{category}eq'artists'?'w.name, ':'').qq{a.name, t.album_id, t.track_num
 	};
 }
 
@@ -778,7 +780,7 @@ sub menu_play {
 	$self->empty_queue;
 	# Add all tracks for this album
 	$mc->query('SET @id:=0');
-	my $sql = $self->sql_track2playlist("WHERE album_id in (select album_id from track where id = $track)");
+	my $sql = $self->sql_track2playlist("WHERE t.album_id in (select album_id from track where id = $track)");
 	$mc->query($sql);
 	# Set track position in playlist
 	$self->{player}->track_mark_played($track,$trk{number});

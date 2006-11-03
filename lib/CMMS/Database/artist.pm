@@ -1,4 +1,4 @@
-#$Id: artist.pm,v 1.12 2006/10/06 13:14:24 byngmeister Exp $
+#$Id: artist.pm,v 1.13 2006/11/03 15:10:57 byngmeister Exp $
 
 package CMMS::Database::artist;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -133,17 +133,15 @@ EndSelects
     my $tables = <<EndTables
 album,
 artist,
-composer,
-conductor,
 genre
+LEFT JOIN composer ON album.composer_id = composer.id
+LEFT JOIN conductor ON album.conductor_id = conductor.id
 EndTables
     ;
 
     my $where = <<EndWhere
 album.artist_id = $id
 and artist.id = album.artist_id
-and composer.id = album.composer_id
-and conductor.id = album.conductor_id
 and genre.id = album.genre_id
 order by album.name
 EndWhere
@@ -171,9 +169,9 @@ EndSelects
 track,
 album,
 artist,
-composer,
-conductor,
 genre
+LEFT JOIN composer ON track.composer_id = composer.id
+LEFT JOIN conductor ON track.conductor_id = conductor.id
 EndTables
     ;
 
@@ -181,8 +179,6 @@ EndTables
 track.artist_id = $id
 and album.id = track.album_id
 and artist.id = track.artist_id
-and composer.id = track.composer_id
-and conductor.id = track.conductor_id
 and genre.id = track.genre_id
 order by track.track_num
 EndWhere

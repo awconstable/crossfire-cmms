@@ -241,6 +241,48 @@ sub artist_find_or_create {
 }
 
 ##############################################################################
+# Finds an conductor_id from name or creates a new entry if it doesn't exist
+
+sub conductor_find_or_create {
+    my( $self, $conductor ) = @_;
+    my $mc = $self->mysqlConnection;
+    my $conductor_id = 0;
+
+    my $q_conductor = $mc->quote($conductor);
+    ($_) = @{$mc->query_and_get('SELECT id FROM conductor WHERE name = '.$q_conductor)||[]};
+	
+    # conductor not in database, add an entry
+    unless($conductor_id = $_->{id}) {
+	my $q = $mc->query('INSERT INTO conductor (name) VALUES('.$q_conductor.')');
+	$conductor_id = $mc->last_id;
+	$q->finish();
+    }       
+
+    return $conductor_id;
+}
+
+##############################################################################
+# Finds an composer_id from name or creates a new entry if it doesn't exist
+
+sub composer_find_or_create {
+    my( $self, $composer ) = @_;
+    my $mc = $self->mysqlConnection;
+    my $composer_id = 0;
+
+    my $q_composer = $mc->quote($composer);
+    ($_) = @{$mc->query_and_get('SELECT id FROM composer WHERE name = '.$q_composer)||[]};
+	
+    # composer not in database, add an entry
+    unless($composer_id = $_->{id}) {
+	my $q = $mc->query('INSERT INTO composer (name) VALUES('.$q_composer.')');
+	$composer_id = $mc->last_id;
+	$q->finish();
+    }       
+
+    return $composer_id;
+}
+
+##############################################################################
 # Store the album and track information into the database
 
 sub store {
@@ -256,15 +298,17 @@ sub store {
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
-	# Find the albums artist/genre IDs or create if it is not in database
-	my $aartist_id = $self->artist_find_or_create($aartist);
-	my $agenre_id  = $self->genre_find_or_create($meta->{GENRE});
-
         # If no tracks exist, bug out
         unless(scalar @files) {
                 warn 'No tracks for this album';
                 return undef;
         }
+
+	# Find the albums artist/genre IDs or create if it is not in database
+	my $aartist_id = $self->artist_find_or_create($aartist);
+	my $agenre_id  = $self->genre_find_or_create($meta->{GENRE});
+	my $acomposer_id  = $meta->{COMPOSER}?$self->composer_find_or_create($meta->{COMPOSER}):'NULL';
+	my $aconductor_id  = $meta->{CONDUCTOR}?$self->conductor_find_or_create($meta->{CONDUCTOR}):'NULL';
 
 	my $mc = $self->mysqlConnection;
 
@@ -282,7 +326,7 @@ sub store {
 	my $acomment = $meta->{COMMENT};
 	$acomment =~ s/[\r\n]+$//g;
 
-	$mc->query('INSERT INTO album (name,discid,year,comment,cover,artist_id,genre_id) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover,$aartist_id,$agenre_id)");
+	$mc->query('INSERT INTO album (name,discid,year,comment,cover,artist_id,genre_id,composer_id,conductor_id) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover,$aartist_id,$agenre_id,$acomposer_id,$aconductor_id)");
 	$album_id = $mc->last_id;
 
 	@files = ();
@@ -301,14 +345,12 @@ sub store {
 		my $ttitle = $track->title;
 		$ttitle =~ s/[\r\n]+//g;
 
-		$artist = $mc->quote($artist);
-		($_) = @{$mc->query_and_get('SELECT id FROM artist WHERE name = '.$artist)||[]};
-		$artist_id = 0;
-		unless($artist_id = $_->{id}) {
-			$mc->query('INSERT INTO artist (name) VALUES('.$artist.')');
-			$artist_id = $mc->last_id;
-		}
-		$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$agenre_id,$ttitle,$track->number,$track->length)).',NOW())';
+		my $artist_id = $self->artist_find_or_create($artist);
+
+		my $tcomposer_id  = $track->composer?$self->composer_find_or_create($track->composer):'NULL';
+		my $tconductor_id  = $track->conductor?$self->conductor_find_or_create($track->conductor):'NULL';
+
+		$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,composer_id,conductor_id,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$agenre_id,$ttitle,$track->number,$track->length,$tcomposer_id,$tconductor_id)).',NOW())';
 		$mc->query($sql);
 
 		my $track_id = $mc->last_id;
@@ -330,9 +372,9 @@ sub store {
 sub store_xml {
 	my($self,$meta) = @_;
 
-	my $aartist = safe_chars($meta->{ARTIST});
+	my $sartist = safe_chars($meta->{ARTIST});
 	my $album = safe_chars($meta->{ALBUM});
-	my $folder = $self->{conf}->{ripper}->{mediadir}."$aartist/$album/";
+	my $folder = $self->{conf}->{ripper}->{mediadir}."$sartist/$album/";
 	$folder =~ s/\/$//;
 	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
 
@@ -345,26 +387,61 @@ sub store_xml {
                 return undef;
         }
 
-	my($artist_id,$album_id,$genre_id);
+	my($album_id,$genre_id);
 
 	my $cover = '';
 	my @imgs = <${folder}/cover.*>;
 	my $img = join('',@imgs) || '';
 	$cover = $img if $img;
 
+	my $atitle = $meta->{ALBUM};
+	$atitle =~ s/[\r\n]+$//g;
+	$atitle =~ s/&/&amp;/g;
+	$atitle =~ s/</&lt;/g;
+	$atitle =~ s/>/&gt;/g;
+
+	my $aartist = $meta->{ARTIST};
+	$aartist =~ s/[\r\n]+$//g;
+	$aartist =~ s/&/&amp;/g;
+	$aartist =~ s/</&lt;/g;
+	$aartist =~ s/>/&gt;/g;
+
+	my $agenre = $meta->{GENRE};
+	$agenre =~ s/[\r\n]+$//g;
+	$agenre =~ s/&/&amp;/g;
+	$agenre =~ s/</&lt;/g;
+	$agenre =~ s/>/&gt;/g;
+
 	my $acomment = $meta->{COMMENT};
 	$acomment =~ s/[\r\n]+$//g;
+	$acomment =~ s/&/&amp;/g;
+	$acomment =~ s/</&lt;/g;
+	$acomment =~ s/>/&gt;/g;
+
+	my $acomposer = $meta->{COMPOSER};
+	$acomposer =~ s/[\r\n]+$//g;
+	$acomposer =~ s/&/&amp;/g;
+	$acomposer =~ s/</&lt;/g;
+	$acomposer =~ s/>/&gt;/g;
+
+	my $aconductor = $meta->{CONDUCTOR};
+	$aconductor =~ s/[\r\n]+$//g;
+	$aconductor =~ s/&/&amp;/g;
+	$aconductor =~ s/</&lt;/g;
+	$aconductor =~ s/>/&gt;/g;
 
 	my $xml = qq(<?xml version="1.0" encoding="ISO-8859-1"?>
 		  <import>
 		    <album>
-		      <name>$meta->{ALBUM}</name>
+		      <name>$atitle</name>
 		      <discid>$meta->{discid}</discid>
 		      <year>$meta->{YEAR}</year>
 		      <comment>$acomment</comment>
+		      <composer>$acomposer</composer>
+		      <conductor>$aconductor</conductor>
 		      <cover>$cover</cover>
-		      <artist>$meta->{ARTIST}</artist>
-		      <genre>$meta->{GENRE}</genre>
+		      <artist>$aartist</artist>
+		      <genre>$agenre</genre>
 		      <folder>$folder</folder>
 		    </album>
 		    <tracks>
@@ -380,13 +457,35 @@ sub store_xml {
 		@files = <$folder/$title.*>;
 		next unless scalar @files;
 
+		$artist =~ s/[\r\n]+//g;
+		$artist =~ s/&/&amp;/g;
+		$artist =~ s/</&lt;/g;
+		$artist =~ s/>/&gt;/g;
+
 		my $ttitle = $track->title;
 		$ttitle =~ s/[\r\n]+//g;
+		$ttitle =~ s/&/&amp;/g;
+		$ttitle =~ s/</&lt;/g;
+		$ttitle =~ s/>/&gt;/g;
+
+		my $tcomposer = $track->composer;
+		$tcomposer =~ s/[\r\n]+//g;
+		$tcomposer =~ s/&/&amp;/g;
+		$tcomposer =~ s/</&lt;/g;
+		$tcomposer =~ s/>/&gt;/g;
+
+		my $tconductor = $track->conductor;
+		$tconductor =~ s/[\r\n]+//g;
+		$tconductor =~ s/&/&amp;/g;
+		$tconductor =~ s/</&lt;/g;
+		$tconductor =~ s/>/&gt;/g;
 
 		$xml .= qq(
 			      <track>
 			        <artist>$artist</artist>
 			        <title>$ttitle</title>
+			        <composer>$tcomposer</composer>
+			        <conductor>$tconductor</conductor>
 			        <track_num>).$track->number.qq(</track_num>
 			        <length_seconds>).$track->length.qq(</length_seconds>
 		);

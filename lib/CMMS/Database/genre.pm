@@ -1,4 +1,4 @@
-#$Id: genre.pm,v 1.16 2006/10/12 16:26:52 byngmeister Exp $
+#$Id: genre.pm,v 1.17 2006/11/03 15:10:57 byngmeister Exp $
 
 package CMMS::Database::genre;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -116,36 +116,6 @@ sub new {
   return $self;
 }
 
-sub get_self {
-    my $self = shift;
-    my $page = shift;
-    my $size = shift;
-    my $extras = shift;
-
-    $extras and $extras = "and $extras";
-
-    my $selects = <<EndSelects
-genre.*
-EndSelects
-    ;
-
-    my $tables = <<EndTables
-genre,
-track,
-album
-EndTables
-    ;
-
-    my $where = <<EndWhere
-(track.genre_id = genre.id or album.genre_id = genre.id)
-group by genre.id
-order by genre.name
-EndWhere
-    ;
-
-    return $self->get_list( "genre", $page, $size, { tables=>$tables, select => $selects, where => $where, dump_sql=>1 } );
-}
-
 sub get_album_list {
     my ($self,$page,$size) = @_;
 
@@ -163,17 +133,15 @@ EndSelects
     my $tables = <<EndTables
 album,
 artist,
-composer,
-conductor,
 genre
+LEFT JOIN composer ON album.composer_id = composer.id
+LEFT JOIN conductor ON album.conductor_id = conductor.id
 EndTables
     ;
 
     my $where = <<EndWhere
 album.genre_id = $id
 and artist.id = album.artist_id
-and composer.id = album.composer_id
-and conductor.id = album.conductor_id
 and genre.id = album.genre_id
 order by album.name
 EndWhere
@@ -201,9 +169,9 @@ EndSelects
 track,
 album,
 artist,
-composer,
-conductor,
 genre
+LEFT JOIN composer ON track.composer_id = composer.id
+LEFT JOIN conductor ON track.conductor_id = conductor.id
 EndTables
     ;
 
@@ -211,8 +179,6 @@ EndTables
 track.genre_id = $id
 and album.id = track.album_id
 and artist.id = track.artist_id
-and composer.id = track.composer_id
-and conductor.id = track.conductor_id
 and genre.id = track.genre_id
 order by track.track_num
 EndWhere

@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use base qw(CMMS::Ripper::DiscID::Generic);
 use Net::FreeDB;
+use CMMS::Track;
 
 sub new {
 	my $class = shift;
@@ -29,13 +30,19 @@ sub metadata {
 	($metadata,$albumdata) = $self->default;
     }
 
+	my @tracks = map{
+		$_ = new CMMS::Track($_);
+		$_->composer('');
+		$_->conductor('');
+		$_
+	} $albumdata->tracks;
+
     $self->{GENRE}    = $metadata->{GENRE};
     $self->{DISCID}   = $metadata->{DISCID};
     $self->{ARTIST}   = $metadata->{ARTIST};
     $self->{ALBUM}    = $metadata->{ALBUM};
     $self->{COMMENT}  = $albumdata->extd;
     $self->{YEAR}     = $albumdata->year;
-    my @tracks        = $albumdata->tracks;
     $self->{TRACKS}   = \@tracks;
 
     return $self;

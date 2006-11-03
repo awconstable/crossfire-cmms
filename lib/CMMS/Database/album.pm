@@ -1,4 +1,4 @@
-#$Id: album.pm,v 1.16 2006/10/06 13:14:24 byngmeister Exp $
+#$Id: album.pm,v 1.17 2006/11/03 15:10:57 byngmeister Exp $
 
 package CMMS::Database::album;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -211,9 +211,9 @@ EndSelects
 track,
 album,
 artist,
-composer,
-conductor,
 genre
+LEFT JOIN composer ON track.composer_id = composer.id
+LEFT JOIN conductor ON track.conductor_id = conductor.id
 EndTables
     ;
 
@@ -221,8 +221,6 @@ EndTables
 track.album_id = $id
 and album.id = track.album_id
 and artist.id = track.artist_id
-and composer.id = track.composer_id
-and conductor.id = track.conductor_id
 and genre.id = track.genre_id
 order by track.track_num
 EndWhere
