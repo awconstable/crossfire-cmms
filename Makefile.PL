@@ -10,6 +10,8 @@ WriteMakefile(
 				 'Install'          => 0.14,
 				 'FrameworkBuilder' => 0.04,
 				 'RS::Util'         => 0.01,
+				 'CDDB::File'       => 1.05,
+				 'Net::FreeDB'      => 0.08,
 				 # CGI can't be > 3.00 due to upload() bug in
 				 # Embperl 1.X
 				 CGI                => 3.00

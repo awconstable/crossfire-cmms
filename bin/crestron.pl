@@ -77,7 +77,8 @@ sub broadcast {
           print STDOUT $line;
           next;
         } else {
-          $line =~ s/\n/\r\n/;
+          $line =~ s/[\r\n]//g;
+          $line .= "\r\n";
           $socket->send($line) or do {
               print STDERR "Client(",$socket->fileno,") disconnected.\n";
               $select->remove($socket);
