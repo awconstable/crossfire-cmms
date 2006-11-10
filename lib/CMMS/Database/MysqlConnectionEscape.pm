@@ -1,4 +1,4 @@
-#$Id: MysqlConnectionEscape.pm,v 1.1 2006/07/04 14:19:14 byngmeister Exp $
+#$Id: MysqlConnectionEscape.pm,v 1.2 2006/11/10 15:53:17 byngmeister Exp $
 
 package CMMS::Database::MysqlConnectionEscape;
 
@@ -69,8 +69,9 @@ sub query_and_get {
 sub escape_hashref {
 	my ($self, $hashref) = @_;
 
+	my $chars = quotemeta ';:|';
 	foreach(keys %{$hashref}) {
-		$hashref->{$_} =~ s/;/:/g;
+		$hashref->{$_} =~ s/[$chars]/ /g;
 	}
 
 	return $hashref;
