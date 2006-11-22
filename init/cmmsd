@@ -16,7 +16,7 @@ RETVAL=0
 
 # subs
 getpids() {
-        PIDS=`ps -efww | grep perl | grep $prog | grep -v ripper | grep -v player | awk {'print $2'}`
+        PIDS=`ps -efww | grep perl | grep $prog | grep -v daemon | grep -v ripper | grep -v player | awk {'print $2'}`
 	PIDS=`echo ${PIDS//\n/''}`
         [ -z "$PIDS" ] && return 1 || return 0
 }

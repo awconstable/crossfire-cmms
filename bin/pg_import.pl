@@ -194,21 +194,23 @@ while(my($album_id,$album) = each %{$tables->{album}->{albums}}) {
 
 	$album->{name} =~ s/#/No./g;
 
-	$album->{discid} = md5_hex($album->{name}) if $album->{discid} eq '';
+	$album->{discid} = md5_hex($tracks[0]->{artist}.' '.$album->{name}) if $album->{discid} eq '';
 
 	my $newlocation = safe_chars($tracks[0]->{artist}).'/'.safe_chars($album->{name});
-	`mkdir -p /usr/local/cmms/htdocs/media/$newlocation` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
+	`mkdir -m 777 -p /usr/local/cmms/htdocs/media/$newlocation` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
 
 	my $trck_num = 1;
 	foreach my $track (@tracks) {
+		$track->{track_num} = $track->{track_num}?$track->{track_num}:$trck_num;
+		$trck_num++;
 		next unless $track->{file_name};
-		$track->{track_num} = $track->{track_num}?$track->{track_num}:$trck_num++;
 		$track->{title} =~ s/#/No./g;
 		my $number = sprintf('%02d',$track->{track_num});
 		my($ext) = ($track->{file_name} =~ /(mp3|flac|wav)$/i);
 		my $newname = substr(safe_chars($number.' '.$track->{title}),0,35).".$ext";
 		#print STDERR "cp '$media/$track->{file_location}$track->{file_name}' /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
 		`cp "$media/$track->{file_location}$track->{file_name}" /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
+		`chown nobody:nobody /usr/local/cmms/htdocs/media/$newlocation/$newname`;
 
 		my $bitrate = 320*1024;
 		my $filesize = -s "/usr/local/cmms/htdocs/media/$newlocation/$newname";
@@ -218,7 +220,7 @@ while(my($album_id,$album) = each %{$tables->{album}->{albums}}) {
 		$total += $track->{length_seconds};
 	}
 
-	my $fname = md5_hex($album->{name});
+	my $fname = md5_hex($tracks[0]->{artist}.' '.$album->{name});
 
 	unless(scalar @{$offsets}) {
 		print STDERR "album [$album_id] [$album->{name}] has no tracks\n";

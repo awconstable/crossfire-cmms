@@ -5,6 +5,7 @@ use warnings;
 use base qw(CMMS::Ripper::Encoder::Generic);
 use CMMS::Psudo;
 use CMMS::File;
+use Audio::TagLib;
 use POSIX qw(:sys_wait_h);
 
 sub _encode {
@@ -54,6 +55,22 @@ sub _encode {
 	waitpid $pid, 0;
 
 	if(-f "$tmp$file.flac") {
+		my($artist1,$album1,$track1) = map{s/"/\\"/g;$_}($artist,$album,$track);
+		$aartist = safe_chars($aartist);
+		$album = safe_chars($album);
+
+		my $flac = new Audio::TagLib::FLAC::File("$tmp$file.flac");
+		my $xiph = $flac->xiphComment(1);
+
+		$xiph->setAlbum(new Audio::TagLib::String($album1))   if $album;
+		$xiph->setArtist(new Audio::TagLib::String($artist1)) if $artist;
+		$xiph->setTitle(new Audio::TagLib::String($track1))   if $track;
+		$xiph->setTrack($number)                              if $number;
+		$xiph->setYear(new Audio::TagLib::String($year))      if $year;
+		$xiph->setGenre(new Audio::TagLib::String($genre))    if $genre;
+
+		$flac->save;
+
 		$aartist = safe_chars($aartist);
 		$album = safe_chars($album);
 

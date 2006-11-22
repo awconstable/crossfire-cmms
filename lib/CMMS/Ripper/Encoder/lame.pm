@@ -5,7 +5,7 @@ use warnings;
 use base qw(CMMS::Ripper::Encoder::Generic);
 use CMMS::Psudo;
 use CMMS::File;
-use MP3::Tag;
+use Audio::TagLib;
 use POSIX qw(:sys_wait_h);
 
 sub _encode {
@@ -73,18 +73,19 @@ sub _encode {
 	waitpid $pid, 0;
 
 	if(-f "$tmp$file.mp3") {
-		my($artist1,$album1,$track1,$comment1) = map{s/"/\\"/g;$_}($artist,$album,$track,$comment);
+		my($artist1,$album1,$track1) = map{s/"/\\"/g;$_}($artist,$album,$track);
 
-		my $mp3 = MP3::Tag->new("$tmp$file.mp3");
-		my $id3v2 = $mp3->new_tag('ID3v2');
+		my $mp3   = new Audio::TagLib::MPEG::File("$tmp$file.mp3");
+		my $id3v2 = $mp3->ID3v2Tag(1);
 
-		$id3v2->add_frame('TALB',$album1) if $album;
-		$id3v2->add_frame('TPE1',$artist1) if $artist;
-		$id3v2->add_frame('TIT2',$track1) if $track;
-		$id3v2->add_frame('TRCK',$number) if $number;
-		$id3v2->add_frame('TYER',$year) if $year;
-		$id3v2->add_frame('TCON',$genre) if $genre;
-		$id3v2->write_tag;
+		$id3v2->setAlbum(new Audio::TagLib::String($album1))   if $album;
+		$id3v2->setArtist(new Audio::TagLib::String($artist1)) if $artist;
+		$id3v2->setTitle(new Audio::TagLib::String($track1))   if $track;
+		$id3v2->setTrack($number)                              if $number;
+		$id3v2->setYear(new Audio::TagLib::String($year))      if $year;
+		$id3v2->setGenre(new Audio::TagLib::String($genre))    if $genre;
+
+		$mp3->save;
 
 		$aartist = safe_chars($aartist);
 		$album = safe_chars($album);

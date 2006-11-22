@@ -326,8 +326,14 @@ sub store {
 	my $acomment = $meta->{COMMENT};
 	$acomment =~ s/[\r\n]+$//g;
 
-	$mc->query('INSERT INTO album (name,discid,year,comment,cover,artist_id,genre_id,composer_id,conductor_id) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover,$aartist_id,$agenre_id,$acomposer_id,$aconductor_id)");
-	$album_id = $mc->last_id;
+	my $qname = $mc->quote($meta->{ALBUM});
+	my $qdisc = $mc->quote($meta->{discid});
+	$sql = "SELECT id FROM album WHERE artist_id = $aartist_id AND genre_id = $agenre_id AND discid = $qdisc";
+	unless((@_ = @{$mc->query_and_get($sql)||[]}) && ($album_id = $_[0]->{id})) {
+		$sql = 'INSERT INTO album (name,discid,year,comment,cover,artist_id,genre_id,composer_id,conductor_id) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover,$aartist_id,$agenre_id,$acomposer_id,$aconductor_id)";
+		$mc->query($sql);
+		$album_id = $mc->last_id;
+	}
 
 	@files = ();
 	my $empty_album = 1;
@@ -530,12 +536,25 @@ sub check {
 
 	$self->add_to_log( "INFO", "check", "Checking if album is in the database (".$meta->{discid}.")" );
 
-
-	($_) = @{$mc->query_and_get('SELECT id FROM album WHERE discid = '.$mc->quote($meta->{discid}))||[]};
-	if($_->{id}) {
-		warn('Album already ripped');
-		$self->add_to_log( "INFO", "check", "Album is in database, skipping" );
-		return 0;
+	if((($_) = @{$mc->query_and_get('SELECT id FROM album WHERE discid = '.$mc->quote($meta->{discid}))||[]}) && (my $aid = $_->{id})) {
+		my %in = map{$_->title=>$_->number}@{$meta->{TRACKS}};
+		while(my($title,$number) = each %in) {
+			if((($_) = @{$mc->query_and_get("SELECT id FROM track WHERE album_id = $aid AND track_num = $number AND title = ".$mc->quote($title))||[]}) && (defined $_->{id})) {
+				delete $in{$title};
+				warn('Track ('.$number.') ['.$title.'] already in this album');
+			}
+			delete $in{$title} if $title eq 'Data Track';
+		}
+		if(scalar keys %in < 1) {
+			warn('Album already ripped');
+			$self->add_to_log( "INFO", "check", "Album is in database, skipping" );
+			return 0;
+		}
+		@_ = ();
+		foreach my $track (@{$meta->{TRACKS}}) {
+			push @_, $track if exists $in{$track->title};
+		}
+		$meta->{TRACKS} = \@_;
 	}
 
 	return 1;

@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.25 2006/11/03 15:10:57 byngmeister Exp $
+#$Id: track.pm,v 1.26 2006/11/22 15:56:52 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -19,9 +19,11 @@ CMMS::Database::track
 use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
-use MP3::Tag;
+use Audio::TagLib;
+use CMMS::Database::track_data;
+use CMMS::File;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.25 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -277,22 +279,60 @@ sub push {
 
 	my $id = $self->SUPER::push(@_);
 
+	my $album  = $mc->enum_lookup('album','id','name',$self->get('album_id'));
+	my $artist = $mc->enum_lookup('artist','id','name',$self->get('artist_id'));
+	my $title  = $self->get('title');
+	my $number = $self->get('track_num');
+	my $year   = $self->get('year');
+	my $genre  = $mc->enum_lookup('genre','id','name',$self->get('genre_id'));
+
+	my $newlocation = safe_chars($artist).'/'.safe_chars($album);
+	`mkdir -p /usr/local/cmms/htdocs/media/$newlocation/` unless -d "/usr/local/cmms/htdocs/media/$newlocation/";
+
 	my $tl = $self->get_track_list;
 	foreach my $track (@{$tl->{elements}}) {
-		next unless $track->{file_name} =~ /\.mp3$/i;
+		my $oldfile = $track->{file_location}.$track->{file_name};
+		my($ext)    = ($oldfile =~ /\.(mp3|flac)$/);
 
-		my $mp3 = MP3::Tag->new("$track->{file_location}$track->{file_name}");
-		my $id3v2 = $mp3->new_tag('ID3v2');
+		my $snumber = sprintf '%02d', $number;
+		my $newname = substr(safe_chars($snumber.' '.$title),0,35).'.'.lc($ext);
+		my $newfile = "/usr/local/cmms/htdocs/media/$newlocation/$newname";
+		if($newfile ne $oldfile) {
+			`cp $oldfile $newfile` unless -f $newfile;
+			`rm -f $oldfile`;
+			my($file_location,$file_name) = ($newfile =~ m@^(.+/)([^/]+)$@);
+			my $data = new CMMS::Database::track_data($mc,$track->{id});
+			$data->pull;
+			$data->set('file_location',$file_location);
+			$data->set('file_name',$file_name);
+			$data->push;
+		}
 
-		$id3v2->add_frame('TALB',$mc->enum_lookup('album','id','name',$self->get('album_id'))) if $mc->enum_lookup('album','id','name',$self->get('album_id'));
-		$id3v2->add_frame('TPE1',$mc->enum_lookup('artist','id','name',$self->get('artist_id'))) if $mc->enum_lookup('artist','id','name',$self->get('artist_id'));
-		$id3v2->add_frame('TIT2',$self->get('title')) if $self->get('title');
-		$id3v2->add_frame('TRCK',$self->get('track_num')) if $self->get('track_num');
-		$id3v2->add_frame('TYER',$self->get('year')) if $self->get('year');
-		$id3v2->add_frame('TCOM',$mc->enum_lookup('composer','id','name',$self->get('composer_id'))) if $mc->enum_lookup('composer','id','name',$self->get('composer_id'));
-		$id3v2->add_frame('TPE3',$mc->enum_lookup('conductor','id','name',$self->get('conductor_id'))) if $mc->enum_lookup('conductor','id','name',$self->get('conductor_id'));
-		$id3v2->add_frame('TCON',$mc->enum_lookup('genre','id','name',$self->get('genre_id'))) if $mc->enum_lookup('genre','id','name',$self->get('genre_id'));
-		$id3v2->write_tag;
+		if($newfile =~ /\.mp3$/i) {
+			my $mp3   = new Audio::TagLib::MPEG::File($newfile);
+			my $id3v2 = $mp3->ID3v2Tag(1);
+
+			$id3v2->setAlbum(new Audio::TagLib::String($album));
+			$id3v2->setArtist(new Audio::TagLib::String($artist));
+			$id3v2->setTitle(new Audio::TagLib::String($title));
+			$id3v2->setTrack($number);
+			$id3v2->setYear(new Audio::TagLib::String($year));
+			$id3v2->setGenre(new Audio::TagLib::String($genre));
+
+			$mp3->save;
+		} elsif($newfile =~ /\.flac$/i) {
+			my $flac = new Audio::TagLib::FLAC::File($newfile);
+			my $xiph = $flac->xiphComment(1);
+
+			$xiph->setAlbum(new Audio::TagLib::String($album));
+			$xiph->setArtist(new Audio::TagLib::String($artist));
+			$xiph->setTitle(new Audio::TagLib::String($title));
+			$xiph->setTrack($number);
+			$xiph->setYear(new Audio::TagLib::String($year));
+			$xiph->setGenre(new Audio::TagLib::String($genre));
+
+			$flac->save;
+		}
 	}
 
 	return $id;
