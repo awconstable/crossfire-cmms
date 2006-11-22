@@ -9,9 +9,6 @@ use Digest::MD5 qw(md5_hex);
 use Getopt::Long;
 use POSIX qw(setsid);
 
-close(STDERR);
-open(STDERR,'>> /usr/local/cmms/logs/file_importer.log');
-
 my($child);
 GetOptions(child => \$child);
 
