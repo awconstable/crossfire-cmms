@@ -9,7 +9,8 @@ our $permitted = {
 	length    => undef,
 	number    => undef,
 	composer  => undef,
-	conductor => undef
+	conductor => undef,
+	type      => undef
 };
 our($AUTOLOAD);
 

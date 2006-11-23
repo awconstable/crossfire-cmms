@@ -8,11 +8,7 @@ our @EXPORT = qw(safe_chars);
 sub safe_chars {
 	$_ = shift;
 
-	s/[\r\n]+//g;
-	s/\s+/_/g;
-	s/\\\\n/_/g;
-	s/\\n/_/g;
-	s/\W//g;
+	s/\W/_/g;
 	s/_+/_/g;
 
 	return lc($_);

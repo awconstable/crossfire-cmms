@@ -296,7 +296,7 @@ sub store {
 	my $album = safe_chars($meta->{ALBUM});
 	my $folder = $self->{conf}->{ripper}->{mediadir}."$s_aartist/$album/";
 	$folder =~ s/\/$//;
-	my @files = grep{/\.(mp3|flac|ogg|wav)$/}<$folder/*>;
+	my @files = grep{/\.(mp3|flac)$/}<$folder/*>;
 
         # If no tracks exist, bug out
         unless(scalar @files) {
@@ -327,9 +327,10 @@ sub store {
 	$acomment =~ s/[\r\n]+$//g;
 
 	my $qname = $mc->quote($meta->{ALBUM});
-	my $qdisc = $mc->quote($meta->{discid});
-	$sql = "SELECT id FROM album WHERE artist_id = $aartist_id AND genre_id = $agenre_id AND discid = $qdisc";
-	unless((@_ = @{$mc->query_and_get($sql)||[]}) && ($album_id = $_[0]->{id})) {
+	my $qdisc = $mc->quote($meta->{DISCID});
+	$sql = "SELECT id FROM album WHERE discid = $qdisc";
+	($_) = @{$mc->query_and_get($sql)||[]};
+	unless($album_id = $_->{id}) {
 		$sql = 'INSERT INTO album (name,discid,year,comment,cover,artist_id,genre_id,composer_id,conductor_id) VALUES('.$mc->quote($meta->{ALBUM}).','.$mc->quote($meta->{discid}).','.$mc->quote($meta->{YEAR}).','.$mc->quote($acomment).",$cover,$aartist_id,$agenre_id,$acomposer_id,$aconductor_id)";
 		$mc->query($sql);
 		$album_id = $mc->last_id;
@@ -356,20 +357,30 @@ sub store {
 		my $tcomposer_id  = $track->composer?$self->composer_find_or_create($track->composer):'NULL';
 		my $tconductor_id  = $track->conductor?$self->conductor_find_or_create($track->conductor):'NULL';
 
-		$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,composer_id,conductor_id,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$agenre_id,$ttitle,$track->number,$track->length,$tcomposer_id,$tconductor_id)).',NOW())';
-		$mc->query($sql);
+		my $track_id;
+		my $qttitle = $mc->quote($ttitle);
+		$sql = "SELECT id FROM track WHERE album_id = $album_id AND artist_id = $artist_id AND genre_id = $agenre_id AND title = $qttitle AND track_num = ".$track->number;
+		($_) = @{$mc->query_and_get($sql)||[]};
+		unless($track_id = $_->{id}) {
+			$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,composer_id,conductor_id,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$agenre_id,$ttitle,$track->number,$track->length,$tcomposer_id,$tconductor_id)).',NOW())';
+			$mc->query($sql);
+			$track_id = $mc->last_id;
+		}
 
-		my $track_id = $mc->last_id;
 		next unless $track_id;
-		$empty_album = 0;
 
 		foreach(@files) {
 			print STDERR "$_\n";
 			my($file_location,$file_name,$file_type) = (/^(.+\/)([^\/]+\.(.+))$/);
 			my $filesize = -s $_;
 			my $bitrate = (/\.mp3$/?160:'');
-			$sql = 'INSERT INTO track_data (track_id,file_location,file_name,file_type,bitrate,filesize,info_source) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($track_id,$file_location,$file_name,$file_type,$bitrate,$filesize,$self->{conf}->{ripper}->{metadata})).')';
-			$mc->query($sql);
+			$sql = "SELECT id FROM track_data WHERE track_id = $track_id AND file_type = '$file_type'";
+			($_) = @{$mc->query_and_get($sql)||[]};
+			unless($_->{id}) {
+				$sql = 'INSERT INTO track_data (track_id,file_location,file_name,file_type,bitrate,filesize,info_source) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($track_id,$file_location,$file_name,$file_type,$bitrate,$filesize,$self->{conf}->{ripper}->{metadata})).')';
+				$mc->query($sql);
+			}
+			$empty_album = 0;
 		}
 	}
 	$mc->query('DELETE FROM album WHERE id = '.$album_id) if $empty_album;
@@ -538,8 +549,12 @@ sub check {
 
 	if((($_) = @{$mc->query_and_get('SELECT id FROM album WHERE discid = '.$mc->quote($meta->{discid}))||[]}) && (my $aid = $_->{id})) {
 		my %in = map{$_->title=>$_->number}@{$meta->{TRACKS}};
+		my $i = 0;
 		while(my($title,$number) = each %in) {
-			if((($_) = @{$mc->query_and_get("SELECT id FROM track WHERE album_id = $aid AND track_num = $number AND title = ".$mc->quote($title))||[]}) && (defined $_->{id})) {
+			my $trk = $meta->{TRACKS}->[$i++];
+			my $ext = 'flac';
+			$ext = 'mp3' if ref($trk) eq 'CMMS::Track::Enhanced' && $trk->type eq 'mp3';
+			if((($_) = @{$mc->query_and_get("SELECT track.id FROM track,track_data WHERE track_data.track_id = track.id AND track_data.file_type = '$ext' AND track.album_id = $aid AND track.track_num = $number AND track.title = ".$mc->quote($title))||[]}) && (defined $_->{id})) {
 				delete $in{$title};
 				warn('Track ('.$number.') ['.$title.'] already in this album');
 			}

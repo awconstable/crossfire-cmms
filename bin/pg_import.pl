@@ -194,7 +194,7 @@ while(my($album_id,$album) = each %{$tables->{album}->{albums}}) {
 
 	$album->{name} =~ s/#/No./g;
 
-	$album->{discid} = md5_hex($tracks[0]->{artist}.' '.$album->{name}) if $album->{discid} eq '';
+	$album->{discid} = md5_hex(lc($tracks[0]->{artist}.' '.$album->{name})) if $album->{discid} eq '';
 
 	my $newlocation = safe_chars($tracks[0]->{artist}).'/'.safe_chars($album->{name});
 	`mkdir -m 777 -p /usr/local/cmms/htdocs/media/$newlocation` unless -d "/usr/local/cmms/htdocs/media/$newlocation";
@@ -209,8 +209,11 @@ while(my($album_id,$album) = each %{$tables->{album}->{albums}}) {
 		my($ext) = ($track->{file_name} =~ /(mp3|flac|wav)$/i);
 		my $newname = substr(safe_chars($number.' '.$track->{title}),0,35).".$ext";
 		#print STDERR "cp '$media/$track->{file_location}$track->{file_name}' /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
-		`cp "$media/$track->{file_location}$track->{file_name}" /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
-		`chown nobody:nobody /usr/local/cmms/htdocs/media/$newlocation/$newname`;
+		my $oldf = "$media/$track->{file_location}$track->{file_name}";
+		$oldf =~ s/(\W)/\\$1/g;
+		$oldf =~ s|\\/|/|g;
+		`cp $oldf /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
+		`chown nobody:nobody /usr/local/cmms/htdocs/media/$newlocation/$newname` if -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
 
 		my $bitrate = 320*1024;
 		my $filesize = -s "/usr/local/cmms/htdocs/media/$newlocation/$newname";

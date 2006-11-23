@@ -106,7 +106,7 @@ sub copy_files {
 		my $newname = substr(safe_chars($number.' '.($track->{Name}?$track->{Name}:'Unknown')),0,35).".$ext";
 		#print STDERR "cp $old /usr/local/cmms/htdocs/media/$newlocation/$newname\n";
 		`cp $old /usr/local/cmms/htdocs/media/$newlocation/$newname` unless -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
-		`chown nobody:nobody /usr/local/cmms/htdocs/media/$newlocation/$newname`;
+		`chown nobody:nobody /usr/local/cmms/htdocs/media/$newlocation/$newname` if -f "/usr/local/cmms/htdocs/media/$newlocation/$newname";
 	}
 
 	my $discid = md5_hex($xml->{Album}->{Artist}->{Name}.' '.$xml->{Album}->{Name});
@@ -128,7 +128,7 @@ sub import {
 		$xml->{Album}->{Genre}->{Name} = 'Unknown';
 	}
 
-	my $discid = md5_hex($xml->{Album}->{Artist}->{Name}.' '.$xml->{Album}->{Name});
+	my $discid = md5_hex(lc($xml->{Album}->{Artist}->{Name}.' '.$xml->{Album}->{Name}));
 
 	my $tracks = [];
 	foreach my $track (@{$xml->{Album}->{Track}}) {
