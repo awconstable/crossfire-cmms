@@ -132,7 +132,7 @@ sub import_folder {
 					$track->artist(($id3->artist->toCString?$id3->artist->toCString:'Unknown'));
 					$track->number(($id3->track?$id3->track:$trck_num));
 					$track->genre(($id3->genre->toCString?$id3->genre->toCString:'Unknown'));
-					$album = ($id3->album->toCString?$id3->album->toCString:'Unknow');
+					$album = ($id3->album->toCString?$id3->album->toCString:'Unknown');
 					$year  = $id3->year;
 				}
 			}
@@ -143,8 +143,8 @@ sub import_folder {
 			} else {
 				print STDERR "track ($trck_num) [$file] has no meta data\n";
 				($_) = ($file =~ m@/([^/]+\.(mp3|flac))$@i);
-				if(!-f '/usr/local/cmms/htdocs/failed/'.$_) {
-					`mv "$file" /usr/local/cmms/htdocs/failed/`;
+				if(!-f '/usr/local/cmms/htdocs/import/failed/'.$_) {
+					`mv "$file" /usr/local/cmms/htdocs/import/failed/`;
 				} else {
 					`rm -f "$file"`;
 				}
@@ -187,14 +187,23 @@ sub import_folder {
 						`rm -f "$file"`;
 					}
 				}
-				`rm -fR $folder/` if !$root && !(grep{/\.(flac|mp3)$/i}<$folder/*>);
+				delete $fsizes->{$file};
 			}
-
-			delete $fsizes->{$file};
 		}
 	}
 
-	foreach my $fld (<$folder/*>) {
-		import_folder($fld) if -d $fld;
+	my $del = 1;
+	if(@_=grep{!/^\.+$/}<$folder/*>) {
+		foreach(@_) {
+			$del = 0 if -d $_ || $_ =~ /\.(mp3|flac)$/i;
+		}
+
+		foreach my $fld (grep{!/\/failed/}@_) {
+			my $nfld = $fld;
+			$nfld =~ s/(\W)/\\$1/g;
+			$nfld =~ s|\\/|/|g;
+			import_folder($nfld) if -d $fld;
+		}
 	}
+	`rm -fR $folder/` if !($folder =~ m|/failed|) && $del;
 }
