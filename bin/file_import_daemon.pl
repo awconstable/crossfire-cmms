@@ -143,6 +143,7 @@ sub import_folder {
 			} else {
 				print STDERR "track ($trck_num) [$file] has no meta data\n";
 				($_) = ($file =~ m@/([^/]+\.(mp3|flac))$@i);
+				`mkdir -p /usr/local/cmms/htdocs/import/failed/` unless -d '/usr/local/cmms/htdocs/import/failed/';
 				if(!-f '/usr/local/cmms/htdocs/import/failed/'.$_) {
 					`mv "$file" /usr/local/cmms/htdocs/import/failed/`;
 				} else {
