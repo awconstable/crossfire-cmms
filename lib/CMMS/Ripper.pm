@@ -326,7 +326,6 @@ sub store {
 	my $acomment = $meta->{COMMENT};
 	$acomment =~ s/[\r\n]+$//g;
 
-	my $qname = $mc->quote($meta->{ALBUM});
 	my $qdisc = $mc->quote($meta->{DISCID});
 	$sql = "SELECT id FROM album WHERE discid = $qdisc";
 	($_) = @{$mc->query_and_get($sql)||[]};

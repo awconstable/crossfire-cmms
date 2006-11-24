@@ -59,7 +59,7 @@ sub import_folder {
 	my($folder,$root) = @_;
 	$folder =~ s|/$||;
 
-	if(my @files  = grep{/\.(mp3|flac)$/i} <$folder/*>) {
+	if(my @files = grep{!/^\.+$/ && !/\/failed/}<$folder/*>) {
 		my $trck_num = 0;
 		foreach my $file (@files) {
 			my($album,$year);
@@ -79,7 +79,7 @@ sub import_folder {
 			}
 			my $track = new CMMS::Track::Enhanced;
 			$track->type(lc($ext));
-			print STDERR "File [$file]\n";
+			print STDERR "File [$file]\n" if $ext;
 			my $meta = undef;
 			if($file =~ /\.flac$/i) {
 				my $flac = new Audio::TagLib::FLAC::File($file);
@@ -89,8 +89,8 @@ sub import_folder {
 				 if(my $id32 = $flac->ID3v2Tag) {
 					$meta = 1;
 					print STDERR "File [$file] has metadata [ID3v2Tag]\n";
-					$track->title(cleanupmeta($id32->title->toCString?$id32->title->toCString:'Unknown'));
-					$track->artist(cleanupmeta($id32->artist->toCString?$id32->artist->toCString:'Unknown'));
+					$track->title(cleanupmeta($id32->title->toCString?$id32->title->toCString:''));
+					$track->artist(cleanupmeta($id32->artist->toCString?$id32->artist->toCString:''));
 					$track->number(($id32->track?$id32->track:$trck_num));
 					$track->genre(cleanupmeta($id32->genre->toCString?$id32->genre->toCString:'Unknown'));
 					$album = cleanupmeta($id32->album->toCString?$id32->album->toCString:'Unknow');
@@ -98,8 +98,8 @@ sub import_folder {
 				} elsif(my $id3 = $flac->ID3v1Tag) {
 					$meta = 1;
 					print STDERR "File [$file] has metadata [ID3v1Tag]\n";
-					$track->title(cleanupmeta($id3->title->toCString?$id3->title->toCString:'Unknown'));
-					$track->artist(cleanupmeta($id3->artist->toCString?$id3->artist->toCString:'Unknown'));
+					$track->title(cleanupmeta($id3->title->toCString?$id3->title->toCString:''));
+					$track->artist(cleanupmeta($id3->artist->toCString?$id3->artist->toCString:''));
 					$track->number(($id3->track?$id3->track:$trck_num));
 					$track->genre(cleanupmeta($id3->genre->toCString?$id3->genre->toCString:'Unknown'));
 					$album = cleanupmeta($id3->album->toCString?$id3->album->toCString:'Unknow');
@@ -107,8 +107,8 @@ sub import_folder {
 				} elsif(my $xiph = $flac->xiphComment) {
 					$meta = 1;
 					print STDERR "File [$file] has metadata [XiphComment]\n";
-					$track->title(cleanupmeta($xiph->title->toCString?$xiph->title->toCString:'Unknown'));
-					$track->artist(cleanupmeta($xiph->artist->toCString?$xiph->artist->toCString:'Unknown'));
+					$track->title(cleanupmeta($xiph->title->toCString?$xiph->title->toCString:''));
+					$track->artist(cleanupmeta($xiph->artist->toCString?$xiph->artist->toCString:''));
 					$track->number(($xiph->track?$xiph->track:$trck_num));
 					$track->genre(cleanupmeta($xiph->genre->toCString?$xiph->genre->toCString:'Unknown'));
 					$album = cleanupmeta($xiph->album->toCString?$xiph->album->toCString:'Unknown');
@@ -121,17 +121,17 @@ sub import_folder {
  				if(my $id32 = $mp3->ID3v2Tag) {
 					$meta = 1;
 					print STDERR "File [$file] has metadata [ID3v2Tag]\n";
-					$track->title(cleanupmeta($id32->title->toCString?$id32->title->toCString:'Unknown'));
-					$track->artist(cleanupmeta($id32->artist->toCString?$id32->artist->toCString:'Unknown'));
+					$track->title(cleanupmeta($id32->title->toCString?$id32->title->toCString:''));
+					$track->artist(cleanupmeta($id32->artist->toCString?$id32->artist->toCString:''));
 					$track->number(($id32->track?$id32->track:$trck_num));
 					$track->genre(cleanupmeta($id32->genre->toCString?$id32->genre->toCString:'Unknown'));
-					$album = cleanupmeta($id32->album->toCString?$id32->album->toCString:'Unknow');
+					$album = cleanupmeta($id32->album->toCString?$id32->album->toCString:'Unknown');
 					$year  = $id32->year;
 				} elsif(my $id3 = $mp3->ID3v1Tag) {
 					$meta = 1;
 					print STDERR "File [$file] has metadata [ID3v1Tag]\n";
-					$track->title(cleanupmeta($id3->title->toCString?$id3->title->toCString:'Unknown'));
-					$track->artist(cleanupmeta($id3->artist->toCString?$id3->artist->toCString:'Unknown'));
+					$track->title(cleanupmeta($id3->title->toCString?$id3->title->toCString:''));
+					$track->artist(cleanupmeta($id3->artist->toCString?$id3->artist->toCString:''));
 					$track->number(($id3->track?$id3->track:$trck_num));
 					$track->genre(cleanupmeta($id3->genre->toCString?$id3->genre->toCString:'Unknown'));
 					$album = cleanupmeta($id3->album->toCString?$id3->album->toCString:'Unknown');
@@ -139,25 +139,40 @@ sub import_folder {
 				}
 			}
 
+			my $odfle = $file;
 			$file =~ s/(\W)/\\$1/g;
 			$file =~ s|\\/|/|g;
 
-			if(defined $meta) {
+			if(defined $meta && $track->artist && $track->title) {
 				push @{$tracks}, $track;
 				push @{$imports}, $file;
-			} else {
+			} elsif(-f $odfle) {
 				print STDERR "track ($trck_num) [$file] has no meta data\n";
-				($_) = ($file =~ m@/([^/]+\.(mp3|flac))$@i);
-				s/\\//g;
-				system('mkdir -p /usr/local/cmms/htdocs/import/failed/') unless -d '/usr/local/cmms/htdocs/import/failed/';
-				if(!-f '/usr/local/cmms/htdocs/import/failed/'.$_) {
-					system("mv $file /usr/local/cmms/htdocs/import/failed/");
-				} else {
-					system("rm -f $file");
+
+				unless(-d '/usr/local/cmms/htdocs/import/failed/') {
+					system('mkdir -m 777 -p /usr/local/cmms/htdocs/import/failed/');
+					system('chown nobody:nobody /usr/local/cmms/htdocs/import/* -R');
 				}
+
+				my($ff,$fe) = ($file =~ m@/usr/local/cmms/htdocs/import/(.+/)?([^/]+)$@i);
+				$ff = '' unless $ff;
+				$ff =~ s/\\//g;
+				$fe =~ s/\\//g;
+				if(!-f '/usr/local/cmms/htdocs/import/failed/'.$ff.$fe) {
+					$ff =~ s/(\W)/\\$1/g;
+					$fe =~ s/(\W)/\\$1/g;
+					unless(-d '/usr/local/cmms/htdocs/import/failed/'.$ff) {
+						system('mkdir -m 777 -p /usr/local/cmms/htdocs/import/failed/'.$ff);
+						system('chown nobody:nobody /usr/local/cmms/htdocs/import/* -R');
+					}
+					system('mv '.$file.' /usr/local/cmms/htdocs/import/failed/'.$ff);
+				} else {
+					system('rm -f '.$file);
+				}
+				$album = undef;
 			}
 
-			if($album) {
+			if(-f $odfle && $album) {
 				my $discid = md5_hex(lc($tracks->[0]->artist.' '.$album));
 				my $metadata = {
 					GENRE     => $tracks->[0]->genre,
@@ -190,8 +205,26 @@ sub import_folder {
 					$ripper->store($metadata);
 				} else {
 					warn "Album [$discid] [$album] already ripped";
-					foreach my $file (@{$imports}) {
-						system("rm -f $file");
+					unless(-d '/usr/local/cmms/htdocs/import/failed/') {
+						system('mkdir -m 777 -p /usr/local/cmms/htdocs/import/failed/');
+						system('chown nobody:nobody /usr/local/cmms/htdocs/import/* -R');
+					}
+					foreach my $fle (@{$imports}) {
+						my($ff,$fe) = ($fle =~ m@/usr/local/cmms/htdocs/import/(.+/)?([^/]+)$@i);
+						$ff = '' unless $ff;
+						$ff =~ s/\\//g;
+						$fe =~ s/\\//g;
+						if(!-f '/usr/local/cmms/htdocs/import/failed/'.$ff.$fe) {
+							$ff =~ s/(\W)/\\$1/g;
+							$fe =~ s/(\W)/\\$1/g;
+							unless(-d '/usr/local/cmms/htdocs/import/failed/'.$ff) {
+								system('mkdir -m 777 -p /usr/local/cmms/htdocs/import/failed/'.$ff);
+								system('chown nobody:nobody /usr/local/cmms/htdocs/import/* -R');
+							}
+							system('mv '.$fle.' /usr/local/cmms/htdocs/import/failed/'.$ff);
+						} else {
+							system('rm -f '.$fle);
+						}
 					}
 				}
 				delete $fsizes->{$file};
@@ -199,20 +232,16 @@ sub import_folder {
 		}
 	}
 
-	my $del = 1;
 	if(@_=grep{!/^\.+$/}<$folder/*>) {
-		foreach(@_) {
-			$del = 0 if -d $_ || $_ =~ /\.(mp3|flac)$/i;
-		}
-
 		foreach my $fld (grep{!/\/failed/}@_) {
 			my $nfld = $fld;
 			$nfld =~ s/(\W)/\\$1/g;
 			$nfld =~ s|\\/|/|g;
 			import_folder($nfld) if -d $fld;
 		}
+	} else {
+		system("rm -fR $folder/") if !$root && !($folder =~ m|/failed|);
 	}
-	system("rm -fR $folder/") if !($folder =~ m|/failed|) && $del;
 }
 
 sub cleanupmeta {
