@@ -75,7 +75,7 @@ sub import_folder {
 				$fsizes->{$file}->{size} = -s $file;
 				$fsizes->{$file}->{time} = time;
 				next;
-			} elsif($fsizes->{$file}->{time}+10 > time) {
+			} elsif($fsizes->{$file}->{time}+60 > time) {
 				next;
 			}
 			my $track = new CMMS::Track::Enhanced;
