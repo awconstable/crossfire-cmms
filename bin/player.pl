@@ -10,7 +10,7 @@ use Time::HiRes qw(sleep);
 
 $SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = $SIG{__DIE__} = \&unload;
 
-my($oup, $odown) = (0, 0);
+my($oup, $odown) = (0, 1000000);
 
 close(STDERR);
 open(STDERR,'>> /usr/local/cmms/logs/player.log');
@@ -78,10 +78,12 @@ while(1) {
 				} elsif($buff =~ /^\@/) {
 					if($buff =~ /\@F [0-9]+ [0-9]+ ([0-9\.]+) ([0-9\.]+)/) {
 						my ($up, $down) = map{ceil($_)} ($1, $2);
-						next if $up eq $oup && $down eq $odown;
-						$oup = $up;
+						$up    = $oup   if $up   < $oup;
+						$down  = $odown if $down > $odown;
+						next   if $up eq $oup && $down eq $odown;
+						$oup   = $up;
 						$odown = $down;
-						$buff = "230: time $up $down";
+						$buff  = "230: time $up $down";
 						$buff .= "\r\n230: endofsong\r\n200: endofsong" if $down == 0;
 					} elsif($buff =~ /\@P 1/) {
 						$buff = "230: pause\r\n200: pause";
@@ -91,9 +93,10 @@ while(1) {
 						my $file = $last;
 						$file = $1 unless $last;
 						$file .= ".$type" unless $file =~ /\.$type$/;
+						($oup, $odown) = (0, 1000000);
 						$buff = "240: songtype $file\r\n220: canplay mod_${type}123 $file\r\n230: play mod_${type}123 $file\r\n230: playing\r\n200: play mod_${type}123 $file";
 					} elsif($buff =~ /\@P 0/) {
-						$buff = "230: stop\r\n200: stop";
+						$buff = "230: endofsong\r\n200: endofsong\r\n230: stop\r\n200: stop";
 					} else {
 						next;
 					}
