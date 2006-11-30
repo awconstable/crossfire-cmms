@@ -8,7 +8,7 @@ use Config::General;
 use POSIX qw(:sys_wait_h ceil);
 use Time::HiRes qw(sleep);
 
-$SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = $SIG{__DIE__} = \&unload;
+$SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = $SIG{__DIE__} = \&interrupt;
 
 my($oup, $odown) = (0, 1000000);
 
@@ -37,9 +37,9 @@ $listen->autoflush(1);
 
 my $select = new IO::Select($listen);
 
-my($rdr,$mpg,$pid,$last) = (undef,undef,undef,undef);
-my $type = 'flac';
-($pid,$type) = player($type);
+my($rdr,$mpg);
+my($pid,$type) = player('flac');
+my($oldcommand,$last) = ('','');
 
 while(1) {
 	foreach my $sock ($select->can_read(0)) {
@@ -64,7 +64,8 @@ while(1) {
 			$buff =~ s/\n+$//g;
 
 			foreach $buff (split("\n",$buff)) {
-				if($buff =~ /^play|pause|stop|seek/) {
+				if($buff =~ /^(play|pause|stop|seek)/) {
+					$oldcommand = $1;
 					if($buff =~ /\.(flac|mp3)$/) {
 						($pid,$type) = player($1) if $type ne $1;
 					}
@@ -96,7 +97,7 @@ while(1) {
 						($oup, $odown) = (0, 1000000);
 						$buff = "240: songtype $file\r\n220: canplay mod_${type}123 $file\r\n230: play mod_${type}123 $file\r\n230: playing\r\n200: play mod_${type}123 $file";
 					} elsif($buff =~ /\@P 0/) {
-						$buff = "230: endofsong\r\n200: endofsong\r\n230: stop\r\n200: stop";
+						$buff = ($oldcommand ne 'stop'?"230: endofsong\r\n200: endofsong\r\n":'') . "230: stop\r\n200: stop";
 					} else {
 						next;
 					}
@@ -118,9 +119,15 @@ while(1) {
 	sleep(.1);
 }
 
+sub interrupt {
+	unload();
+	exit 0;
+}
+
 sub unload {
 	if($pid) {
 		print $mpg "quit\n";
+		$select->remove($rdr);
 		print STDERR "Closing $type player ($pid)\n";
 		$rdr->close;
 		$mpg->close;
@@ -132,15 +139,7 @@ sub unload {
 sub player {
 	my $t = shift;
 
-	if($pid) {
-		print $mpg "quit\n";
-		$select->remove($rdr);
-		print STDERR "Closing $type player ($pid)\n";
-		$rdr->close;
-		$mpg->close;
-		kill 'HUP' => $pid;
-		waitpid $pid, 0;
-	}
+	unload();
 
 	my $p;
 	$p = open2($rdr,$mpg,'nice -n -10 /usr/local/bin/flac123 -R 2>&1') if $t eq 'flac';
