@@ -153,6 +153,10 @@ $prelookup = $pltobj->get_pre_lookup( "track_id", "");
 $prelookup->{none} = "NULL";
 $prelookup->{nonetext} = "[please pick]";
 
+$aprelookup = $pltobj->get_pre_lookup( "album_id", "");
+$aprelookup->{none} = "NULL";
+$aprelookup->{nonetext} = "[please pick]";
+
 $lookup = undef;
 
 if( $prevalue ) {
@@ -166,6 +170,15 @@ $lookup = $pltobj->get_lookup( "track_id", "$extras");
 <br />
 <div class="subsubtitle">Add track/album to playlist</div>
 <table width="100%" cellspacing="1" cellpadding="2" border="0" class="boxtable">
+<tr>
+<td class="boldtablecells" width="25%">Arist:</td>
+<td class="tablecells">
+<select class="input" id="ppsel_track_id" name="plt_artist_id" onchange="javascript:fwAjaxLookupSelect('psel_track_id','CMMS::Database','playlist_track','album_id','ppsel_track_id');">
+<option value="" [+ $prevalue ? "": "SELECTED" +]>[please pick]</option>
+[$ foreach $e ( @{$aprelookup->{elements}} ) $]<option value="[+ $e->{name} +]" [+ $prevalue eq $e->{name} ? "SELECTED" : "" +]>[+ $e->{text} +]</option>[$ endforeach $]
+</select>
+</td>
+</tr>
 <tr>
 <td class="boldtablecells" width="25%">Album:</td>
 <td class="tablecells">

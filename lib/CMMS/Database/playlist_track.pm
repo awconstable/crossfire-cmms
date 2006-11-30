@@ -1,4 +1,4 @@
-#$Id: playlist_track.pm,v 1.14 2006/09/26 11:45:57 byngmeister Exp $
+#$Id: playlist_track.pm,v 1.15 2006/11/30 16:33:17 toby Exp $
 
 package CMMS::Database::playlist_track;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -79,6 +79,27 @@ sub new {
 		},
 		displaytype => "readonly",
             },
+	    'album_id' => {
+	        type => "int",
+		tag  => "Album",
+		title => "Album",
+		displaytype => "doublelookup",
+		prelookup => {
+		    nonetext => "[please pick an artist]",
+		    table => "artist",
+		    keycol => "id",
+		    valcol => "name",
+		    lookup_restriction => "album.artist_id=",
+		    reverse_method => "rlookup_artist",
+		},
+		lookup => {
+		    table => "album",
+		    keycol => "id",
+		    valcol => "name",
+		    none => "NULL",
+		    read_only => 1,
+		},
+	    },
             'track_id' => {
 	        type => "int",
 		tag  => "Track",
@@ -207,6 +228,21 @@ sub rlookup_album {
     my $mc = $self->mysqlConnection();
 
     my $id = $mc->enum_lookup("track","id","album_id",$track_id);
+    
+    return $id;
+}
+#------------------------------------------------------------------------------
+
+=head2 rlookup_artist
+
+=cut
+
+
+sub rlookup_artist {
+    my( $self, $album_id ) = @_;
+    my $mc = $self->mysqlConnection();
+
+    my $id = $mc->enum_lookup("album","id","arist_id",$album_id);
     
     return $id;
 }
