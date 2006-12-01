@@ -85,7 +85,6 @@ while(1) {
 						$oup   = $up;
 						$odown = $down;
 						$buff  = "230: time $up $down";
-						$buff .= "\r\n230: endofsong\r\n200: endofsong" if $down == 0;
 					} elsif($buff =~ /\@P 1/) {
 						$buff = "230: pause\r\n200: pause";
 					} elsif($buff =~ /\@P 2/) {
