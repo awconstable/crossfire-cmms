@@ -18,7 +18,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -128,13 +128,13 @@ EndSelects
     ;
 
     my $tables = <<EndTables
-conductor,
-track
+conductor
+LEFT JOIN track ON track.conductor_id = conductor.id
 EndTables
     ;
 
     my $where = <<EndWhere
-track.conductor_id = conductor.id
+1=1
 group by conductor.id
 order by conductor.name
 EndWhere
