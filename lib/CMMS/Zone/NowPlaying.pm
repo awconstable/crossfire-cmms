@@ -160,10 +160,10 @@ sub random {
 	my $random = $row->{value};
 
 	if($random) {
-		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND param = 'random'");
+		$mc->query("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND param = 'random'");
 		$random = undef;
 	} else {
-		$mc->query_and_get("REPLACE INTO zone_mem (zone,param,value) values('$self->{zone}->{number}', 'random', 1)");
+		$mc->query("REPLACE INTO zone_mem (zone,param,value) values('$self->{zone}->{number}', 'random', 1)");
 		$random = 1;
 	}
 
@@ -188,10 +188,10 @@ sub repeat {
 	my $repeat = $row->{value};
 
 	if($repeat) {
-		$mc->query_and_get("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND param = 'repeat'");
+		$mc->query("DELETE from zone_mem where zone = '$self->{zone}->{number}' AND param = 'repeat'");
 		$repeat = undef;
 	} else {
-		$mc->query_and_get("REPLACE INTO zone_mem (zone,param,value) values('$self->{zone}->{number}', 'repeat', 1)");
+		$mc->query("REPLACE INTO zone_mem (zone,param,value) values('$self->{zone}->{number}', 'repeat', 1)");
 		$repeat = 1;
 	}
 

@@ -28,7 +28,7 @@ sub hash2cmd {
     delete($hash{cmd});
     
     while ( ($k,$v) = each %hash ) {
-        $arr[$i++] = $k . $value_sep . $v;
+        $arr[$i++] = $k . $value_sep . (defined $v?$v:'');
     }
     $line = join ($send_sep, @arr);
     return $line."\r\n";

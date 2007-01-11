@@ -399,6 +399,7 @@ sub get_playlist_num_tracks {
 
 sub get_fulltrack_info { 
 	my ($self, $track_id) = @_;
+	return undef unless $track_id;
 
 	my $mc = $self->mysqlConnection;
 
