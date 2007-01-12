@@ -38,7 +38,7 @@ $mc and $db->{password} and $mc->password( $db->{password} );
 
 unless( $mc and $mc->connect ) {
     qlog CRITICAL, "Can't connect to database '".$mc->database."' on '".$mc->host."' with user '".$mc->user."'";
-    die;
+    exit 0;
 };
 
 qlog INFO,"[$$] Connecting to cmms_player $zone->{host}:$zone->{port}";
@@ -50,8 +50,8 @@ unless( $player = IO::Socket::INET->new(Proto     => "tcp",
 					PeerAddr  => $zone->{host},
 					PeerPort  => $zone->{port})
 	) {
-    qlog "Can't connect to port $zone->{port} on $zone->{host}: $!";
-    die;
+    qlog CRITICAL, "Can't connect to port $zone->{port} on $zone->{host}: $!";
+    exit 0;
 }
 
 $player->autoflush(1);
@@ -68,7 +68,10 @@ while(1) {
 	foreach my $hndl ($select->can_read(0)) {
 		if($hndl == $player) {
 			my $line;
-			die("Can't read from Player") unless sysread($hndl,$line,1024);
+			unless(sysread($hndl,$line,1024)) {
+				qlog CRITICAL, "Can't read from Player";
+				exit 0;
+			}
 
 			$line =~ s/\r+//g;
 			foreach my $command (split "\n", $line) {
@@ -99,7 +102,10 @@ while(1) {
 			}
 		} elsif($hndl == \*STDIN) {
 			my($line,%cmd);
-			die("Can't read from STDIN") unless sysread($hndl,$line,1024);
+			unless(sysread($hndl,$line,1024)) {
+				qlog CRITICAL, "Can't read from STDIN";
+				exit 0;
+			}
 
 			$line =~ s/\r+//g;
 			foreach my $command (split "\n", $line) {

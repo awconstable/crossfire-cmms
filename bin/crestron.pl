@@ -32,14 +32,12 @@ while(1) {
 			$select->add($new);
 			print STDERR localtime(time)." Client(",$new->fileno,") [",$new->peerhost,":",$new->peerport, "] connected.\n";
 		} elsif($sock == \*STDIN) {
-			my $line="";
-			my $read = sysread($sock, $line, 1024);
-			$line =~ s/\r+//g;
-			foreach my $command (split "\n", $line) {
-				foreach my $hndl ($select->handles) {
-					next if $hndl==$listen || $hndl==$sock || !$hndl->connected || !$hndl->fileno;
-					print $hndl "$command\r\n";
-				}
+			my $line = <$sock>;
+			$line =~ s/[\r\n]+//g;
+
+			foreach my $hndl ($select->handles) {
+				next if $hndl==$listen || $hndl==$sock || !$hndl->connected || !$hndl->fileno;
+				print $hndl "$line\r\n";
 			}
 		} else {
 			my $line='';
@@ -57,5 +55,5 @@ while(1) {
 		}
 	}
 
-	sleep 0.3;
+	sleep 0.1;
 }
