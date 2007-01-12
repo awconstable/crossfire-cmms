@@ -34,11 +34,12 @@ while(1) {
 		} elsif($sock == \*STDIN) {
 			my $line="";
 			my $read = sysread($sock, $line, 1024);
-			$line =~ s/[\r\n]//g;
-			$line .= "\r\n";
-			foreach my $hndl ($select->handles) {
-				next if $hndl==$listen || $hndl==$sock || !$hndl->connected || !$hndl->fileno;
-				print $hndl $line;
+			$line =~ s/\r+//g;
+			foreach my $command (split "\n", $line) {
+				foreach my $hndl ($select->handles) {
+					next if $hndl==$listen || $hndl==$sock || !$hndl->connected || !$hndl->fileno;
+					print $hndl "$command\r\n";
+				}
 			}
 		} else {
 			my $line='';
@@ -49,7 +50,11 @@ while(1) {
 				next;
 			}
 
-			print STDOUT $line;
+			$line =~ s/\r+//g;
+			foreach my $command (split "\n", $line) {
+				print STDERR "\t[$command]\n";
+				print STDOUT $command;
+			}
 		}
 	}
 
