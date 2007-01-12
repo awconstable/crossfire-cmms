@@ -156,15 +156,11 @@ sub get_track_info {
 
 sub status_play {
 	my ($self, $data) = @_;
-
-	# PLAYER.... MP3 UNIQUE LOCATION
-	# mod_mpg123 /home/chrala/cmms_mp3/rolling_stones/flashpoint/17-sex_drive.mp3
-	$data =~ /^(\w*) (.*)$/;
+	return () unless $data =~ /\.(mp3|flac)$/i;
 
 	# PREXIF...............|DIRECTORY................|FILENAME
 	# /storedir/media/audio/rolling_stones/flashpoint/06-ruby_tuesday.mp3
 	# /home/chrala/cmms_mp3/rolling_stones/flashpoint/17-sex_drive.mp3
-	$data = $2;
 	$data =~ /^(.*)\/(.*)$/;
 
 	return $self->get_track_info($1.'/', $2);
@@ -201,34 +197,35 @@ sub loop {
 
 	my $line;
 	my %cmd;
-	while(defined ($line = <$handle>)) {
-		chomp $line;
-		$line =~ s/\r//;
-		next if $line eq ''; # empty line - there won't be command
+	while(1) {
+		sysread($handle,$line,1024);
+		$line =~ s/\r+//g;
 
-		# status, command, data
-		my ($status, $cmd, $data);
-		if($line =~ /^(\d\d\d): (\w*) (.*)$/) {
-			$status = $1;
-			$cmd    = $2;
-			$data   = $3;
-		} elsif($line =~ /^(\d\d\d): (\w*)$/) {
-			$status = $1;
-			$cmd    = $2;
-			$data   = undef;
-		} else {
-			next;
-		}
-
-		if($commands->{lc $status}{lc $cmd}) {
-			my $method = $commands->{lc $status}{lc $cmd};
-			my %ret = eval "\$self->$method(\$data)";
-			if($ret{cmd}) {
-				$ret{zone} = $self->{zone}->{number};
-				print hash2cmd(%ret);
+		foreach my $command (split "\n", $line) {
+			# status, command, data
+			my ($status, $cmd, $data);
+			if($command =~ /^(\d\d\d): (\w*) (.*)$/) {
+				$status = $1;
+				$cmd    = $2;
+				$data   = $3;
+			} elsif($command =~ /^(\d\d\d): (\w*)$/) {
+				$status = $1;
+				$cmd    = $2;
+				$data   = undef;
+			} else {
+				next;
 			}
-		} else {
-			qlog INFO, "cmms_player: ".$line."\n";
+
+			if($commands->{lc $status}{lc $cmd}) {
+				my $method = $commands->{lc $status}{lc $cmd};
+				my %ret = eval "\$self->$method(\$data)";
+				if($ret{cmd}) {
+					$ret{zone} = $self->{zone}->{number};
+					print hash2cmd(%ret);
+				}
+			} else {
+				qlog INFO, "cmms_player: ".$command."\n";
+			}
 		}
 	}
 }

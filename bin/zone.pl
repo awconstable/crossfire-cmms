@@ -2,12 +2,15 @@
 
 use strict;
 use IO::Socket;
+use IO::Select;
 use Getopt::Long;
 use Config::General;
 use CMMS::Zone::Sender;
 use CMMS::Zone::Status;
+use CMMS::Zone::Command;
 use CMMS::Database::MysqlConnectionEscape;
 use Quantor::Log;
+use Time::HiRes qw(sleep);
 
 $Quantor::Log::log_level = INFO; 
 
@@ -38,65 +41,80 @@ unless( $mc and $mc->connect ) {
     die;
 };
 
-my $parentpid = $$;
-my ($kidpid, $handle, $line);
-
 qlog INFO,"[$$] Connecting to cmms_player $zone->{host}:$zone->{port}";
 
+my $player;
+
 # create a tcp connection to the specified host and port
-unless( $handle = IO::Socket::INET->new(Proto     => "tcp",
+unless( $player = IO::Socket::INET->new(Proto     => "tcp",
 					PeerAddr  => $zone->{host},
 					PeerPort  => $zone->{port})
 	) {
     qlog "Can't connect to port $zone->{port} on $zone->{host}: $!";
     die;
 }
-     
+
+$player->autoflush(1);
+STDOUT->autoflush(1);
+
 qlog INFO,"[$$] Connected to irmp3d.";
 
-# split the program into two processes, identical twins
-unless ( defined($kidpid = fork()) ) {
-    qlog CRITICAL, "Can't fork: $!";
-    die;
+my $status = new CMMS::Zone::Status(mc => $mc, handle => $player, zone => $zone, conf => \%conf);
+my $sender = new CMMS::Zone::Sender(mc => $mc, handle => $player, zone => $zone, conf => \%conf);
+
+my $select = new IO::Select($player,\*STDIN);
+
+while(1) {
+	foreach my $hndl ($select->can_read(0)) {
+		if($hndl == $player) {
+			my $line;
+			die("Can't read from Player") unless sysread($hndl,$line,1024);
+
+			$line =~ s/\r+//g;
+			foreach my $command (split "\n", $line) {
+				# status, command, data
+				my ($stt, $cmd, $data);
+				if($command =~ /^(\d\d\d): (\w*) (.*)$/) {
+					$stt  = $1;
+					$cmd  = $2;
+					$data = $3;
+				} elsif($command =~ /^(\d\d\d): (\w*)$/) {
+					$stt  = $1;
+					$cmd  = $2;
+					$data = undef;
+				} else {
+					next;
+				}
+
+				if($CMMS::Zone::Status::commands->{lc $stt}{lc $cmd}) {
+					my $method = $CMMS::Zone::Status::commands->{lc $stt}{lc $cmd};
+					my %ret = eval "\$status->$method(\$data)";
+					if($ret{cmd}) {
+						$ret{zone} = $zone->{number};
+						print STDOUT hash2cmd(%ret);
+					}
+				} else {
+					qlog INFO, "cmms_player: ".$command."\n";
+				}
+			}
+		} elsif($hndl == \*STDIN) {
+			my($line,%cmd);
+			die("Can't read from STDIN") unless sysread($hndl,$line,1024);
+
+			$line =~ s/\r+//g;
+			foreach my $command (split "\n", $line) {
+				qlog INFO, "Received command: $command\n";
+				%cmd = cmd2hash $command;
+				next unless %cmd;  # empty hash - there won't be command either
+				next unless &check_cmd(\%cmd, $sender->{zone}->{number}); # do further checking (eg. zone)
+				my $cmd = $sender->process(\%cmd);
+				if($cmd) {
+					qlog INFO, "Sending to player '$cmd'";
+					print $player "$cmd\r\n";
+				}
+			}
+		}
+	}
+
+	sleep 0.1;
 }
-
-
-
-if ($kidpid) {
-
-    $SIG{__DIE__} = sub { 
-        kill("TERM" => $kidpid);        # send SIGTERM to child
-        };
-
-    STDOUT->autoflush(1); # important, otherwise output will be buffered!!!
-    
-    qlog INFO, "[$$] Status process.";
-
-    my $obj = new CMMS::Zone::Status(mc => $mc, handle => $handle, zone => $zone, conf => \%conf);
-    $obj->loop;
-
-    qlog INFO, "[$$] Connection closed by cmms_player...";
-    
-} else {
-    $SIG{__DIE__} = \&terminate_all;
-    
-    $handle->autoflush(1); # so output gets there right away
-    STDOUT->autoflush(1); # important, otherwise output will be buffered!!!
-    # child copies standard input to the socket
-
-    qlog INFO,"[$$] Sender/Command process.";
-
-    my $obj = new CMMS::Zone::Sender(mc => $mc, handle => $handle, zone => $zone, conf => \%conf);
-    $obj->loop;
-
-    qlog INFO, "[$$] Program ended by cmmsd/STDIN...";    
-    
-}
-
-sub terminate_all {
-	# try to clean up
-	$handle->close;
-	kill("TERM" => $parentpid); # tell parent we've died :(
-}
-
-exit;

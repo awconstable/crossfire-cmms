@@ -53,7 +53,7 @@ while(1) {
 			next unless $sock->fileno;
 
 			my $buff = '';
-			unless($sock->sysread($buff,5*1024)) {
+			unless($sock->sysread($buff,1024)) {
 				print STDERR 'Client ('.$sock->fileno.') ['.$sock->peerhost.':'.$sock->peerport."] disconnected\n";
 				$select->remove($sock);
 				$sock->close();
@@ -61,7 +61,6 @@ while(1) {
 			}
 
 			$buff =~ s/\r+//g;
-			$buff =~ s/\n+$//g;
 
 			foreach $buff (split("\n",$buff)) {
 				if($buff =~ /^(play|pause|stop|seek)/) {
@@ -92,9 +91,9 @@ while(1) {
 					} elsif($buff =~ /\@I (\/?.+)/) {
 						my $file = $last;
 						$file = $1 unless $last;
-						$file .= ".$type" unless $file =~ /\.$type$/;
+						next unless $file =~ /\.$type$/;
 						($oup, $odown) = (0, 1000000);
-						$buff = "240: songtype $file\r\n220: canplay mod_${type}123 $file\r\n230: play mod_${type}123 $file\r\n230: playing\r\n200: play mod_${type}123 $file";
+						$buff = "240: songtype $file\r\n230: play $file\r\n230: playing\r\n";
 					} elsif($buff =~ /\@P 0/) {
 						$buff = ($oldcommand ne 'stop'?"230: endofsong\r\n200: endofsong\r\n":'') . "230: stop\r\n200: stop";
 					} else {

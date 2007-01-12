@@ -52,8 +52,7 @@ while(1) {
 
 			$line =~ s/\r+//g;
 			foreach my $command (split "\n", $line) {
-				print STDERR "\t[$command]\n";
-				print STDOUT $command;
+				print STDOUT "$command\r\n";
 			}
 		}
 	}

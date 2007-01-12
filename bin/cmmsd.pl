@@ -13,6 +13,9 @@ close(STDERR);
 open(STDERR,'>> /usr/local/cmms/logs/cmmsd.log');
 $Quantor::Log::log_level = INFO;
 
+STDOUT->autoflush(1);
+STDERR->autoflush(1);
+
 my %conf = ParseConfig('/etc/cmms.conf');
 $conf{zones}->{zone} = [$conf{zones}->{zone}] unless ref($conf{zones}->{zone}) eq 'ARRAY';
 
@@ -37,6 +40,8 @@ foreach my $zone (@{$conf{zones}->{zone}}) {
 		pid => $zonepid
 	}
 }
+
+qlog INFO, "CMMSD ready";
 
 while(1) {
 	foreach my $hndl ($select->can_read(0)) {
@@ -71,8 +76,8 @@ while(1) {
 					}
 
 					my $hndlout = $zone->{out};
-					qlog DEBUG,"[zone $number PID[$zone->{pid}]] {$command}";
-					print $hndlout "$command\n";
+					qlog DEBUG,"CRESTRON zone $number PID[$zone->{pid}] {$command}";
+					print $hndlout "$command\r\n";
 				}
 			}
 
@@ -109,8 +114,8 @@ while(1) {
 		$line =~ s/\r+//g;
 
 		foreach my $command (split "\n", $line) {
-			qlog DEBUG,"zone $number PID[$zone->{pid}] {$command}";
-			print $crestout "$command\n";
+			qlog DEBUG,"ZONE zone $number PID[$zone->{pid}] {$command}";
+			print $crestout "$command\r\n";
 		}
 	}
 

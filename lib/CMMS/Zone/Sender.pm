@@ -67,16 +67,18 @@ sub loop {
 	my $line;
 	my %cmd;
 
-	while(defined ($line = <STDIN>)) {
-		chomp $line;
-		last if $line eq 'quit';
-		next if $line eq ''; # empty line - there won't be command
-		qlog INFO, "Received command: $line\n";
-		%cmd = cmd2hash $line;
-		next unless %cmd;  # empty hash - there won't be command either
-		next unless &check_cmd(\%cmd, $self->{zone}->{number}); # do further checking (eg. zone)
-		my $cmd = $self->process(\%cmd);
-		send2player($self->{handle}, $cmd) if $cmd;
+	while(1) {
+		sysread(STDIN,$line,1024);
+		$line =~ s/\r+//g;
+
+		foreach my $command (split "\n", $line) {
+			qlog INFO, "Received command: $command\n";
+			%cmd = cmd2hash $command;
+			next unless %cmd;  # empty hash - there won't be command either
+			next unless &check_cmd(\%cmd, $self->{zone}->{number}); # do further checking (eg. zone)
+			my $cmd = $self->process(\%cmd);
+			send2player($self->{handle}, $cmd) if $cmd;
+		}
 	}
 }
 
