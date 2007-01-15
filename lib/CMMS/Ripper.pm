@@ -15,7 +15,7 @@ our $permitted = {
 	logfile         => 1,
         loghandle       => 1,
 };
-our $VERSION = '1.1.4';
+our $VERSION = '1.1.8';
 our($AUTOLOAD);
 
 #############################################################
@@ -203,6 +203,7 @@ sub amazon_cover {
 
 sub genre_find_or_create {
     my( $self, $genre ) = @_;
+    $genre =~ s/[\r\n]+//g;
     my $mc = $self->mysqlConnection;
     my $genre_id = 0;
 
@@ -224,6 +225,7 @@ sub genre_find_or_create {
 
 sub artist_find_or_create {
     my( $self, $artist ) = @_;
+    $artist =~ s/[\r\n]+//g;
     my $mc = $self->mysqlConnection;
     my $artist_id = 0;
 
@@ -245,6 +247,7 @@ sub artist_find_or_create {
 
 sub conductor_find_or_create {
     my( $self, $conductor ) = @_;
+    $conductor =~ s/[\r\n]+//g;
     my $mc = $self->mysqlConnection;
     my $conductor_id = 0;
 
@@ -266,6 +269,7 @@ sub conductor_find_or_create {
 
 sub composer_find_or_create {
     my( $self, $composer ) = @_;
+    $composer =~ s/[\r\n]+//g;
     my $mc = $self->mysqlConnection;
     my $composer_id = 0;
 
