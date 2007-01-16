@@ -25,6 +25,8 @@ print STDERR localtime(time)." Server started [",$listen->sockhost, ":", $listen
 
 my $select = IO::Select->new($listen,\*STDIN);
 
+my $buff = '';
+
 while(1) {
 	foreach my $sock ($select->can_read(0)) {
 		if($sock == $listen) {
@@ -32,12 +34,20 @@ while(1) {
 			$select->add($new);
 			print STDERR localtime(time)." Client(",$new->fileno,") [",$new->peerhost,":",$new->peerport, "] connected.\n";
 		} elsif($sock == \*STDIN) {
-			my $line = <$sock>;
-			$line =~ s/[\r\n]+//g;
+			my $line = '';
 
-			foreach my $hndl ($select->handles) {
-				next if $hndl==$listen || $hndl==$sock || !$hndl->connected || !$hndl->fileno;
-				print $hndl "$line\r\n";
+			sysread($sock, $line, 1024);
+			$buff .= $line;
+
+			while($buff =~ /\n/) {
+				my($out) = ($buff =~ /([^\r\n]+)/);
+				my $qout = quotemeta $out;
+				$buff =~ s/^$qout([\r\n]+)?//;
+
+				foreach my $hndl ($select->handles) {
+					next if $hndl==$listen || $hndl==$sock;
+					print $hndl "$out\r\n";
+				}
 			}
 		} else {
 			my $line='';

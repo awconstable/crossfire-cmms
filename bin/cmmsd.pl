@@ -24,6 +24,8 @@ my($crestin,$crestout);
 my $crestpid = open2($crestin,$crestout,'/usr/bin/cmms_crestron.pl 2>>/usr/local/cmms/logs/crestron.log');
 qlog INFO,"Starting crestron PID[$crestpid]";
 
+$crestin->autoflush(1);
+
 my $select = new IO::Select($crestin);
 
 my $zones = {};

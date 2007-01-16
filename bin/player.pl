@@ -71,10 +71,10 @@ while(1) {
 
 					$last = $1 if $buff =~ /play (.+)/;
 					my $command = $buff;
-					$buff = "210: $buff";
 					$command =~ s/seek/jump/;
 					$command =~ s/play/load/;
 					print $mpg $command."\n";
+					next;
 				} elsif($buff =~ /^\@/) {
 					if($buff =~ /\@F [0-9]+ [0-9]+ ([0-9\.]+) ([0-9\.]+)/) {
 						my ($up, $down) = map{ceil($_)} ($1, $2);
@@ -85,29 +85,28 @@ while(1) {
 						$odown = $down;
 						$buff  = "230: time $up $down";
 					} elsif($buff =~ /\@P 1/) {
-						$buff = "230: pause\r\n200: pause";
+						$buff = "200: pause";
 					} elsif($buff =~ /\@P 2/) {
-						$buff = "230: pause\r\n200: unpause";
+						$buff = "200: unpause";
 					} elsif($buff =~ /\@I (\/?.+)/) {
 						my $file = $last;
 						$file = $1 unless $last;
-						next unless $file =~ /\.$type$/;
 						($oup, $odown) = (0, 1000000);
-						$buff = "240: songtype $file\r\n230: play $file\r\n230: playing\r\n";
+						$buff = "230: playing\r\n230: play $file";
 					} elsif($buff =~ /\@P 0/) {
-						$buff = ($oldcommand ne 'stop'?"230: endofsong\r\n200: endofsong\r\n":'') . "230: stop\r\n200: stop";
+						$buff = ($oldcommand ne 'stop'?"230: endofsong\r\n":'') . "230: stop";
 					} else {
 						next;
 					}
 				} else {
 					next;
 				}
-	
+
 				foreach my $hndl ($select->handles) {
 					next if $hndl == $listen;
 					next unless $hndl->fileno;
 					next if $hndl == $rdr;
-	
+
 					print $hndl "$buff\r\n";
 				}
 			}
