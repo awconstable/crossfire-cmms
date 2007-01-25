@@ -64,7 +64,7 @@ sub default {
 		GENRE => 'Misc',
 		DISCID => $self->{discid},
 		ARTIST => 'Unknown',
-		ALBUM => $dischex
+		ALBUM => 'Unknown'
 	};
 
 	my $query = '';
