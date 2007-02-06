@@ -121,6 +121,15 @@ sub set_track_mark {
 	qlog INFO, "Marking track ($track_id:$track_order) as ".($mark eq 'NULL' ? 'unplayed' : 'played');
 
 	my $sql = qq{
+		UPDATE track
+		SET played = played + 1,
+		last_played = now()
+		WHERE id = $track_id
+	};
+
+	$mc->query($sql);
+
+	$sql = qq{
 		UPDATE playlist_current 
 		SET track_played = %s 
 		WHERE zone = %d 

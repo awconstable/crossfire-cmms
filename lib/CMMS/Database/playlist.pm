@@ -1,4 +1,4 @@
-#$Id: playlist.pm,v 1.12 2006/09/26 11:45:57 byngmeister Exp $
+#$Id: playlist.pm,v 1.13 2007/02/06 16:53:41 byngmeister Exp $
 
 package CMMS::Database::playlist;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use CMMS::Database::playlist_track;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -88,6 +88,7 @@ sub new {
 		maxsize => 64,
 		mandatory => 1,
 		description => "Please enter a name for the playlist so that you can identify at a later date.",
+		defaultvalue => "Untitled",
             },
 
     },

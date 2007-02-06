@@ -1,6 +1,7 @@
 [-
 ($session_id, $cgi, $mc) = @param;
 
+$page = $cgi->param('page') || 1;
 $stab = $cgi->param("tab") || "1";
 $zones = $mc->query_and_get('select id,name from zone order by id') || [];
 
@@ -49,6 +50,13 @@ LIMIT 1
 $current = $mc->query_and_get($sql)||[];
 $current = $current->[0]->{track_order};
 
+$pcgi = new CGI($cgi);
+$pcgi->delete('page');
+$limit = 25;
+
+$page = ($page<1?1:$page);
+$start = ($page-1)*$limit;
+
 $sql = qq(
 SELECT playlist_current.*,
        album.cover,
@@ -68,6 +76,7 @@ AND playlist_current.track_id = track.id
 AND track.album_id = album.id
 AND track.artist_id = artist.id
 ORDER BY playlist_current.track_order
+LIMIT $start, $limit
 );
 
 $playlist = $mc->query_and_get($sql);
@@ -122,6 +131,18 @@ $playlist = $mc->query_and_get($sql);
  <td class="boldtablecells" width="5%">Opt</td>
 </tr>
 </table>
+<table style="width: 98%">
+<tr>
+ <td class="boldtablecells" width="50%">
+   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
+   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
+ </td>
+ <td class="boldtablecells" width="50%" align="right">
+   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
+   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
+ </td>
+</tr>
+</table>
 [$ if $playlist and $#{$playlist} >= 0 $]
 <ul id="playlist" class="playlist">
 [- $total_time = 0; -]
@@ -174,5 +195,17 @@ $class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
 [$ else $]
 <div style="text-align: center" class="bodytext">There are no tracks currently queued to be played in this zone</div>
 [$ endif $]
+<table style="width: 98%">
+<tr>
+ <td class="boldtablecells" width="50%">
+   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
+   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
+ </td>
+ <td class="boldtablecells" width="50%" align="right">
+   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
+   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
+ </td>
+</tr>
+</table>
 </div>
 [$ endif $]

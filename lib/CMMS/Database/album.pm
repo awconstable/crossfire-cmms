@@ -1,4 +1,4 @@
-#$Id: album.pm,v 1.17 2006/11/03 15:10:57 byngmeister Exp $
+#$Id: album.pm,v 1.18 2007/02/06 16:53:41 byngmeister Exp $
 
 package CMMS::Database::album;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -49,9 +49,9 @@ sub new {
     tag => "album",
     title => "Album",
     title_field => "name",
-    display => [ "id", "name", "discid", "year", "comment", "cover", "artist_id", "composer_id", "conductor_id", "genre_id"  ],
+    display => [ "id", "name", "discid", "year", "comment", "cover", "artist_id", "inherit_artist", "composer_id", "conductor_id", "genre_id", "last_edited", "created"  ],
     list_display => [ "name", "cover",  ],
-    tagorder => [ "id", "discid", "name", "year", "comment", "cover",  ],
+    tagorder => [ "id", "discid", "name", "year", "comment", "cover", "last_edited", "created"  ],
     tagrelationorder => [ ],
     relationshiporder => [ "track" ],
     no_broadcast => 1,
@@ -78,6 +78,16 @@ sub new {
 		    read_only => 1,
 		},
 		mandatory => 1,
+		event_change => "inherit_artist",
+            },
+            'inherit_artist' => {
+                type => "int",
+		tag  => "Inherit_artist",
+		title => "Inherit artist",
+		displaytype => "checkbox",
+		help => "Tick this box if you want the album tracks to inherit artist",
+		event_change => "inherit_artist",
+		no_search => 1,
             },
             'composer_id' => {
 	        type => "int",
@@ -163,6 +173,20 @@ sub new {
 		displaytype => "image",
 		no_search => 1,
             },
+            'last_edited' => {
+	        type => "datetime",
+		tag  => "last_edited",
+		title => "Last edited",
+		displaytype => "readonly",
+		no_search => 1,
+            },
+            'created' => {
+	        type => "datetime",
+		tag  => "Created",
+		title => "Created",
+		displaytype => "readonly",
+		no_search => 1,
+            },
 
     },
     relationships => {
@@ -190,6 +214,22 @@ sub new {
   # Return object
   #
   return $self;
+}
+
+sub inherit_artist {
+	my($self, $change) = @_;
+	return undef unless $self->get('inherit_artist') && $self->get('id');
+	my $mc = $self->mysqlConnection;
+	my $id = $self->get('id');
+	my $artist_id = $self->get('artist_id');
+	$mc->query(qq(
+UPDATE
+track
+SET
+artist_id = $artist_id
+WHERE
+album_id = $id
+	));
 }
 
 sub get_track_list {
@@ -248,4 +288,3 @@ Copyright (c) 2006 Coreware Limited. England.  All rights reserved.
 You must obtain a written license to use this software.
 
 =cut
-

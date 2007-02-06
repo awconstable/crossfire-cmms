@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.26 2006/11/22 15:56:52 byngmeister Exp $
+#$Id: track.pm,v 1.27 2007/02/06 16:53:41 byngmeister Exp $
 
 package CMMS::Database::track;
 
@@ -23,7 +23,7 @@ use Audio::TagLib;
 use CMMS::Database::track_data;
 use CMMS::File;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.27 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -52,9 +52,9 @@ sub new {
     tag => "track",
     title => "Track",
     title_field => "title",
-    display => [ "id", "track_num", "artist_id", "composer_id", "conductor_id", "album_id", "title", "genre_id", "length_seconds", "comment", "year", "ctime"  ],
+    display => [ "id", "track_num", "artist_id", "composer_id", "conductor_id", "album_id", "title", "genre_id", "length_seconds", "comment", "year", "last_edited", "created", "last_played", "played"],
     list_display => [ "artist_id", "album_id", "composer_id", "conductor_id", "title", "genre_id", ],
-    tagorder => [ "id", "album_id", "artist_id", "composer_id", "conductor_id", "genre_id", "title", "track_num", "length_seconds", "ctime", "comment", "year"  ],
+    tagorder => [ "id", "album_id", "artist_id", "composer_id", "conductor_id", "genre_id", "title", "track_num", "length_seconds", "comment", "year", "last_edited", "created", "last_played", "played"],
     tagrelationorder => [ ],
     relationshiporder => [ "track_data" ],
     no_broadcast => 1,
@@ -155,13 +155,6 @@ sub new {
 		suffix => "seconds",
 		no_search => 1
             },
-            'ctime' => {
-	        type => "datetime",
-		tag  => "Ctime",
-		title => "Created time",
-		displaytype => "hidden",
-		no_search => 1,
-            },
             'comment' => {
 	        type => "text",
 		tag  => "Comment",
@@ -176,7 +169,35 @@ sub new {
 		title => "Year",
 		size => 4,
 		maxsize => 4,
-            }
+            },
+            'played' => {
+	        type => "int",
+		tag  => "Played",
+		title => "# Times played",
+		displaytype => "readonly",
+		no_search => 1,
+            },
+            'last_played' => {
+	        type => "datetime",
+		tag  => "last_played",
+		title => "Last played",
+		displaytype => "readonly",
+		no_search => 1,
+            },
+            'last_edited' => {
+	        type => "datetime",
+		tag  => "last_edited",
+		title => "Last edited",
+		displaytype => "readonly",
+		no_search => 1,
+            },
+            'created' => {
+	        type => "datetime",
+		tag  => "Created",
+		title => "Created",
+		displaytype => "readonly",
+		no_search => 1,
+            },
 
     },
     relationships => {

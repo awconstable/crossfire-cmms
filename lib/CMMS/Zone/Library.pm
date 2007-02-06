@@ -460,6 +460,8 @@ sub select_playlist_tracks {
 
 	my $sql = $self->sql_track_where_order(", playlist_track where playlist_track.track_id = t.id and playlist_track.playlist_id = $mem{playlist_id}");
 	$sql = $self->sql_track_where_order(", playlist_current where playlist_current.track_id = t.id and playlist_current.zone = '$self->{zone}->{number}'") if $mem{playlist_id} == -1;
+	$sql = 'select t.id, t.title as text from track t where UNIX_TIMESTAMP(t.created) > UNIX_TIMESTAMP(NOW()-1209600) order by t.created desc,t.album_id,t.track_num LIMIT ? OFFSET ?' if $mem{playlist_id} == -2;
+	$sql = 'select t.id, t.title as text from track t order by t.played desc,t.album_id,t.track_num LIMIT ? OFFSET ?' if $mem{playlist_id} == -3;
 
   my $rows = $self->make_select($sql);
   if($rows > 0) {
@@ -503,7 +505,7 @@ sub select_playlists {
   }
 
 	my %hash = ();
-	my $i = 1;
+	my $i = 3;
 	my $tmp = $mem{lines};
 	foreach(values %{$tmp}) {
 		$hash{$i++} = $_;
@@ -511,6 +513,18 @@ sub select_playlists {
 	$hash{0} = {
 		playlist_id => -1,
 		text => 'Now Playing',
+		cmd => 'playplaylist',
+		category => 'tracks'
+  	};
+	$hash{1} = {
+		playlist_id => -2,
+		text => 'Recently Added',
+		cmd => 'playplaylist',
+		category => 'tracks'
+  	};
+	$hash{2} = {
+		playlist_id => -3,
+		text => 'Most Played',
 		cmd => 'playplaylist',
 		category => 'tracks'
   	};
@@ -714,6 +728,8 @@ sub page_next {
         } elsif($c eq 'tracks' && $mem{playlist_id}) {
                 $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_track where playlist_track.track_id = t.id and playlist_track.playlist_id = $mem{playlist_id}"));
                 $total = $self->make_select_no_limit($self->sql_track_where_num(", playlist_current where playlist_current.track_id = t.id and playlist_current.zone = '$self->{zone}->{number}'")) if $mem{playlist_id} == -1;
+                $total = $self->make_select_no_limit('select t.id, t.title as text from track t where UNIX_TIMESTAMP(t.created) > UNIX_TIMESTAMP(NOW()-1209600) order by t.created desc,t.album_id,t.track_num') if $mem{playlist_id} == -2;
+                $total = $self->make_select_no_limit('select t.id, t.title as text from track t order by t.played desc,t.album_id,t.track_num limit 25') if $mem{playlist_id} == -3;
 	} elsif($c eq 'tracks') {
 		$total = $self->make_select_no_limit($self->sql_track_where($self->sql_prepare_where||''));
 	} elsif($c eq 'playlists') {
@@ -824,7 +840,7 @@ sub menu_playplaylist {
 	$mem{search} = undef;
 	$mem{category}  = 'tracks';
 
-	unless($mem{playlist_id} == -1) {
+	unless($mem{playlist_id} == -1 && $mem{playlist_id} == -2 && $mem{playlist_id} == -3) {
 		$self->empty_queue;
 		$sql = $self->sql_playlist2playlist($mem{playlist_id});
 		my $ret = $mc->query($sql);

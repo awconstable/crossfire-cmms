@@ -125,6 +125,8 @@ foreach $param ( $cgi->param ) {
     }
 }
 
+$title = '';
+
 # Build a selfurl for use in links
 #
 $selfurl = uri_escape($cgi->self_url, ";/\?:&%");
@@ -144,6 +146,13 @@ $self_url = $cgi->self_url;
         { title => "Tracks", view => "tracks", icon=>"/icons/32x32/shadow/folder_music.png" },
         { title => "Configuration", view => "configuration", icon=>"/icons/32x32/shadow/wrench.png", required_group=>"cmmsadmin" }
 );
+
+foreach(@tabs) {
+	if($view eq $_->{view}) {
+		$title = $_->{title};
+		last;
+	}
+}
 
 # Setup alert styles
 $green = "background-color: #33cc33;";
