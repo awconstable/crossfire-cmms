@@ -650,6 +650,22 @@ sub sql_track2playlist {
 
 sub sql_playlist2playlist {
 	my ($self, $playlist_id) = @_;
+	my $mc = $self->mysqlConnection;
+
+	if($playlist_id == -2) {
+		$mc->query('SET @id:=0');
+		return qq {
+			REPLACE INTO playlist_current 
+			(zone,track_id,track_order) select '$self->{zone}->{number}', t.id, \@id:=1+\@id from track t where UNIX_TIMESTAMP(t.created) > UNIX_TIMESTAMP(NOW()-1209600) order by t.created desc,t.album_id,t.track_num 
+		}
+	}
+	if($playlist_id == -3) {
+		$mc->query('SET @id:=0');
+		return qq{
+			REPLACE INTO playlist_current 
+			(zone,track_id,track_order) select '$self->{zone}->{number}', t.id, \@id:=1+\@id from track t order by t.played desc,t.album_id,t.track_num limit 25
+		}
+	}
 
 	return qq {
 		REPLACE INTO playlist_current 
@@ -699,6 +715,8 @@ sub queueall {
 
 sub playall {
 	my $self = shift;
+
+	return 0 if $mem{playlist_id} == -1 || $mem{playlist_id} == -2 || $mem{playlist_id} == -3;
 
 	my $mc = $self->mysqlConnection;
 
@@ -840,7 +858,7 @@ sub menu_playplaylist {
 	$mem{search} = undef;
 	$mem{category}  = 'tracks';
 
-	unless($mem{playlist_id} == -1 && $mem{playlist_id} == -2 && $mem{playlist_id} == -3) {
+	unless($mem{playlist_id} == -1) {
 		$self->empty_queue;
 		$sql = $self->sql_playlist2playlist($mem{playlist_id});
 		my $ret = $mc->query($sql);
