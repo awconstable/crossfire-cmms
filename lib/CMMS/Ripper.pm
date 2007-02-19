@@ -365,7 +365,7 @@ sub store {
 		$sql = "SELECT id FROM track WHERE album_id = $album_id AND artist_id = $artist_id AND genre_id = $agenre_id AND title = $qttitle AND track_num = ".$track->number;
 		($_) = @{$mc->query_and_get($sql)||[]};
 		unless($track_id = $_->{id}) {
-			$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,composer_id,conductor_id,ctime) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$agenre_id,$ttitle,$track->number,$track->length,$tcomposer_id,$tconductor_id)).',NOW())';
+			$sql = 'INSERT INTO track (album_id,artist_id,genre_id,title,track_num,length_seconds,composer_id,conductor_id,created) VALUES('.join(',',map{s/[\r\n]+//g;$mc->quote($_)}($album_id,$artist_id,$agenre_id,$ttitle,$track->number,$track->length,$tcomposer_id,$tconductor_id)).',NOW())';
 			$mc->query($sql);
 			$track_id = $mc->last_id;
 		}
