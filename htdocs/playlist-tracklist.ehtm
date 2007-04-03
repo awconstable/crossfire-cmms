@@ -88,11 +88,11 @@ $playlist = $mc->query_and_get($sql);
 <div id="divplaylist">
 <table style="width: 100%">
 <tr>
+ <td class="boldtablecells" width="5%">Tag</td>
  <td class="boldtablecells" width="30%">Artist</td>
  <td class="boldtablecells" width="30%">Album</td>
  <td class="boldtablecells" width="30%">Title</td>
  <td class="boldtablecells" style="text-align: right" width="5%">Len</td>
- <td class="boldtablecells" width="5%">Opt</td>
 </tr>
 </table>
 [$ if $playlist and $#{$playlist} >= 0 $]
@@ -106,20 +106,18 @@ $class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
 <li id="item_[+ $t->{id} +]">
 <table style="width: 100%">
 <tr>
+ <td class="tablecells" width="5%" style="text-align: center"><input type="checkbox" name="tag.[+ $t->{id} +] value="1"></a></td>
  <td class="tablecells" width="30%"><a href="artist.ehtml?id=[+ $t->{artist_id} +];session_id=[+ $session_id +]">[+ $t->{artist} +]</a></td>
  <td class="tablecells" width="30%"><a href="album.ehtml?id=[+ $t->{album_id} +];session_id=[+ $session_id +]">[+ $t->{album} +]</a></td>
  <td class="tablecells" width="30%"><a href="track.ehtml?id=[+ $t->{track_id} +];session_id=[+ $session_id +]">[+ $t->{title} +]</a></td>
  <td class="tablecells" style="text-align: right" width="5%">[+ sprintf("%i:%02i",int($t->{length_seconds} / 60), $t->{length_seconds} % 60) +]</td>
- <td class="tablecells" width="5%">
-<a href="playlist_track.ehtml?id=[+ $t->{id} +];command=delete;session_id=[+ $session_id +]"><img src="/icons/16x16/shadow/delete.png" border="0" width="16" height="16" title="Delete"></a>
- </td>
 </tr>
 </table>
 </li>
 [$ endforeach $]
 </ul>
 
-<div align="right">
+<div style="float: right">
 <table>
   <tr>
     <td class="boldtablecells">Total tracks: [+ scalar @{$playlist} +]</td>
@@ -128,6 +126,14 @@ $class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
 </table>
 </div>
 
+<div style="float: left">
+<table style="width: 96px; margin-top: 4px;" cellspacing="0" cellpadding="0" border="0">
+<tr>
+ <td style="text-align: center">[+ $ui->theme_object->form_button( name=>"deletetagged", link=>"playlist.ehtml?id=$id;view=".$ui->view().";session_id=".$ui->p_session_id(), type=>"delete tagged", icon=>"/icons/32x32/shadow/cd_delete.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
+</tr>
+</table>
+</div>
+<div style="clear:both; margin-bottom: 6px;"></div>
 [$ else $]
 <div style="text-align: center" class="bodytext">There are no tracks in this play list</div>
 [$ endif $]
@@ -189,9 +195,9 @@ $lookup = $pltobj->get_lookup( "track_id", "$extras");
 </td>
 </tr>
 <tr>
-<td class="boldtablecells width="25%">Track:</td>
+<td class="boldtablecells" style="vertical-align: top;" width="25%">Tracks:</td>
 <td class="tablecells">
-<select id="sel_track_id" class="input" name="plt_track_id"><option value="">[please pick]</option>
+<select style="width: 300px" multiple="1" id="sel_track_id" size="12" class="input" name="plt_track_id">
 [$ foreach $e ( @{$lookup->{elements}} ) $]<option value="[+ $e->{name} +]" [+ $field_value eq $e->{name} ? "SELECTED" : "" +]>[+ $e->{text} +]</option>[$ endforeach $]
 </select>
 </td>

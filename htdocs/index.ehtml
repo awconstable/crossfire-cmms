@@ -201,7 +201,7 @@ $this_dir = dirname($ENV{'SCRIPT_FILENAME'});
       </table>
     </td>
     <td align="left" valign="top" class="maintable">
-[- Execute "index-$view.ehtm", $session_id, $cgi, $mc  -]
+[- Execute "index-$view.ehtm", $session_id, $cgi, $mc, $laf  -]
 </td>
 </tr>
 </table>

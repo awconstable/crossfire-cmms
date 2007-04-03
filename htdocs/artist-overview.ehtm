@@ -1,0 +1,90 @@
+[-
+use CMMS::Database::artist;
+use Mail::Address;
+use URI::Escape;
+
+# Fetch parameters
+($ui) = @param;
+$mc = $ui->db();
+$id = $ui->cgi()->param("id");
+$obj = $ui->object();
+$laf = $ui->theme_object();
+
+# Setup status styles
+$green = "background-color: #33cc33; text-align: center; color: #fff;";
+$yellow = "background-color: #cccc33; text-align: center; color: #000;";
+$red = "background-color: #cc3333; text-align: center; color: #fff;";
+
+@alerts = ( $green, $yellow, $red );
+
+-]
+<table WIDTH="100%" CELLPADDING="2" CELLSPACING="1" BORDER="0" class="boxtable"><tr valign="top">
+<td class="boldtablecells" width="30%">Name:</td>
+<td class="tablecells" width="70%">[+ $obj->get("name") +]</td>
+</tr>
+</table>
+
+<div class="subtitle">Tracks:</div>
+[-
+$tracks = $obj->get_album_list();
+-]
+<table style="width: 100%">
+<tr>
+ <td class="boldtablecells" width="5%">Tag</td>
+ <td class="boldtablecells" width="30%">Title</td>
+ <td class="boldtablecells" width="15%">Composer</td>
+ <td class="boldtablecells" width="15%">Conductor</td>
+ <td class="boldtablecells" width="20%">Genre</td>
+ <td class="boldtablecells" width="20%">Options</td>
+</tr>
+[$ if $#{$tracks->{elements}} >=0 $]
+[$ foreach $t ( @{$tracks->{elements}} ) $]
+<tr>
+ <td class="tablecells"><input type="checkbox" name="tag.[+ $t->{id} +]"></td>
+ <td class="tablecells">[+ $t->{name} +]</td>
+ <td class="tablecells">[+ $t->{composer_id} || "-" +] </td>
+ <td class="tablecells">[+ $t->{conductor_id} || "-" +]</td>
+ <td class="tablecells">[+ $t->{genre_id} || "-" +]</td>
+ <td class="tablecells">
+[+ $ui->theme_object->link_button( name=>"edit.album.".$t->{id}, link=>"album.ehtml?id=".$t->{id}.";session_id=".$ui->session_id, type=>"edit", icon=>"/icons/16x16/shadow/document_edit.png", iconic=>1 ) +]
+[+ $ui->theme_object->link_button( name=>"delete.album.".$t->{id}, link=>"album.ehtml?id=".$t->{id}.";session_id=".$ui->session_id.";command=delete", type=>"delete", icon=>"/icons/16x16/shadow/document_delete.png", iconic=>1 ); +]
+
+ </td>
+</tr>
+[$ endforeach $]
+[$ else $]
+<tr>
+<td class="tablecells" colspan="5">There are no albums currently in this artist</td>
+</tr>
+[$ endif $]
+</table>
+<div class="subsubtitle">Add tagged albums to playlist</div>
+<table class="boxtable" width="100%" cellpadding="2" cellspacing="1" border="0"><tr>
+<td class="boldtablecells" style="width: 20%">
+[-
+$playlists = $mc->query_and_get("SELECT * FROM playlist ORDER BY name");
+-]
+Playlist:
+</td>
+<td class="tablecells" style="width: 400px">
+<select style="width: 300px;" name="playlist_id">
+<option value="">[select a play list]</option>
+<option value=""></option>
+[$ foreach $p ( @{$playlists} ) $]
+<option value="[+ $p->{id} +]">[+ $p->{name} +]</option>
+[$ endforeach $]
+</select><br />or create new playlist called <input type="text" name="playlist_name" value="">
+</td>
+<td class="tablecells">
+[+ $ui->theme_object->form_button( name=>"add_albums", link=>"artist.ehtml?id=".$id.";session_id=".$ui->p_session_id(), type=>"add albums", icon=>"/icons/24x24/shadow/cd_add.png", iconstyle=>"medium", iconic=>1 ) +]
+</td>
+</tr>
+</table>
+<div align="center">
+<table class="iconbar" cellspacing="0" cellpadding="0" border="0">
+<tr>
+ <td>[+ $ui->theme_object->form_button( name=>"save", link=>$ui->success_url, type=>"done", icon=>"/icons/32x32/shadow/check2.png", iconstyle=>"bigtext", iconic=>1 ) +]</td>
+</tr>
+</table>
+</div>
+

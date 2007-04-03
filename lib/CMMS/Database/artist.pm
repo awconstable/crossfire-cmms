@@ -1,4 +1,4 @@
-#$Id: artist.pm,v 1.13 2006/11/03 15:10:57 byngmeister Exp $
+#$Id: artist.pm,v 1.14 2007/04/03 15:03:15 toby Exp $
 
 package CMMS::Database::artist;
 
@@ -20,7 +20,7 @@ use strict;
 use warnings;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -47,15 +47,31 @@ sub new {
   $self->definition({
     name => "artist",
     tag => "artist",
-    title => "artist",
+    title => "Artist",
     display => [ "id", "name",  ],
     list_display => [ "name"  ],
     tagorder => [ "id", "name",  ],
     tagrelationorder => [ ],
-    relationshiporder => [ "album", "track" ],
+    relationshiporder => [],
     no_broadcast => 1,
     no_clone => 1,
     order_by => 'name',
+    event_post_save => "event_post_save",
+    event_force_save => "event_force_save",
+    multiview => {
+	order => [ qw( Overview Edit ) ],
+	views => {
+	    'Overview' => {
+		include => "artist-overview.ehtm",
+		display => [ "id" ],
+	    },
+	    'Edit' => {
+		display => [ "id", "name", ],
+	    },
+	},
+    },
+    default_view => "Overview",
+    create_view => "Edit",
     elements => {
             'id' => {
 	        type => "int",
@@ -88,7 +104,8 @@ sub new {
 	    		{ col => "genre_id", title => "Genre" },
 	    		{ col => "name", title => "Name" },
 			],
-	    list_method => 'get_album_list'
+	    list_method => 'get_album_list',
+	    no_clone => 1,
 	},
 	'track' => {
 	    type => "one2many",
@@ -106,7 +123,8 @@ sub new {
 	    		{ col => "track_num", title => "Track No." },
 	    		{ col => "length_seconds", title => "Length" },
 			],
-	    list_method => 'get_track_list'
+	    list_method => 'get_track_list',
+	    no_clone => 1,
 	}
     },
   });
@@ -132,8 +150,8 @@ EndSelects
 
     my $tables = <<EndTables
 album,
-artist,
-genre
+artist
+LEFT JOIN genre ON album.genre_id = genre.id
 LEFT JOIN composer ON album.composer_id = composer.id
 LEFT JOIN conductor ON album.conductor_id = conductor.id
 EndTables
@@ -142,12 +160,11 @@ EndTables
     my $where = <<EndWhere
 album.artist_id = $id
 and artist.id = album.artist_id
-and genre.id = album.genre_id
 order by album.name
 EndWhere
     ;
 
-    return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+    return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where, dump_sql=>1 } );
 }
 
 sub get_track_list {
@@ -186,6 +203,79 @@ EndWhere
 
     return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
 }
+
+sub event_post_save {
+    my( $self, $ui ) = @_;
+    my $cgi = $ui->cgi();
+    my $view = $ui->view();
+
+    my $mc = $self->mysqlConnection();
+
+    if( $view eq "Overview" ) {
+	my $playlist_id = $cgi->param("playlist_id");	
+	my $new_playlist_name = $cgi->param("playlist_name");
+
+	if( $cgi->param("button_add_albums.x") ) {
+	    my @params = $cgi->param();
+
+	    my $plobj = new CMMS::Database::playlist($mc,$playlist_id);	    
+
+	    if( $playlist_id ) {
+		$plobj->pull or $plobj=undef;
+	    }
+	    elsif ($new_playlist_name) {
+		$plobj->set("name",$new_playlist_name);
+		$playlist_id = $plobj->push();
+	    }
+	    else {
+		$plobj = undef;
+	    }
+
+	    if( $plobj ) {
+
+		foreach my $p ( @params ) {
+		    
+		    if( $p =~ /^tag\.(.*)/ ) {
+			my $album_id = $1;
+			$album_id and $plobj->add_album($album_id);
+		    }
+		}
+
+		$ui->redirect_url("playlist.ehtml?id=".$playlist_id.";session_id=".$cgi->param("session_id"));
+	    }
+	}
+	elsif( $cgi->param("button_deletetagged.x") ) {
+	    my @params = $cgi->param();
+
+	    foreach my $p ( @params ) {
+
+		if( $p =~ /^tag\.(.*)/ ) {
+		    my $id = $1;
+		    my $q = $mc->query("DELETE FROM playlist_track WHERE id=".$mc->quote($id));
+		    $q->finish();
+		    
+		}
+	    }
+	}       
+    }
+}
+
+sub event_force_save {
+  my( $self,$ui ) = @_;
+  my $cgi = $ui->cgi();
+  
+  if( $cgi->param("button_addalbum.x") ) {
+      return 1;
+  }
+      
+  if( $cgi->param("button_add_tracks.x") ) {
+      return 1;
+  }
+      
+  return 0;
+}
+
+
 
 1;
 

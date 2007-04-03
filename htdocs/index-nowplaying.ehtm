@@ -1,7 +1,7 @@
 [-
-($session_id, $cgi, $mc) = @param;
+($session_id, $cgi, $mc, $laf) = @param;
 
-$page = $cgi->param('page') || 1;
+$page = $cgi->param('page') || 0;
 $stab = $cgi->param("tab") || "1";
 $zones = $mc->query_and_get('select id,name from zone order by id') || [];
 
@@ -54,8 +54,7 @@ $pcgi = new CGI($cgi);
 $pcgi->delete('page');
 $limit = 25;
 
-$page = ($page<1?1:$page);
-$start = ($page-1)*$limit;
+$start = ($page)*$limit;
 
 $sql = qq(
 SELECT playlist_current.*,
@@ -80,6 +79,23 @@ LIMIT $start, $limit
 );
 
 $playlist = $mc->query_and_get($sql);
+
+$size_sql = qq(
+SELECT count(playlist_current.id) as tcount
+FROM playlist_current,
+     track,
+     album,
+     artist
+WHERE playlist_current.zone = $q_zone
+AND playlist_current.track_id = track.id
+AND track.album_id = album.id
+AND track.artist_id = artist.id
+);
+
+my $size_r = $mc->query_and_get($size_sql);
+my $size = $$size_r[0]->{tcount};
+$num_pages = ($size / $limit) + ($size % $limit ? 1 : 0) - 1;
+$ptab = $laf->page_tab( $page, $num_pages, "index.ehtml?v=nowplaying;tab=$stab" );
 -]
 
 <script src="/javascript/scriptaculous/lib/prototype.js" type="text/javascript"></script>
@@ -122,6 +138,7 @@ $playlist = $mc->query_and_get($sql);
 </style>
 
 <div id="divplaylist">
+[$ if $num_pages > 1 $]<div align="center" class="bodytext">[+ $ptab +]</div>[$ endif $]
 <table style="width: 98%">
 <tr>
  <td class="boldtablecells" width="30%">Artist</td>
@@ -129,18 +146,6 @@ $playlist = $mc->query_and_get($sql);
  <td class="boldtablecells" width="30%">Title</td>
  <td class="boldtablecells" style="text-align: right" width="5%">Len</td>
  <td class="boldtablecells" width="5%">Opt</td>
-</tr>
-</table>
-<table style="width: 98%">
-<tr>
- <td class="boldtablecells" width="50%">
-   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
-   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
- </td>
- <td class="boldtablecells" width="50%" align="right">
-   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
-   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
- </td>
 </tr>
 </table>
 [$ if $playlist and $#{$playlist} >= 0 $]
@@ -195,17 +200,6 @@ $class = ($current==$t->{track_order}?'boldtablecells':'tablecells');
 [$ else $]
 <div style="text-align: center" class="bodytext">There are no tracks currently queued to be played in this zone</div>
 [$ endif $]
-<table style="width: 98%">
-<tr>
- <td class="boldtablecells" width="50%">
-   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
-   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
- </td>
- <td class="boldtablecells" width="50%" align="right">
-   [$ if($page > 1) $]<a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page-1) +]">[$ endif $]Previous<a>
-   <a href="[+ $pcgi->url(-relative=>1, -query=>1).'&amp;page='.($page+1) +]">Next<a>
- </td>
-</tr>
-</table>
+[$ if $num_pages > 1 $]<div align="center" class="bodytext">[+ $ptab +]</div>[$ endif $]
 </div>
 [$ endif $]

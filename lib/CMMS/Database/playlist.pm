@@ -1,4 +1,4 @@
-#$Id: playlist.pm,v 1.13 2007/02/06 16:53:41 byngmeister Exp $
+#$Id: playlist.pm,v 1.14 2007/04/03 15:03:15 toby Exp $
 
 package CMMS::Database::playlist;
 
@@ -21,7 +21,7 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use CMMS::Database::playlist_track;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -185,15 +185,26 @@ sub event_post_save {
 	if( $cgi->param("button_addalbum.x") ) {
             my $album_id = $cgi->param("plt_album_id");
 	    $album_id and $self->add_album($album_id);
-
-	    print STDERR "Adding album $album_id\n";
-
 	}
 	elsif( $cgi->param("button_addtrack.x") ) {
-            my $track_id = $cgi->param("plt_track_id");	    
-	    $track_id and $self->add_track($track_id);
+            my @tracks = $cgi->param("plt_track_id");	    
 
-	    print STDERR "Adding track $track_id\n";
+	    foreach my $track_id ( @tracks ) {
+		$track_id and $self->add_track($track_id);
+	    }
+	}
+	elsif( $cgi->param("button_deletetagged.x") ) {
+	    my @params = $cgi->param();
+
+	    foreach my $p ( @params ) {
+
+		if( $p =~ /^tag\.(.*)/ ) {
+		    my $id = $1;
+		    my $q = $mc->query("DELETE FROM playlist_track WHERE id=".$mc->quote($id));
+		    $q->finish();
+		    
+		}
+	    }
 	}
 
 	
@@ -229,7 +240,7 @@ sub event_force_save {
       return 1;
   }
       
-  if( $cgi->param("button_addtrack.x") ) {
+  if( $cgi->param("button_add_tracks.x") ) {
       return 1;
   }
       

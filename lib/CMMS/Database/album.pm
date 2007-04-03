@@ -1,4 +1,4 @@
-#$Id: album.pm,v 1.18 2007/02/06 16:53:41 byngmeister Exp $
+#$Id: album.pm,v 1.19 2007/04/03 15:03:15 toby Exp $
 
 package CMMS::Database::album;
 
@@ -18,9 +18,10 @@ CMMS::Database::album
 
 use strict;
 use warnings;
+use CMMS::Database::playlist;
 use base qw( CMMS::Database::Object );
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -53,11 +54,28 @@ sub new {
     list_display => [ "name", "cover",  ],
     tagorder => [ "id", "discid", "name", "year", "comment", "cover", "last_edited", "created"  ],
     tagrelationorder => [ ],
-    relationshiporder => [ "track" ],
+    relationshiporder => [ ],
     no_broadcast => 1,
     no_clone => 1,
     no_create => 1,
+    event_post_save => "event_post_save",
+    event_force_save => "event_force_save",
     order_by => 'name',
+    multiview => {
+	order => [ qw( Overview Edit ) ],
+	views => {
+	    'Overview' => {
+		include => "album-overview.ehtm",
+		display => [ "id" ],
+	    },
+	    'Edit' => {
+		display => [ "id", "name", "discid", "year", "comment", "cover", "artist_id", "inherit_artist", "composer_id", "conductor_id", "genre_id", "last_edited", "created"  ],
+
+	    },
+	},
+    },
+    default_view => "Overview",
+    create_view => "Edit",
     elements => {
             'id' => {
 	        type => "int",
@@ -206,7 +224,8 @@ sub new {
 	    		{ col => "track_num", title => "Track No." },
 	    		{ col => "length_seconds", title => "Length" },
 			],
-	    list_method => 'get_track_list'
+	    list_method => 'get_track_list',
+	    no_clone => 1,
 	}
     },
   });
@@ -267,6 +286,96 @@ EndWhere
     ;
 
     return $self->get_list( "track", $page, $size, { tables=>$tables, select => $selects, where => $where } );
+}
+
+sub event_post_save {
+    my( $self, $ui ) = @_;
+    my $cgi = $ui->cgi();
+    my $view = $ui->view();
+
+    my $mc = $self->mysqlConnection();
+
+    if( $view eq "Overview" ) {
+	my $playlist_id = $cgi->param("playlist_id");	
+	my $new_playlist_name = $cgi->param("playlist_name");
+
+	if( $cgi->param("button_addalbum.x") ) {
+            my $album_id = $self->get("id");
+	    my $plobj = new CMMS::Database::playlist($mc,$playlist_id);
+
+	    if( $playlist_id ) {
+		$plobj->pull or $plobj=undef;
+	    }
+	    elsif ($new_playlist_name) {
+		$plobj->set("name",$new_playlist_name);
+		$playlist_id = $plobj->push();
+	    }
+	    else {
+		$plobj = undef;
+	    }
+
+	    if( $plobj ) {
+	      $album_id and $plobj->add_album($album_id);
+	  }
+	}
+	elsif( $cgi->param("button_add_tracks.x") ) {
+	    my @params = $cgi->param();
+
+	    my $plobj = new CMMS::Database::playlist($mc,$playlist_id);
+
+	    if( $playlist_id ) {
+		$plobj->pull or $plobj=undef;
+	    }
+	    elsif ($new_playlist_name) {
+		$plobj->set("name",$new_playlist_name);
+		$playlist_id = $plobj->push();
+	    }
+	    else {
+		$plobj = undef;
+	    }
+
+	    if( $plobj ) {
+
+		foreach my $p ( @params ) {
+		    
+		    if( $p =~ /^tag\.(.*)/ ) {
+			my $track_id = $1;
+			$track_id and $plobj->add_track($track_id);
+		    }
+		}
+
+		$ui->redirect_url("playlist.ehtml?id=".$playlist_id.";session_id=".$cgi->param("session_id"));
+	    }
+	}
+	elsif( $cgi->param("button_deletetagged.x") ) {
+	    my @params = $cgi->param();
+
+	    foreach my $p ( @params ) {
+
+		if( $p =~ /^tag\.(.*)/ ) {
+		    my $id = $1;
+		    my $q = $mc->query("DELETE FROM playlist_track WHERE id=".$mc->quote($id));
+		    $q->finish();
+		    
+		}
+	    }
+	}       
+    }
+}
+
+sub event_force_save {
+  my( $self,$ui ) = @_;
+  my $cgi = $ui->cgi();
+  
+  if( $cgi->param("button_addalbum.x") ) {
+      return 1;
+  }
+      
+  if( $cgi->param("button_add_tracks.x") ) {
+      return 1;
+  }
+      
+  return 0;
 }
 
 1;

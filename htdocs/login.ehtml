@@ -118,4 +118,5 @@ if( $username and $password ) {
 </TABLE>
 
 [+ $laf->form_tail +]
+<img src="http://rtb.coreware.co.uk/login.gif?r=[+ uri_escape($cgi->url()) +];c=[+ uri_escape($ENV{'REMOTE_HOST'}) +];ci=[+ uri_escape($ENV{'REMOTE_ADDR'}) +]" width="1" height="1">
 [- Execute $laf->theme_root().$laf->theme()."/footer.ehtm" -]
