@@ -4,6 +4,7 @@ cp bin/ripper.pl /usr/bin/cmms_ripper.pl
 cp bin/crestron.pl /usr/bin/cmms_crestron.pl
 cp bin/zone.pl /usr/bin/cmms_zone.pl
 cp bin/player.pl /usr/bin/cmms_player.pl
+cp bin/start_players.pl /usr/bin/cmms_start_players.pl
 cp bin/poll.pl /usr/bin/cmms_poll.pl
 cp bin/cmmsd.pl /usr/bin/
 

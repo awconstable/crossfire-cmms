@@ -6,21 +6,46 @@ use IO::Select;
 use IPC::Open2;
 use Config::General;
 use POSIX qw(:sys_wait_h ceil);
+use Quantor::Log;
 use Time::HiRes qw(sleep);
+use Data::Dumper;
 
-$SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = $SIG{__DIE__} = \&interrupt;
+#$SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = $SIG{__DIE__} = \&interrupt;
 
 my($oup, $odown) = (0, 1000000);
 
+# load configuration
+my %conf = ParseConfig('/etc/cmms.conf');
+my $confa = $conf{players}->{player};
+my $conf;
+our $zonenum = shift @ARGV || 1;
+
+if( ref($confa) eq "HASH" ) {
+    if( $zonenum==1 ) {
+	$conf = $confa;
+    }
+    else {
+	print STDERR "Undefined zone specified in startup";
+	die;
+    }
+}
+elsif( $$confa[$zonenum-1] ) {
+    $conf = $$confa[$zonenum-1];
+
+    unless( $conf ) {
+	print STDERR "Undefined zone specified in startup";
+	die;
+    }
+}
+
+my $alsadevice = $conf->{alsadevice} || "zone".$zonenum;
+
+# open a log file
 close(STDERR);
-open(STDERR,'>> /usr/local/cmms/logs/player.log');
+open(STDERR,'>> /usr/local/cmms/logs/player-zone-'.$zonenum.'.log');
 
 STDERR->autoflush(1);
 STDOUT->autoflush(1);
-
-# load config
-my %conf = ParseConfig('/etc/cmms.conf');
-my $conf = $conf{player};
 
 # Create a listening socket
 my $listen = new IO::Socket::INET(
@@ -38,7 +63,7 @@ $listen->autoflush(1);
 my $select = new IO::Select($listen);
 
 my($rdr,$mpg);
-my($pid,$type) = player('flac');
+my($pid,$type) = player();
 my($oldcommand,$last) = ('','');
 
 while(1) {
@@ -65,13 +90,11 @@ while(1) {
 			foreach $buff (split("\n",$buff)) {
 				if($buff =~ /^(play|pause|stop|seek)/) {
 					$oldcommand = $1;
-					if($buff =~ /\.(flac|mp3)$/) {
-						($pid,$type) = player($1) if $type ne $1;
-					}
 
 					$last = $1 if $buff =~ /play (.+)/;
 					my $command = $buff;
-					$command =~ s/seek/jump/;
+
+					# Convert commands
 					$command =~ s/play/load/;
 					print $mpg $command."\n";
 					next;
@@ -138,10 +161,8 @@ sub player {
 
 	unload();
 
-	my $p;
-	$p = open2($rdr,$mpg,'nice -n -10 /usr/local/bin/flac123 -R 2>&1') if $t eq 'flac';
-	$p = open2($rdr,$mpg,'nice -n -10 /usr/bin/mpg123 -R 2>&1') if $t eq 'mp3';
-	print STDERR "Opening $t player ($p)\n";
+	my $p = open2($rdr,$mpg,'nice -n -10 /usr/bin/mplayer -ao alsa:device='.$alsadevice.' -idle -slave 2>&1');
+	print STDERR "Opening mplayer player ($p)\n";
 	$select->add($rdr);
 
 	return ($p,$t);

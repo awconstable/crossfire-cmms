@@ -69,7 +69,6 @@ Playlist:
 <td class="tablecells" style="width: 400px">
 <select style="width: 300px;" name="playlist_id">
 <option value="">[select a play list]</option>
-<option value=""></option>
 [$ foreach $p ( @{$playlists} ) $]
 <option value="[+ $p->{id} +]">[+ $p->{name} +]</option>
 [$ endforeach $]
