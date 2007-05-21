@@ -38,7 +38,7 @@ elsif( $$confa[$zonenum-1] ) {
     }
 }
 
-my $alsadevice = $conf->{alsadevice} || "zone".$zonenum;
+my $alsadevice = $conf->{device} || "zone".$zonenum;
 
 # open a log file
 close(STDERR);
