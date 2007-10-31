@@ -1,9 +1,15 @@
-$Id: README,v 1.4 2007/04/03 15:05:31 toby Exp $
+$Id: README,v 1.5 2007/10/31 17:47:18 toby Exp $
 
 This is the Crossfire CMMS Server
 
 History
 =======
+
+03-April-2007 Tobias Russell                        <toby@russellsharpe.com>
+-------------------------------------------------------------------------------
+1.2.1
+
+mplayer replaces mpg123 and flac123
 
 03-April-2007 Tobias Russell                        <toby@russellsharpe.com>
 -------------------------------------------------------------------------------

@@ -191,13 +191,17 @@ sub get_response {
 }
 
 sub make_select {
-	my ($self, $query) = @_;
+	my ($self, $query, $overridelimit) = @_;
+
+	my $locallimit = $overridelimit ? $overridelimit : $limit;
 
 	my $mc = $self->mysqlConnection;
 
 	$query =~ s/(([^\|])\?)/$2%d/g;
 	$query =~ s/\|\?/?/g;
-	$query = sprintf($query, $limit, $mem{offset});
+	$query = sprintf($query, $locallimit, $mem{offset});
+
+	print STDERR $query."\n";
 
 	my $rows = $mc->query_and_get($query)||[];
 
@@ -490,12 +494,21 @@ sub sql_playlist {
 }
 
 sub select_playlists {
-	my $self = shift;
+    my $self = shift;
+    
+    my $q = $self->sql_playlist($self->sql_prepare_where);
 
-	my $q = $self->sql_playlist($self->sql_prepare_where);
-
-  my $rows = $self->make_select($q);
-  if ($rows > 0) {
+	my $rows;
+	if ($mem{offset} == 0)
+	{
+   		$rows = $self->make_select($q,5);
+	}
+	else
+	{
+   		$rows = $self->make_select($q);
+	}
+  
+    if ($rows > 0) {
       for (my $i = 0; $i<$rows; $i++) {
           my $id = $mem{lines}{$i}{id};
           $mem{lines}{$i}{playlist_id} = $id;
@@ -504,12 +517,15 @@ sub select_playlists {
       }
   }
 
+if($mem{offset} == 0)
+{
 	my %hash = ();
 	my $i = 3;
 	my $tmp = $mem{lines};
 	foreach(values %{$tmp}) {
 		$hash{$i++} = $_;
 	}
+
 	$hash{0} = {
 		playlist_id => -1,
 		text => 'Now Playing',
@@ -529,7 +545,7 @@ sub select_playlists {
 		category => 'tracks'
   	};
   	$mem{lines} = \%hash;
-
+}
 	return 1;
 }
 
@@ -737,6 +753,7 @@ sub page_next {
 	my $c = $mem{category};
 
 	my $total = 0;
+	
 	if($c eq 'genres') {
 		$total = $self->make_select_no_limit($self->sql_genre($self->sql_prepare_where||''));
 	} elsif($c eq 'artists') {
@@ -752,16 +769,31 @@ sub page_next {
 		$total = $self->make_select_no_limit($self->sql_track_where($self->sql_prepare_where||''));
 	} elsif($c eq 'playlists') {
 		$total = $self->make_select_no_limit($self->sql_playlist($self->sql_prepare_where||''));
+		$total = $total + 3;
 	}
+	
 	$total = (ceil($total / $limit)-1) * $limit;
 
-	if($mem{offset} eq $total) {
+	if($c eq 'playlists')
+        {
+		$total = $total - 3;
+	}
+
+	if($mem{offset} >= $total) {
 		# we are at end, so return without screen redrawing
 		$mem{offset} += $limit;
 		return $self->page_prev;
 	}
 
-	$mem{offset} += $limit;
+	if(($c eq 'playlists') && ($mem{offset} == 0))
+	{
+		$mem{offset} += $limit - 3;
+	}
+	else
+	{
+		$mem{offset} += $limit;
+	}
+
 	if($self->prepare_memory) {
 		$self->history_update;
 		return 1;

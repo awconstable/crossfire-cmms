@@ -19,7 +19,7 @@ else {
 &ui_print_header(undef, $text{'index_title'}, "", undef, 1, 1, 0,
 	&help_search_link("cmmsd", "man"));
 
-foreach $i ('general', 'zone') {
+foreach $i ('general', 'zone', 'player') {
 	push(@links, "list_${i}.cgi");
 	push(@titles, $text{"${i}_title"});
 	push(@icons, "images/${i}.gif");

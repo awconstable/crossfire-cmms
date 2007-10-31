@@ -9,6 +9,7 @@ use POSIX qw(:sys_wait_h ceil);
 use Quantor::Log;
 use Time::HiRes qw(sleep);
 use Data::Dumper;
+use Data::HexDump;
 
 #$SIG{TERM} = $SIG{INT} = $SIG{QUIT} = $SIG{HUP} = $SIG{__DIE__} = \&interrupt;
 
@@ -40,7 +41,7 @@ elsif( $$confa[$zonenum-1] ) {
 
 my $alsadevice = $conf->{device} || "zone".$zonenum;
 
-# open a log file
+#open a log file
 close(STDERR);
 open(STDERR,'>> /usr/local/cmms/logs/player-zone-'.$zonenum.'.log');
 
@@ -63,10 +64,10 @@ $listen->autoflush(1);
 my $select = new IO::Select($listen);
 
 my($rdr,$mpg);
-my($pid,$type) = player();
+my($pid,$type) = player('flac');
 my($oldcommand,$last) = ('','');
-my $pstate = 0;
-my $new_track = 1;
+my $playing = 0;
+my $pause = 0;
 
 while(1) {
     foreach my $sock ($select->can_read(0)) {
@@ -89,74 +90,101 @@ while(1) {
 	    
 	    $buff =~ s/\r+//g;
 	    
-	    foreach $buff (split("\n",$buff)) {
-		
-		if($buff =~ /^(play|pause|stop|seek)/) {
-		    $oldcommand = $1;
-		    
-		    $last = $1 if $buff =~ /play (.+)/;
-		    my $command = $buff;
-		    
-		    # Convert commands
-		    $command =~ s/play/load/;
-		    print STDERR ">>>".$command."\n";
-		    print $mpg $command."\n";
-		    next;
-		} elsif($buff =~ /PAUSE/) {
-		    print STDERR "STATE=pause";
-		    $buff = "200: pause";
-		    $pstate = 1;
-		} elsif($buff =~ /^A:/) {
-		    if($buff =~ /^A\:\s+(.*?)\s\((.*?)\)\sof\s(.*?)\s\((.*?)\)/) {
-			my ($up,$ptime,$total,$time) = ($1,$2,$3,$4);
-			print STDERR "Time $up/$total ($time)\n";
+	    print STDERR sprintf("\r%02d: %.80s",$playing,$buff);
+	    
+	    if( $buff=~ /Starting playback/ ) {
+		$playing = 1;
+	    }
+	    elsif( $buff =~ /\d\%.*?\[J\x0a/ and $playing ) {
+		$buff = "230: endofsong\r\n";
+		$playing = 0;
 
-			if( $new_track and $total - $up > 0.2 ) {
-			    $new_track = 0;
-			}
-			
-			if( $total - $up < 0.2 ) {
-			    # The new track flag is a hack to allow any time data that is received
-			    # after the track is deemed to have finished doesn't fool the player into
-			    # thinking the new track has ended.
-			    $new_track = 1;
-			    $buff = "230: endofsong\r\n";
-			}
-			else {
-			    my $down = $total - $up;
-			    $up    = $oup   if $up   < $oup;
-			    $down  = $odown if $down > $odown;
-			    next   if $up eq $oup && $down eq $odown;
-			    $oup   = $up;
-			    $odown = $down;
-			    
-			    if( $pstate ) {
-				$pstate = 0;
-				$buff = "200: unpause\r\n230: time $up $down";
-				print STDERR "STATE=unpause";
-			    }
-			    else {
-				$buff  = "230: time $up $down";
-			    }
-			}
-		    } elsif($buff =~ /\@I (\/?.+)/) {
-			my $file = $last;
-			$file = $1 unless $last;
-			($oup, $odown) = (0, 1000000);
-			$buff = "230: playing\r\n230: play $file";
-		    } else {
-			next;
-		    }
-		} else {
-		    next;
-		}
-		
 		foreach my $hndl ($select->handles) {
 		    next if $hndl == $listen;
 		    next unless $hndl->fileno;
 		    next if $hndl == $rdr;
 		    
 		    print $hndl "$buff\r\n";
+		}		
+	    }
+	    else {
+		foreach $buff (split("\n",$buff)) {
+		    if($buff =~ /^(play|pause|stop|seek)/) {
+			$oldcommand = $1;
+
+			if($buff =~ /\.(flac|mp3)$/) {
+			    ($pid,$type) = player($1) if $type ne $1;
+			}
+			
+			if ($buff =~ /play (.+)/) {
+			    $playing = 0;
+			    $last = $1;
+			}
+
+			my $command = $buff;
+			$command =~ s/play/load/;
+			
+			if( $oldcommand eq "stop" ) {
+			    print $mpg "seek 0 2\n";
+			    print $mpg "pause\n";
+			}
+			else {
+			    print $mpg $command."\n";
+			}
+
+			# Send response back to crestron
+			if( $oldcommand eq "pause" ) {
+			    $pause = 1 - $pause;
+
+			    if( $pause ) {
+				$buff = "200: pause";
+			    }
+			    else {
+				$buff = "200: unpause";
+			    }
+			}
+			elsif( $oldcommand eq "stop" ) {
+			    $buff = "230: stop";
+			}
+			elsif( $oldcommand eq "play" ) {
+			    $buff = "230: playing\r\n230: play $last";
+			}
+
+		    } elsif($buff =~ /^\@/) {
+			if($buff =~ /\@F [0-9]+ [0-9]+ ([0-9\.]+) ([0-9\.]+)/) {
+			    my ($up, $down) = map{ceil($_)} ($1, $2);
+			    $up    = $oup   if $up   < $oup;
+			    $down  = $odown if $down > $odown;
+			    next   if $up eq $oup && $down eq $odown;
+			    $oup   = $up;
+			    $odown = $down;
+			    $buff  = "230: time $up $down";
+			} elsif($buff =~ /\=\=\= PAUSE \=\=\=/) {
+			    $buff = "200: pause";
+			} elsif($buff =~ /\@P 2/) {
+			    $buff = "200: unpause";
+			} elsif($buff =~ /\@I (\/?.+)/) {
+			    my $file = $last;
+			    $file = $1 unless $last;
+			    ($oup, $odown) = (0, 1000000);
+			    $buff = "230: playing\r\n230: play $file";
+			} elsif($buff =~ /\@P 0/) {
+			    $buff = ($oldcommand ne 'stop'?"230: endofsong\r\n":'') . "230: stop";
+			} else {
+			    next;
+			}
+		    } else {
+			next;
+		    }
+		    
+		    foreach my $hndl ($select->handles) {
+			next if $hndl == $listen;
+			next unless $hndl->fileno;
+			next if $hndl == $rdr;
+
+			print STDERR ">>> $buff\r\n";
+			print $hndl "$buff\r\n";
+		    }
 		}
 	    }
 	}
@@ -187,7 +215,10 @@ sub player {
 
 	unload();
 
-	my $p = open2($rdr,$mpg,'nice -n -10 /usr/bin/mplayer -ao alsa:device='.$alsadevice.' -idle -slave 2>&1');
+	my $p;
+#	$p = open2($rdr,$mpg,'nice -n -10 /usr/local/bin/flac123 -R 2>&1') if $t eq 'flac';
+#	$p = open2($rdr,$mpg,'nice -n -10 /usr/bin/mpg123 -R 2>&1') if $t eq 'mp3';
+	$p = open2($rdr,$mpg,'nice -n -10 /usr/bin/mplayer -ao alsa:device='.$alsadevice.' -idle -slave -nojoystick -nomouseinput -nolirc 2>&1');
 	print STDERR "Opening mplayer player ($p)\n";
 	$select->add($rdr);
 

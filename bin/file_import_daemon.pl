@@ -174,7 +174,7 @@ sub import_folder {
 			}
 
 			if($album) {
-				my $discid = md5_hex(lc($tracks->[0]->artist.' '.$album));
+				my $discid = md5_hex(lc($album));
 				my $metadata = {
 					GENRE     => $tracks->[0]->genre,
 					DISCID    => $discid,
