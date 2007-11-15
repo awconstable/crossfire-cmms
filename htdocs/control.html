@@ -1,0 +1,202 @@
+<html>
+  <head>
+    <title>Crossfire Media Server :: web controller</title>
+    <script language="JavaScript" type="text/JavaScript">
+    <!--
+    var state  = 'play';
+
+    function rndm(vlu) {
+    	document.getElementById('rndm').className = (vlu == 1?'on':'off');
+    }
+
+    function repeat(vlu) {
+    	document.getElementById('repeat').className = (vlu == 1?'on':'off');
+    }
+
+    function doit(tid,tvl) {
+    	var elm;
+    	if(elm = document.getElementById(tid)) {
+    		elm.innerHTML = tvl;
+    	}
+    }
+
+    function pause(btn) {
+    	controller2.location='play.php?cmd=pause';
+    	btn.src = (state=='pause'?'/icons/32x32/shadow/media_pause.png':'/icons/32x32/shadow/media_play.png');
+    	btn.value = (state=='pause'?'||':'|>');
+    }
+
+    function stop(btn) {
+    	controller2.location='play.php?cmd='+(state=='play'?'stop':'play');
+    	btn.value = (state=='play'?'|>':'[]');
+    }
+
+    var jumper = null;
+    function jump(dir) {
+    	if(!dir) {
+    		clearTimeout(jumper);
+    		return;
+    	}
+    	controller2.location='play.php?cmd='+dir;
+    	jumper = setTimeout("jump('"+dir+"');",100);
+    }
+
+    function dosearch(vlu) {
+      controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:search_clear');
+      var bits = vlu.split('');
+      for(var i = 0; i < bits.length; i++) {
+      	controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:search_add|char:'+bits[i]);
+      }
+    }
+    //-->
+    </script>
+    <style type="text/css">
+    <!--
+    body {
+      background-color: #eee;
+    }
+
+    div#wrapper {
+      width: 400px;
+      background: #fff;
+      border: 1px solid #999;
+      margin: 0 auto;
+    }
+
+    div#header {
+      text-align: center; 
+    }   
+
+    div#controls, div#tracknav {
+      background: #f99;
+      border-top: 1px solid #999;
+      border-bottom: 1px solid #999;
+      text-align: center;
+      padding-top: 3px;
+      padding-bottom: 3px;
+    }
+
+    div#controls input, div#tracknav input {
+    margin-left: 4px;
+    margin-right: 4px;
+    }
+
+    td,th,div,input,input.off {
+      font-family: Verdana,Arial,Helvetica,sans-serif;
+      font-size: 12px;
+    }
+
+    table.currenttrack {
+     margin-left: 6px;
+     margin-right: 6px;
+     margin-top: 6px;
+     margin-bottom: 6px;
+     border: 1px solid #999;
+     width: 386px;
+    }
+
+    div#lines {
+      border: 1px solid #999;
+      width: 324px;
+      background: #eee;
+      font-family: courier;
+      text-align: left;
+      margin-bottom: 6px;
+      margin-top: 6px;
+    }
+
+    div#searchbox {
+      text-align: center;
+      background: #ccc;
+      padding: 2px;
+      border-bottom: 1px solid #999;
+    }
+
+    table.currenttrack th {
+      width: 100px;
+      background: #eee;
+    }
+
+    table.currenttrack td {
+      background: #f8f8f8;
+      border-bottom: 1px dotted #999;
+    }  
+
+    input {
+    }
+    input.on {
+      background-color: orange;
+    }
+    //-->
+    </style>
+  </head>
+  <body>
+<div id="wrapper">
+<div id="header">
+<img src="/theme/crossfire/logo.gif" />
+</div>
+<div id="controls">
+          <input type="image" onclick="pause(this);" value="||" src="/icons/32x32/shadow/media_pause.png" title="Pause">
+          <input type="image" onclick="stop(this);" value="[]" src="/icons/32x32/shadow/media_stop.png" title="Stop">
+          <input type="image" onmouseup="jump();" onmousedown="jump('rev');" value="&laquo;" src="/icons/32x32/shadow/media_rewind.png" title="Rewind">
+          <input type="image" onmouseup="jump();" onmousedown="jump('fwd');" value="&raquo;" src="/icons/32x32/shadow/media_fast_forward.png" title="Fast Forward">
+          <input type="image" onclick="controller2.location='play.php?cmd=previous';" value="Previous" src="/icons/32x32/shadow/media_step_back.png" title="Previous Track">
+          <input type="image" onclick="controller2.location='play.php?cmd=next';" value="Next" src="/icons/32x32/shadow/media_step_forward.png" title="Next Track">
+          <input type="image" id="repeat" onclick="controller2.location='play.php?cmd=repeat';" value="Repeat" src="/icons/32x32/shadow/refresh.png" title="Repeat">
+          <input type="image" id="rndm" onclick="controller2.location='play.php?cmd=random';" value="Random" src="/icons/32x32/shadow/die.png" alt="Random Track">
+</div>
+
+<table class="currenttrack">
+      <tr>
+        <th>Current Track</th>
+        <td id="track"></td>
+      </tr>
+      <tr>
+        <th>Artist</td>
+        <td id="artist"></th>
+      </tr>
+      <tr>
+        <th>Album</th>
+        <td id="album"></td>
+      </tr>
+      <tr>
+        <th>Playlist</th>
+        <td id="playlist"></td>
+      </tr>
+      <tr>
+        <th>Genre</th>
+        <td id="genre"></td>
+      </tr>
+    </table>
+    <iframe width="0" height="0" name="controller1" src="control.php"></iframe>
+    <iframe width="0" height="0" name="controller2" src="inject.php?cmd=zone:1|screen:library|cmd:list|category:albums"></iframe>
+
+    <div id="tracknav">
+
+    <input type="image" title="Albums" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:list|category:albums');" src="/icons/32x32/shadow/cd_gold.png" title="Albums">
+    <input type="image" value="Artists" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:list|category:artists');" src="/icons/32x32/shadow/microphone2.png" title="Artists">
+<!--
+    <input type="image" value="Tracks" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:list|category:tracks');" title="Tracks" src="/icons/32x32/shadow/>
+-->
+    <input type="image" value="Playlists" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:list|category:playlists');" title="Playlists" src="/icons/32x32/shadow/note_edit.png">
+    <input type="image" value="Genres" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:list|category:genres');" title="Genres" src="/icons/32x32/shadow/music.png">
+
+    <input type="image" value="Play all" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:playall');" title="Play All" style="margin-left: 40px;" src="/icons/32x32/shadow/cd_run.png">
+    <input type="image" value="Queue all" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:queueall');" title="Queue All" src="/icons/32x32/shadow/cd_add.png">
+
+</div>
+
+<div id="searchbox"><strong>Search:</strong> <input type="text" id="q" name="q"><input type="button" value="Go" onclick="dosearch(document.getElementById('q').value);"></div>
+<div style="text-align: center">
+<div style="float: left; margin-left: 6px; width: 24px;">
+    <input type="image" value="&laquo;" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:page_prev');" title="Prev Page" src="/icons/24x24/shadow/nav_left_red.png" style="position: relative; margin-top: 24px">
+</div>
+<div style="float: right; margin-right: 6px;">
+    <input type="image" value="&raquo;" onclick="controller2.location='inject.php?cmd='+escape('zone:1|screen:library|cmd:page_next');" title="Next Page" src="/icons/24x24/shadow/nav_right_red.png" style="position: relative; margin-top: 24px">
+</div>
+<div id="lines"></div>
+<div style="clear:both"></div>
+</div>
+</div>
+  </body>
+</html>

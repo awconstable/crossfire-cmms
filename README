@@ -1,9 +1,16 @@
-$Id: README,v 1.6 2007/11/15 09:24:22 toby Exp $
+$Id: README,v 1.7 2007/11/15 09:25:36 toby Exp $
 
 This is the Crossfire CMMS Server
 
 History
 =======
+
+15-November-2007 Tobias Russell                       <toby@russellsharpe.com>
+-------------------------------------------------------------------------------
+1.2.5
+
+Bug fix to remove entries from playlists when tracks are deleted
+Added in missing webmin file
 
 31-October-2007 Tobias Russell                        <toby@russellsharpe.com>
 -------------------------------------------------------------------------------

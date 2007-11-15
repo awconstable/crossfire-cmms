@@ -1,4 +1,4 @@
-#$Id: track.pm,v 1.27 2007/02/06 16:53:41 byngmeister Exp $
+#$Id: track.pm,v 1.28 2007/11/15 09:25:36 toby Exp $
 
 package CMMS::Database::track;
 
@@ -21,9 +21,10 @@ use warnings;
 use base qw( CMMS::Database::Object );
 use Audio::TagLib;
 use CMMS::Database::track_data;
+use CMMS::Database::playlist_track;
 use CMMS::File;
 
-our $VERSION = sprintf '%d.%03d', q$Revision: 1.27 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf '%d.%03d', q$Revision: 1.28 $ =~ /(\d+)\.(\d+)/;
 
 #==============================================================================
 # CLASS METHODS
@@ -217,6 +218,15 @@ sub new {
 	    		{ col => "info_source", title => "Meta Source" },
 			],
 	    list_method => 'get_track_list'
+	},
+	'playlist_track' => {
+	    type => "one2many",
+	    localkey => "id",
+	    foreignkey => "track_id",
+	    title => "Track(s)",
+	    tag => "playlist_track",
+	    position => 1,
+	    no_clone => 1,
 	}
     },
   });
