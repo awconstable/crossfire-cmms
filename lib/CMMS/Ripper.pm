@@ -15,7 +15,8 @@ our $permitted = {
 	logfile         => 1,
         loghandle       => 1,
 };
-our $VERSION = '1.2.1';
+
+our $VERSION = '1.2.4';
 our($AUTOLOAD);
 
 #############################################################

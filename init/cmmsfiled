@@ -2,7 +2,7 @@
 #
 # cmms_file_import_daemon.pl        Startup script for the CMMS File Daemon
 #
-# chkconfig: 2345 89 20
+# chkconfig: 2345 99 20
 # description: Daemon for CMMS File importer
 # processname: cmms_file_import_daemon.pl
 

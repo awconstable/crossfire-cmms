@@ -90,7 +90,7 @@ while(1) {
 	    
 	    $buff =~ s/\r+//g;
 	    
-	    print STDERR sprintf("\r%02d: %.80s",$playing,$buff);
+	    # print STDERR sprintf("\r%02d: %.80s",$playing,$buff);
 	    
 	    if( $buff=~ /Starting playback/ ) {
 		$playing = 1;

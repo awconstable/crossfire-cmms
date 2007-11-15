@@ -8,7 +8,7 @@ WriteMakefile(
 	      'PREREQ_PM'    => {
 				 'TAER'             => 0.08,
 				 'Install'          => 0.14,
-				 'FrameworkBuilder' => 0.04,
+#				 'FrameworkBuilder' => 0.04,
 				 'RS::Util'         => 0.01,
 				 'CDDB::File'       => 1.05,
 				 'Net::FreeDB'      => 0.08,

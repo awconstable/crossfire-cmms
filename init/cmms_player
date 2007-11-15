@@ -2,7 +2,7 @@
 #
 # cmms_player        Startup script for the CMMS player server
 #
-# chkconfig: 2345 88 20
+# chkconfig: 2345 98 20
 # description: Daemon for cmms_player
 # processname: cmms_player
 
@@ -27,6 +27,12 @@ start() {
         /usr/local/bin/rexima vol 80 1>/dev/null 2>&1
 	/usr/bin/amixer sset DAC,0 80%,80% 1>/dev/null 2>&1
 	/usr/bin/amixer sset DAC,1 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer -c 1 sset DAC,0 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer -c 1 sset DAC,1 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer -c 2 sset DAC,0 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer -c 2 sset DAC,1 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer -c 3 sset DAC,0 80%,80% 1>/dev/null 2>&1
+	/usr/bin/amixer -c 3 sset DAC,1 80%,80% 1>/dev/null 2>&1
 	# Make sure samba share mounted :)
 	mount -a
         $startplayer 1>/dev/null 2>&1 &
