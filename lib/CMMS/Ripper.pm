@@ -2,7 +2,7 @@ package CMMS::Ripper;
 
 use strict;
 use warnings;
-use Config::General;
+use Config::General qw(ParseConfig);
 use URI::Escape;
 use LWP;
 use CMMS::File;
@@ -16,7 +16,7 @@ our $permitted = {
         loghandle       => 1,
 };
 
-our $VERSION = '1.2.5';
+our $VERSION = '1.2.6';
 our($AUTOLOAD);
 
 #############################################################

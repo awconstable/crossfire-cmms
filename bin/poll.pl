@@ -2,7 +2,7 @@
 
 use strict;
 use LWP;
-use Config::General;
+use Config::General qw(ParseConfig);
 use URI::Escape;
 
 my $ua = new LWP::UserAgent;

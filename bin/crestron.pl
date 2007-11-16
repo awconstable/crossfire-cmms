@@ -3,7 +3,7 @@
 use strict;
 use IO::Socket;
 use IO::Select;
-use Config::General;
+use Config::General qw(ParseConfig);
 use Time::HiRes qw(sleep);
 
 # load config & configure multiplexer

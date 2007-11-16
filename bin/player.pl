@@ -4,7 +4,7 @@ use strict;
 use IO::Socket;
 use IO::Select;
 use IPC::Open2;
-use Config::General;
+use Config::General qw(ParseConfig);
 use POSIX qw(:sys_wait_h ceil);
 use Quantor::Log;
 use Time::HiRes qw(sleep);

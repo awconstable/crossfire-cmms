@@ -4,7 +4,7 @@ use strict;
 use IO::Socket;
 use IO::Select;
 use Getopt::Long;
-use Config::General;
+use Config::General qw(ParseConfig);
 use CMMS::Zone::Sender;
 use CMMS::Zone::Status;
 use CMMS::Zone::Command;

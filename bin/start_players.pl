@@ -2,7 +2,7 @@
 
 use strict;
 use Quantor::Log;
-use Config::General;
+use Config::General qw(ParseConfig);
 use Data::Dumper;
 
 # load configuration

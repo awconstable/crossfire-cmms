@@ -2,7 +2,7 @@
 
 use strict;
 use IO::Select;
-use Config::General;
+use Config::General qw(ParseConfig);
 use Time::HiRes qw(sleep);
 use Quantor::Log;
 use IPC::Open2;
