@@ -1,5 +1,5 @@
 #!/bin/bash
-
+ 
 CRON=`grep -c '/usr/bin/cmms_poll.pl' /etc/crontab`
 
 if [ "$CRON" = "0" ]; then
